@@ -1,0 +1,309 @@
+{
+  "domain": {
+    "slug": "vyakarana",
+    "title": "Sanskrit Grammar (Pāṇinian)"
+  },
+  "entity_kinds": [
+    { "slug": "varna", "schema": { "type": "phoneme", "fields": ["transliteration", "devanagari", "class"] } },
+    { "slug": "pratyahara", "schema": { "type": "phoneme_class", "fields": ["start", "marker", "members"] } },
+    { "slug": "dhatu", "schema": { "type": "verb_root", "fields": ["meaning", "gana"] } },
+    { "slug": "pratyaya", "schema": { "type": "suffix", "fields": ["function"] } },
+    { "slug": "sutra", "schema": { "type": "rule", "fields": ["number", "text", "translation"] } }
+  ],
+  "relation_kinds": [
+    { "slug": "member_of", "src_kind": "varna", "dst_kind": "pratyahara" },
+    { "slug": "defined_by", "src_kind": "pratyahara", "dst_kind": "sutra" },
+    { "slug": "applies_to", "src_kind": "sutra", "dst_kind": "pratyahara" }
+  ],
+  "claim_templates": [
+    {
+      "slug": "sandhi_rule",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "first": { "type": "string", "description": "Final sound of first word" },
+          "second": { "type": "string", "description": "Initial sound of second word" },
+          "result": { "type": "string", "description": "Resulting sound(s) after sandhi" },
+          "sutra": { "type": "string", "description": "Ashtadhyayi sutra reference" },
+          "context": { "type": "string", "description": "Application context" }
+        }
+      }
+    },
+    {
+      "slug": "pratyahara_def",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "pratyahara": { "type": "string" },
+          "members": { "type": "array", "items": { "type": "string" } },
+          "shiva_sutra": { "type": "string" }
+        }
+      }
+    },
+    {
+      "slug": "sound_classification",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "sound": { "type": "string" },
+          "class": { "type": "string" },
+          "properties": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  ],
+  "traditions": [
+    { "name": "pāṇini" },
+    { "name": "kāśikā", "parent": "pāṇini" },
+    { "name": "siddhānta-kaumudī", "parent": "pāṇini" }
+  ],
+  "sources": [
+    { "slug": "ashtadhyayi", "kind": "text", "reference": "Pāṇini, Aṣṭādhyāyī", "reliability": 1.0 },
+    { "slug": "shiva-sutras", "kind": "text", "reference": "Māheśvara Sūtrāṇi (Śiva Sūtras)", "reliability": 1.0 }
+  ],
+  "entities": [
+    { "kind": "varna", "name": "a", "attrs": { "devanagari": "अ", "class": "vowel", "short": true } },
+    { "kind": "varna", "name": "i", "attrs": { "devanagari": "इ", "class": "vowel", "short": true } },
+    { "kind": "varna", "name": "u", "attrs": { "devanagari": "उ", "class": "vowel", "short": true } },
+    { "kind": "varna", "name": "ṛ", "attrs": { "devanagari": "ऋ", "class": "vowel", "short": true } },
+    { "kind": "varna", "name": "ḷ", "attrs": { "devanagari": "ऌ", "class": "vowel", "short": true } },
+    { "kind": "varna", "name": "ā", "attrs": { "devanagari": "आ", "class": "vowel", "long": true } },
+    { "kind": "varna", "name": "ī", "attrs": { "devanagari": "ई", "class": "vowel", "long": true } },
+    { "kind": "varna", "name": "ū", "attrs": { "devanagari": "ऊ", "class": "vowel", "long": true } },
+    { "kind": "varna", "name": "e", "attrs": { "devanagari": "ए", "class": "vowel", "diphthong": true } },
+    { "kind": "varna", "name": "o", "attrs": { "devanagari": "ओ", "class": "vowel", "diphthong": true } },
+    { "kind": "varna", "name": "ai", "attrs": { "devanagari": "ऐ", "class": "vowel", "diphthong": true } },
+    { "kind": "varna", "name": "au", "attrs": { "devanagari": "औ", "class": "vowel", "diphthong": true } },
+    { "kind": "varna", "name": "y", "attrs": { "devanagari": "य", "class": "semivowel" } },
+    { "kind": "varna", "name": "v", "attrs": { "devanagari": "व", "class": "semivowel" } },
+    { "kind": "varna", "name": "r", "attrs": { "devanagari": "र", "class": "semivowel" } },
+    { "kind": "varna", "name": "l", "attrs": { "devanagari": "ल", "class": "semivowel" } },
+    { "kind": "varna", "name": "h", "attrs": { "devanagari": "ह", "class": "consonant", "place": "glottal" } },
+    { "kind": "varna", "name": "k", "attrs": { "devanagari": "क", "class": "stop", "place": "velar", "voicing": "unvoiced" } },
+    { "kind": "varna", "name": "g", "attrs": { "devanagari": "ग", "class": "stop", "place": "velar", "voicing": "voiced" } },
+    { "kind": "varna", "name": "ṅ", "attrs": { "devanagari": "ङ", "class": "nasal", "place": "velar" } },
+    { "kind": "varna", "name": "t", "attrs": { "devanagari": "त", "class": "stop", "place": "dental", "voicing": "unvoiced" } },
+    { "kind": "varna", "name": "d", "attrs": { "devanagari": "द", "class": "stop", "place": "dental", "voicing": "voiced" } },
+    { "kind": "varna", "name": "n", "attrs": { "devanagari": "न", "class": "nasal", "place": "dental" } },
+    { "kind": "varna", "name": "p", "attrs": { "devanagari": "प", "class": "stop", "place": "labial", "voicing": "unvoiced" } },
+    { "kind": "varna", "name": "b", "attrs": { "devanagari": "ब", "class": "stop", "place": "labial", "voicing": "voiced" } },
+    { "kind": "varna", "name": "m", "attrs": { "devanagari": "म", "class": "nasal", "place": "labial" } },
+    { "kind": "varna", "name": "s", "attrs": { "devanagari": "स", "class": "sibilant", "place": "dental" } },
+    { "kind": "varna", "name": "ś", "attrs": { "devanagari": "श", "class": "sibilant", "place": "palatal" } },
+    { "kind": "varna", "name": "ṣ", "attrs": { "devanagari": "ष", "class": "sibilant", "place": "retroflex" } },
+
+    { "kind": "pratyahara", "name": "ac", "attrs": { "meaning": "all vowels", "members": ["a","i","u","ṛ","ḷ","e","o","ai","au"] } },
+    { "kind": "pratyahara", "name": "hal", "attrs": { "meaning": "all consonants" } },
+    { "kind": "pratyahara", "name": "ik", "attrs": { "meaning": "simple vowels", "members": ["i","u","ṛ","ḷ"] } },
+    { "kind": "pratyahara", "name": "aṇ", "attrs": { "meaning": "a, i, u", "members": ["a","i","u"] } },
+    { "kind": "pratyahara", "name": "yaṇ", "attrs": { "meaning": "semivowels", "members": ["y","v","r","l"] } },
+    { "kind": "pratyahara", "name": "eṅ", "attrs": { "meaning": "e and o", "members": ["e","o"] } },
+    { "kind": "pratyahara", "name": "ec", "attrs": { "meaning": "e, o, ai, au", "members": ["e","o","ai","au"] } },
+    { "kind": "pratyahara", "name": "ak", "attrs": { "meaning": "simple vowels including a", "members": ["a","i","u","ṛ","ḷ"] } },
+
+    { "kind": "sutra", "name": "1.1.1", "attrs": { "text": "vṛddhir ādaic", "translation": "The vowels ā, ai, au are called vṛddhi" } },
+    { "kind": "sutra", "name": "1.1.2", "attrs": { "text": "adeṅ guṇaḥ", "translation": "The vowels a, e, o are called guṇa" } },
+    { "kind": "sutra", "name": "6.1.77", "attrs": { "text": "iko yaṇ aci", "translation": "An ik vowel is replaced by the corresponding yaṇ semivowel when followed by a vowel" } },
+    { "kind": "sutra", "name": "6.1.78", "attrs": { "text": "eco'yavāyāvaḥ", "translation": "e and o are replaced by ay and av before a vowel" } },
+    { "kind": "sutra", "name": "6.1.87", "attrs": { "text": "ād guṇaḥ", "translation": "When a/ā is followed by a simple vowel, guṇa replaces both" } },
+    { "kind": "sutra", "name": "6.1.88", "attrs": { "text": "vṛddhir eci", "translation": "When a/ā is followed by e, o, ai, or au, vṛddhi replaces both" } },
+    { "kind": "sutra", "name": "6.1.101", "attrs": { "text": "akaḥ savarṇe dīrghaḥ", "translation": "A simple vowel followed by its savarṇa (homogeneous vowel) is replaced by its long form" } }
+  ],
+  "claims": [
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "a", "result": "ā", "sutra": "6.1.101" },
+      "statement": "a + a → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "ā", "result": "ā", "sutra": "6.1.101" },
+      "statement": "a + ā → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "ā", "second": "a", "result": "ā", "sutra": "6.1.101" },
+      "statement": "ā + a → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "ā", "second": "ā", "result": "ā", "sutra": "6.1.101" },
+      "statement": "ā + ā → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "i", "second": "i", "result": "ī", "sutra": "6.1.101" },
+      "statement": "i + i → ī (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "u", "second": "u", "result": "ū", "sutra": "6.1.101" },
+      "statement": "u + u → ū (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "i", "result": "e", "sutra": "6.1.87" },
+      "statement": "a + i → e (guṇa-sandhi, Aṣṭ. 6.1.87)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "ī", "result": "e", "sutra": "6.1.87" },
+      "statement": "a + ī → e (guṇa-sandhi, Aṣṭ. 6.1.87)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "u", "result": "o", "sutra": "6.1.87" },
+      "statement": "a + u → o (guṇa-sandhi, Aṣṭ. 6.1.87)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "ū", "result": "o", "sutra": "6.1.87" },
+      "statement": "a + ū → o (guṇa-sandhi, Aṣṭ. 6.1.87)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "ṛ", "result": "ar", "sutra": "6.1.87" },
+      "statement": "a + ṛ → ar (guṇa-sandhi, Aṣṭ. 6.1.87)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "e", "result": "ai", "sutra": "6.1.88" },
+      "statement": "a + e → ai (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "o", "result": "au", "sutra": "6.1.88" },
+      "statement": "a + o → au (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "ai", "result": "ai", "sutra": "6.1.88" },
+      "statement": "a + ai → ai (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "au", "result": "au", "sutra": "6.1.88" },
+      "statement": "a + au → au (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "i", "second": "a", "result": "ya", "sutra": "6.1.77" },
+      "statement": "i + a → ya (yaṇ-sandhi, Aṣṭ. 6.1.77)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "i", "second": "ā", "result": "yā", "sutra": "6.1.77" },
+      "statement": "i + ā → yā (yaṇ-sandhi, Aṣṭ. 6.1.77)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "i", "second": "u", "result": "yu", "sutra": "6.1.77" },
+      "statement": "i + u → yu (yaṇ-sandhi, Aṣṭ. 6.1.77)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "u", "second": "a", "result": "va", "sutra": "6.1.77" },
+      "statement": "u + a → va (yaṇ-sandhi, Aṣṭ. 6.1.77)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "u", "second": "ā", "result": "vā", "sutra": "6.1.77" },
+      "statement": "u + ā → vā (yaṇ-sandhi, Aṣṭ. 6.1.77)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "u", "second": "i", "result": "vi", "sutra": "6.1.77" },
+      "statement": "u + i → vi (yaṇ-sandhi, Aṣṭ. 6.1.77)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "ṛ", "second": "a", "result": "ra", "sutra": "6.1.77" },
+      "statement": "ṛ + a → ra (yaṇ-sandhi, Aṣṭ. 6.1.77)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+
+    {
+      "template": "pratyahara_def",
+      "params": { "pratyahara": "ac", "members": ["a","i","u","ṛ","ḷ","e","o","ai","au"], "shiva_sutra": "1-4" },
+      "statement": "ac = all vowels {a, i, u, ṛ, ḷ, e, o, ai, au}",
+      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+    },
+    {
+      "template": "pratyahara_def",
+      "params": { "pratyahara": "ik", "members": ["i","u","ṛ","ḷ"], "shiva_sutra": "1" },
+      "statement": "ik = simple vowels excluding a {i, u, ṛ, ḷ}",
+      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+    },
+    {
+      "template": "pratyahara_def",
+      "params": { "pratyahara": "yaṇ", "members": ["y","v","r","l"], "shiva_sutra": "5" },
+      "statement": "yaṇ = semivowels {y, v, r, l}",
+      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+    },
+    {
+      "template": "pratyahara_def",
+      "params": { "pratyahara": "aṇ", "members": ["a","i","u"], "shiva_sutra": "1" },
+      "statement": "aṇ = the three short simple vowels {a, i, u}",
+      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+    },
+    {
+      "template": "pratyahara_def",
+      "params": { "pratyahara": "eṅ", "members": ["e","o"], "shiva_sutra": "3" },
+      "statement": "eṅ = guṇa diphthongs {e, o}",
+      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+    },
+
+    {
+      "template": "sound_classification",
+      "params": { "sound": "a", "class": "vowel", "properties": ["short", "simple", "guṇa"] },
+      "statement": "a is a short simple vowel and is itself a guṇa vowel",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sound_classification",
+      "params": { "sound": "e", "class": "vowel", "properties": ["guṇa", "diphthong"] },
+      "statement": "e is a guṇa-grade diphthong vowel (guṇa of i/ī)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sound_classification",
+      "params": { "sound": "o", "class": "vowel", "properties": ["guṇa", "diphthong"] },
+      "statement": "o is a guṇa-grade diphthong vowel (guṇa of u/ū)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sound_classification",
+      "params": { "sound": "ai", "class": "vowel", "properties": ["vṛddhi", "diphthong"] },
+      "statement": "ai is a vṛddhi-grade diphthong vowel (vṛddhi of i/ī)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sound_classification",
+      "params": { "sound": "au", "class": "vowel", "properties": ["vṛddhi", "diphthong"] },
+      "statement": "au is a vṛddhi-grade diphthong vowel (vṛddhi of u/ū)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    }
+  ],
+  "relations": []
+}

@@ -1,0 +1,296 @@
+{
+  "domain": {
+    "slug": "jyotish",
+    "title": "Jyotiṣa (Vedic Astrology)"
+  },
+  "entity_kinds": [
+    { "slug": "graha", "schema": { "type": "planet", "fields": ["sanskrit", "western_name", "nature", "gender", "element"] } },
+    { "slug": "rashi", "schema": { "type": "sign", "fields": ["number", "sanskrit", "element", "quality", "ruler"] } },
+    { "slug": "bhava", "schema": { "type": "house", "fields": ["number", "significations"] } },
+    { "slug": "nakshatra", "schema": { "type": "lunar_mansion", "fields": ["number", "ruler", "deity", "degrees"] } },
+    { "slug": "dignity_type", "schema": { "type": "classification", "fields": ["description"] } },
+    { "slug": "drishti_type", "schema": { "type": "aspect", "fields": ["description"] } }
+  ],
+  "relation_kinds": [
+    { "slug": "rules", "src_kind": "graha", "dst_kind": "rashi" },
+    { "slug": "exalted_in", "src_kind": "graha", "dst_kind": "rashi" },
+    { "slug": "debilitated_in", "src_kind": "graha", "dst_kind": "rashi" },
+    { "slug": "moolatrikona_in", "src_kind": "graha", "dst_kind": "rashi" },
+    { "slug": "aspects", "src_kind": "graha", "dst_kind": "graha" },
+    { "slug": "natural_friend", "src_kind": "graha", "dst_kind": "graha" },
+    { "slug": "natural_enemy", "src_kind": "graha", "dst_kind": "graha" },
+    { "slug": "natural_neutral", "src_kind": "graha", "dst_kind": "graha" },
+    { "slug": "rules_nakshatra", "src_kind": "graha", "dst_kind": "nakshatra" }
+  ],
+  "claim_templates": [
+    {
+      "slug": "dignity",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "graha": { "type": "string" },
+          "rashi": { "type": "string" },
+          "dignity_type": { "type": "string", "enum": ["exaltation", "debilitation", "own_sign", "moolatrikona"] },
+          "degree": { "type": "number", "description": "Exact degree of exaltation/debilitation if applicable" }
+        }
+      }
+    },
+    {
+      "slug": "planetary_nature",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "graha": { "type": "string" },
+          "nature": { "type": "string", "enum": ["benefic", "malefic", "neutral"] },
+          "qualification": { "type": "string" }
+        }
+      }
+    },
+    {
+      "slug": "planetary_friendship",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "graha": { "type": "string" },
+          "friend": { "type": "string" },
+          "relation": { "type": "string", "enum": ["friend", "enemy", "neutral"] }
+        }
+      }
+    },
+    {
+      "slug": "house_signification",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "bhava": { "type": "integer" },
+          "significations": { "type": "array", "items": { "type": "string" } },
+          "karaka": { "type": "string", "description": "Natural significator graha" }
+        }
+      }
+    },
+    {
+      "slug": "aspect_rule",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "graha": { "type": "string" },
+          "houses_aspected": { "type": "array", "items": { "type": "integer" } },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    {
+      "slug": "sign_property",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "rashi": { "type": "string" },
+          "property": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    },
+    {
+      "slug": "karaka",
+      "param_schema": {
+        "type": "object",
+        "properties": {
+          "graha": { "type": "string" },
+          "significations": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  ],
+  "traditions": [
+    { "name": "parāśara" },
+    { "name": "jaimini" },
+    { "name": "bphs", "parent": "parāśara" }
+  ],
+  "sources": [
+    { "slug": "bphs", "kind": "text", "reference": "Bṛhat Parāśara Horā Śāstra", "reliability": 0.95 },
+    { "slug": "phala-dipika", "kind": "text", "reference": "Phala Dīpikā (Mantreśvara)", "reliability": 0.9 },
+    { "slug": "jataka-parijata", "kind": "text", "reference": "Jātaka Pārijāta (Vaidyanātha)", "reliability": 0.9 },
+    { "slug": "saravali", "kind": "text", "reference": "Sārāvalī (Kalyāṇavarman)", "reliability": 0.9 }
+  ],
+  "entities": [
+    { "kind": "graha", "name": "Sūrya", "attrs": { "western": "Sun", "nature": "malefic", "gender": "masculine", "element": "fire", "tattva": "ātman", "aliases": ["Sun", "Ravi", "Arka"] } },
+    { "kind": "graha", "name": "Chandra", "attrs": { "western": "Moon", "nature": "benefic", "gender": "feminine", "element": "water", "tattva": "manas", "aliases": ["Moon", "Soma"] } },
+    { "kind": "graha", "name": "Maṅgala", "attrs": { "western": "Mars", "nature": "malefic", "gender": "masculine", "element": "fire", "tattva": "courage", "aliases": ["Mars", "Kuja", "Bhūmi-putra"] } },
+    { "kind": "graha", "name": "Budha", "attrs": { "western": "Mercury", "nature": "neutral", "gender": "neuter", "element": "earth", "tattva": "speech", "aliases": ["Mercury"] } },
+    { "kind": "graha", "name": "Guru", "attrs": { "western": "Jupiter", "nature": "benefic", "gender": "masculine", "element": "ether", "tattva": "knowledge", "aliases": ["Jupiter", "Bṛhaspati"] } },
+    { "kind": "graha", "name": "Śukra", "attrs": { "western": "Venus", "nature": "benefic", "gender": "feminine", "element": "water", "tattva": "desire", "aliases": ["Venus"] } },
+    { "kind": "graha", "name": "Śani", "attrs": { "western": "Saturn", "nature": "malefic", "gender": "neuter", "element": "air", "tattva": "sorrow", "aliases": ["Saturn", "Manda"] } },
+    { "kind": "graha", "name": "Rāhu", "attrs": { "western": "North Node", "nature": "malefic", "gender": "feminine", "shadow": true, "aliases": ["North Node", "Dragon's Head"] } },
+    { "kind": "graha", "name": "Ketu", "attrs": { "western": "South Node", "nature": "malefic", "gender": "neuter", "shadow": true, "aliases": ["South Node", "Dragon's Tail"] } },
+
+    { "kind": "rashi", "name": "Meṣa", "attrs": { "number": 1, "western": "Aries", "element": "fire", "quality": "movable", "gender": "masculine" } },
+    { "kind": "rashi", "name": "Vṛṣabha", "attrs": { "number": 2, "western": "Taurus", "element": "earth", "quality": "fixed", "gender": "feminine" } },
+    { "kind": "rashi", "name": "Mithuna", "attrs": { "number": 3, "western": "Gemini", "element": "air", "quality": "dual", "gender": "masculine" } },
+    { "kind": "rashi", "name": "Karka", "attrs": { "number": 4, "western": "Cancer", "element": "water", "quality": "movable", "gender": "feminine" } },
+    { "kind": "rashi", "name": "Siṃha", "attrs": { "number": 5, "western": "Leo", "element": "fire", "quality": "fixed", "gender": "masculine" } },
+    { "kind": "rashi", "name": "Kanyā", "attrs": { "number": 6, "western": "Virgo", "element": "earth", "quality": "dual", "gender": "feminine" } },
+    { "kind": "rashi", "name": "Tulā", "attrs": { "number": 7, "western": "Libra", "element": "air", "quality": "movable", "gender": "masculine" } },
+    { "kind": "rashi", "name": "Vṛścika", "attrs": { "number": 8, "western": "Scorpio", "element": "water", "quality": "fixed", "gender": "feminine" } },
+    { "kind": "rashi", "name": "Dhanus", "attrs": { "number": 9, "western": "Sagittarius", "element": "fire", "quality": "dual", "gender": "masculine" } },
+    { "kind": "rashi", "name": "Makara", "attrs": { "number": 10, "western": "Capricorn", "element": "earth", "quality": "movable", "gender": "feminine" } },
+    { "kind": "rashi", "name": "Kumbha", "attrs": { "number": 11, "western": "Aquarius", "element": "air", "quality": "fixed", "gender": "masculine" } },
+    { "kind": "rashi", "name": "Mīna", "attrs": { "number": 12, "western": "Pisces", "element": "water", "quality": "dual", "gender": "feminine" } },
+
+    { "kind": "bhava", "name": "1st House", "attrs": { "number": 1, "sanskrit": "Tanu Bhāva", "significations": ["self", "body", "appearance", "personality", "health", "vitality"] } },
+    { "kind": "bhava", "name": "2nd House", "attrs": { "number": 2, "sanskrit": "Dhana Bhāva", "significations": ["wealth", "family", "speech", "food", "right eye", "early education"] } },
+    { "kind": "bhava", "name": "3rd House", "attrs": { "number": 3, "sanskrit": "Sahaja Bhāva", "significations": ["siblings", "courage", "communication", "short travels", "efforts", "hands"] } },
+    { "kind": "bhava", "name": "4th House", "attrs": { "number": 4, "sanskrit": "Sukha Bhāva", "significations": ["mother", "happiness", "property", "vehicles", "education", "heart"] } },
+    { "kind": "bhava", "name": "5th House", "attrs": { "number": 5, "sanskrit": "Putra Bhāva", "significations": ["children", "intelligence", "creativity", "romance", "past merit", "mantras"] } },
+    { "kind": "bhava", "name": "6th House", "attrs": { "number": 6, "sanskrit": "Ari Bhāva", "significations": ["enemies", "disease", "debt", "service", "obstacles", "maternal uncle"] } },
+    { "kind": "bhava", "name": "7th House", "attrs": { "number": 7, "sanskrit": "Yuvati Bhāva", "significations": ["spouse", "partnership", "trade", "foreign travel", "desire", "death"] } },
+    { "kind": "bhava", "name": "8th House", "attrs": { "number": 8, "sanskrit": "Randhra Bhāva", "significations": ["longevity", "transformation", "occult", "inheritance", "chronic illness", "obstacles"] } },
+    { "kind": "bhava", "name": "9th House", "attrs": { "number": 9, "sanskrit": "Dharma Bhāva", "significations": ["father", "dharma", "fortune", "guru", "higher learning", "long journeys", "philosophy"] } },
+    { "kind": "bhava", "name": "10th House", "attrs": { "number": 10, "sanskrit": "Karma Bhāva", "significations": ["career", "status", "authority", "fame", "government", "father's influence"] } },
+    { "kind": "bhava", "name": "11th House", "attrs": { "number": 11, "sanskrit": "Lābha Bhāva", "significations": ["gains", "income", "elder siblings", "friends", "hopes", "fulfillment"] } },
+    { "kind": "bhava", "name": "12th House", "attrs": { "number": 12, "sanskrit": "Vyaya Bhāva", "significations": ["loss", "expenditure", "liberation", "foreign lands", "isolation", "sleep", "left eye"] } },
+
+    { "kind": "dignity_type", "name": "Exaltation", "attrs": { "sanskrit": "Uccha", "description": "Planet at maximum strength and positive expression" } },
+    { "kind": "dignity_type", "name": "Debilitation", "attrs": { "sanskrit": "Nīcha", "description": "Planet at minimum strength and challenged expression" } },
+    { "kind": "dignity_type", "name": "Own Sign", "attrs": { "sanskrit": "Svakṣetra", "description": "Planet in a sign it rules, comfortable and strong" } },
+    { "kind": "dignity_type", "name": "Mūlatrikoṇa", "attrs": { "sanskrit": "Mūlatrikoṇa", "description": "Planet in its office sign, strong in a specific degree range" } }
+  ],
+  "claims": [
+    { "template": "dignity", "params": { "graha": "Sūrya", "rashi": "Meṣa", "dignity_type": "exaltation", "degree": 10 }, "statement": "Sūrya (Sun) is exalted in Meṣa (Aries) at 10°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Sūrya", "rashi": "Tulā", "dignity_type": "debilitation", "degree": 10 }, "statement": "Sūrya (Sun) is debilitated in Tulā (Libra) at 10°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Sūrya", "rashi": "Siṃha", "dignity_type": "own_sign" }, "statement": "Sūrya (Sun) rules Siṃha (Leo)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Sūrya", "rashi": "Siṃha", "dignity_type": "moolatrikona" }, "statement": "Sūrya (Sun) has mūlatrikoṇa in Siṃha (Leo) 0°-20°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "dignity", "params": { "graha": "Chandra", "rashi": "Vṛṣabha", "dignity_type": "exaltation", "degree": 3 }, "statement": "Chandra (Moon) is exalted in Vṛṣabha (Taurus) at 3°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Chandra", "rashi": "Vṛścika", "dignity_type": "debilitation", "degree": 3 }, "statement": "Chandra (Moon) is debilitated in Vṛścika (Scorpio) at 3°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Chandra", "rashi": "Karka", "dignity_type": "own_sign" }, "statement": "Chandra (Moon) rules Karka (Cancer)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Chandra", "rashi": "Vṛṣabha", "dignity_type": "moolatrikona" }, "statement": "Chandra (Moon) has mūlatrikoṇa in Vṛṣabha (Taurus) 4°-20°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "dignity", "params": { "graha": "Maṅgala", "rashi": "Makara", "dignity_type": "exaltation", "degree": 28 }, "statement": "Maṅgala (Mars) is exalted in Makara (Capricorn) at 28°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Maṅgala", "rashi": "Karka", "dignity_type": "debilitation", "degree": 28 }, "statement": "Maṅgala (Mars) is debilitated in Karka (Cancer) at 28°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Maṅgala", "rashi": "Meṣa", "dignity_type": "own_sign" }, "statement": "Maṅgala (Mars) rules Meṣa (Aries)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Maṅgala", "rashi": "Vṛścika", "dignity_type": "own_sign" }, "statement": "Maṅgala (Mars) rules Vṛścika (Scorpio)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Maṅgala", "rashi": "Meṣa", "dignity_type": "moolatrikona" }, "statement": "Maṅgala (Mars) has mūlatrikoṇa in Meṣa (Aries) 0°-12°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "dignity", "params": { "graha": "Budha", "rashi": "Kanyā", "dignity_type": "exaltation", "degree": 15 }, "statement": "Budha (Mercury) is exalted in Kanyā (Virgo) at 15°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Budha", "rashi": "Mīna", "dignity_type": "debilitation", "degree": 15 }, "statement": "Budha (Mercury) is debilitated in Mīna (Pisces) at 15°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Budha", "rashi": "Mithuna", "dignity_type": "own_sign" }, "statement": "Budha (Mercury) rules Mithuna (Gemini)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Budha", "rashi": "Kanyā", "dignity_type": "own_sign" }, "statement": "Budha (Mercury) rules Kanyā (Virgo)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Budha", "rashi": "Kanyā", "dignity_type": "moolatrikona" }, "statement": "Budha (Mercury) has mūlatrikoṇa in Kanyā (Virgo) 16°-20°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "dignity", "params": { "graha": "Guru", "rashi": "Karka", "dignity_type": "exaltation", "degree": 5 }, "statement": "Guru (Jupiter) is exalted in Karka (Cancer) at 5°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Guru", "rashi": "Makara", "dignity_type": "debilitation", "degree": 5 }, "statement": "Guru (Jupiter) is debilitated in Makara (Capricorn) at 5°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Guru", "rashi": "Dhanus", "dignity_type": "own_sign" }, "statement": "Guru (Jupiter) rules Dhanus (Sagittarius)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Guru", "rashi": "Mīna", "dignity_type": "own_sign" }, "statement": "Guru (Jupiter) rules Mīna (Pisces)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Guru", "rashi": "Dhanus", "dignity_type": "moolatrikona" }, "statement": "Guru (Jupiter) has mūlatrikoṇa in Dhanus (Sagittarius) 0°-10°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "dignity", "params": { "graha": "Śukra", "rashi": "Mīna", "dignity_type": "exaltation", "degree": 27 }, "statement": "Śukra (Venus) is exalted in Mīna (Pisces) at 27°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śukra", "rashi": "Kanyā", "dignity_type": "debilitation", "degree": 27 }, "statement": "Śukra (Venus) is debilitated in Kanyā (Virgo) at 27°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śukra", "rashi": "Vṛṣabha", "dignity_type": "own_sign" }, "statement": "Śukra (Venus) rules Vṛṣabha (Taurus)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śukra", "rashi": "Tulā", "dignity_type": "own_sign" }, "statement": "Śukra (Venus) rules Tulā (Libra)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śukra", "rashi": "Tulā", "dignity_type": "moolatrikona" }, "statement": "Śukra (Venus) has mūlatrikoṇa in Tulā (Libra) 0°-15°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "dignity", "params": { "graha": "Śani", "rashi": "Tulā", "dignity_type": "exaltation", "degree": 20 }, "statement": "Śani (Saturn) is exalted in Tulā (Libra) at 20°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śani", "rashi": "Meṣa", "dignity_type": "debilitation", "degree": 20 }, "statement": "Śani (Saturn) is debilitated in Meṣa (Aries) at 20°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śani", "rashi": "Makara", "dignity_type": "own_sign" }, "statement": "Śani (Saturn) rules Makara (Capricorn)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śani", "rashi": "Kumbha", "dignity_type": "own_sign" }, "statement": "Śani (Saturn) rules Kumbha (Aquarius)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "dignity", "params": { "graha": "Śani", "rashi": "Kumbha", "dignity_type": "moolatrikona" }, "statement": "Śani (Saturn) has mūlatrikoṇa in Kumbha (Aquarius) 0°-20°", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "dignity", "params": { "graha": "Rāhu", "rashi": "Mithuna", "dignity_type": "exaltation" }, "statement": "Rāhu is exalted in Mithuna (Gemini) — some authorities give Vṛṣabha", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda", "confidence": 0.7 }] },
+    { "template": "dignity", "params": { "graha": "Rāhu", "rashi": "Dhanus", "dignity_type": "debilitation" }, "statement": "Rāhu is debilitated in Dhanus (Sagittarius)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda", "confidence": 0.7 }] },
+    { "template": "dignity", "params": { "graha": "Ketu", "rashi": "Dhanus", "dignity_type": "exaltation" }, "statement": "Ketu is exalted in Dhanus (Sagittarius) — some authorities give Vṛścika", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda", "confidence": 0.7 }] },
+    { "template": "dignity", "params": { "graha": "Ketu", "rashi": "Mithuna", "dignity_type": "debilitation" }, "statement": "Ketu is debilitated in Mithuna (Gemini)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda", "confidence": 0.7 }] },
+
+    { "template": "planetary_nature", "params": { "graha": "Sūrya", "nature": "malefic", "qualification": "krūra (cruel); natural malefic but auspicious as ātmakāraka" }, "statement": "Sūrya is a natural malefic (krūra graha)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Chandra", "nature": "benefic", "qualification": "śubha when waxing (śukla pakṣa); krūra when waning (kṛṣṇa pakṣa) and near new moon" }, "statement": "Chandra is a natural benefic when bright, malefic when dark (near amāvāsyā)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Maṅgala", "nature": "malefic", "qualification": "krūra; fiery, aggressive, accident-prone" }, "statement": "Maṅgala is a natural malefic (krūra graha)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Budha", "nature": "neutral", "qualification": "takes the nature of planets it associates with; benefic alone, malefic with malefics" }, "statement": "Budha is naturally neutral — assumes the nature of associated grahas", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Guru", "nature": "benefic", "qualification": "the greatest natural benefic (mahā śubha graha)" }, "statement": "Guru is the greatest natural benefic (mahā śubha graha)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Śukra", "nature": "benefic", "qualification": "śubha; teacher of the asuras; strong material benefic" }, "statement": "Śukra is a natural benefic (śubha graha)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Śani", "nature": "malefic", "qualification": "the greatest natural malefic (mahā krūra); slow, restrictive, karmic" }, "statement": "Śani is the greatest natural malefic (mahā krūra graha)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Rāhu", "nature": "malefic", "qualification": "shadow planet (chāyā graha); amplifies and distorts; acts like Śani" }, "statement": "Rāhu is a natural malefic (chāyā graha, acts like Śani)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_nature", "params": { "graha": "Ketu", "nature": "malefic", "qualification": "shadow planet (chāyā graha); dissolves and spiritualizes; acts like Maṅgala" }, "statement": "Ketu is a natural malefic (chāyā graha, acts like Maṅgala)", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "aspect_rule", "params": { "graha": "all", "houses_aspected": [7], "description": "All planets aspect the 7th house from their position" }, "statement": "Every graha has full dṛṣṭi (aspect) on the 7th house from itself", "assertions": [{ "tradition": "parāśara", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "aspect_rule", "params": { "graha": "Maṅgala", "houses_aspected": [4, 7, 8], "description": "Mars has special aspects on 4th, 7th, and 8th houses" }, "statement": "Maṅgala has special dṛṣṭi on the 4th, 7th, and 8th houses from itself", "assertions": [{ "tradition": "parāśara", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "aspect_rule", "params": { "graha": "Guru", "houses_aspected": [5, 7, 9], "description": "Jupiter has special aspects on 5th, 7th, and 9th houses" }, "statement": "Guru has special dṛṣṭi on the 5th, 7th, and 9th houses from itself", "assertions": [{ "tradition": "parāśara", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "aspect_rule", "params": { "graha": "Śani", "houses_aspected": [3, 7, 10], "description": "Saturn has special aspects on 3rd, 7th, and 10th houses" }, "statement": "Śani has special dṛṣṭi on the 3rd, 7th, and 10th houses from itself", "assertions": [{ "tradition": "parāśara", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "karaka", "params": { "graha": "Sūrya", "significations": ["soul", "father", "authority", "government", "vitality", "ego", "bones", "right eye"] }, "statement": "Sūrya is kāraka for soul (ātman), father, authority, government, vitality", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "karaka", "params": { "graha": "Chandra", "significations": ["mind", "mother", "emotions", "fluids", "public", "left eye", "sleep", "fertility"] }, "statement": "Chandra is kāraka for mind (manas), mother, emotions, public life", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "karaka", "params": { "graha": "Maṅgala", "significations": ["courage", "siblings", "land", "blood", "energy", "surgery", "weapons", "accidents"] }, "statement": "Maṅgala is kāraka for courage, siblings, land, blood, martial energy", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "karaka", "params": { "graha": "Budha", "significations": ["intellect", "speech", "commerce", "writing", "mathematics", "skin", "nervous system", "friends"] }, "statement": "Budha is kāraka for intellect, speech, commerce, writing, mathematics", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "karaka", "params": { "graha": "Guru", "significations": ["wisdom", "children", "dharma", "wealth", "guru", "expansion", "liver", "fat", "husband"] }, "statement": "Guru is kāraka for wisdom, children, dharma, guru, expansion", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "karaka", "params": { "graha": "Śukra", "significations": ["love", "marriage", "beauty", "art", "luxury", "vehicles", "reproductive system", "wife"] }, "statement": "Śukra is kāraka for love, marriage, beauty, art, luxury, vehicles", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "karaka", "params": { "graha": "Śani", "significations": ["longevity", "sorrow", "discipline", "servants", "delay", "chronic disease", "karma", "renunciation"] }, "statement": "Śani is kāraka for longevity, sorrow, discipline, karma, renunciation", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "planetary_friendship", "params": { "graha": "Sūrya", "friend": "Chandra", "relation": "friend" }, "statement": "Sūrya and Chandra are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Sūrya", "friend": "Maṅgala", "relation": "friend" }, "statement": "Sūrya and Maṅgala are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Sūrya", "friend": "Guru", "relation": "friend" }, "statement": "Sūrya and Guru are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Sūrya", "friend": "Śukra", "relation": "enemy" }, "statement": "Sūrya and Śukra are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Sūrya", "friend": "Śani", "relation": "enemy" }, "statement": "Sūrya and Śani are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Sūrya", "friend": "Budha", "relation": "neutral" }, "statement": "Sūrya is neutral toward Budha", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "planetary_friendship", "params": { "graha": "Chandra", "friend": "Sūrya", "relation": "friend" }, "statement": "Chandra and Sūrya are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Chandra", "friend": "Budha", "relation": "friend" }, "statement": "Chandra and Budha are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "planetary_friendship", "params": { "graha": "Maṅgala", "friend": "Sūrya", "relation": "friend" }, "statement": "Maṅgala and Sūrya are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Maṅgala", "friend": "Chandra", "relation": "friend" }, "statement": "Maṅgala and Chandra are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Maṅgala", "friend": "Guru", "relation": "friend" }, "statement": "Maṅgala and Guru are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Maṅgala", "friend": "Budha", "relation": "enemy" }, "statement": "Maṅgala and Budha are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "planetary_friendship", "params": { "graha": "Guru", "friend": "Sūrya", "relation": "friend" }, "statement": "Guru and Sūrya are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Guru", "friend": "Chandra", "relation": "friend" }, "statement": "Guru and Chandra are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Guru", "friend": "Maṅgala", "relation": "friend" }, "statement": "Guru and Maṅgala are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Guru", "friend": "Śukra", "relation": "enemy" }, "statement": "Guru and Śukra are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Guru", "friend": "Budha", "relation": "enemy" }, "statement": "Guru and Budha are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+
+    { "template": "planetary_friendship", "params": { "graha": "Śani", "friend": "Budha", "relation": "friend" }, "statement": "Śani and Budha are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Śani", "friend": "Śukra", "relation": "friend" }, "statement": "Śani and Śukra are natural friends", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Śani", "friend": "Sūrya", "relation": "enemy" }, "statement": "Śani and Sūrya are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Śani", "friend": "Chandra", "relation": "enemy" }, "statement": "Śani and Chandra are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] },
+    { "template": "planetary_friendship", "params": { "graha": "Śani", "friend": "Maṅgala", "relation": "enemy" }, "statement": "Śani and Maṅgala are natural enemies", "assertions": [{ "tradition": "bphs", "source": "bphs", "pramana": "shabda" }] }
+  ],
+  "relations": [
+    { "kind": "rules", "src": "Sūrya", "dst": "Siṃha" },
+    { "kind": "rules", "src": "Chandra", "dst": "Karka" },
+    { "kind": "rules", "src": "Maṅgala", "dst": "Meṣa" },
+    { "kind": "rules", "src": "Maṅgala", "dst": "Vṛścika" },
+    { "kind": "rules", "src": "Budha", "dst": "Mithuna" },
+    { "kind": "rules", "src": "Budha", "dst": "Kanyā" },
+    { "kind": "rules", "src": "Guru", "dst": "Dhanus" },
+    { "kind": "rules", "src": "Guru", "dst": "Mīna" },
+    { "kind": "rules", "src": "Śukra", "dst": "Vṛṣabha" },
+    { "kind": "rules", "src": "Śukra", "dst": "Tulā" },
+    { "kind": "rules", "src": "Śani", "dst": "Makara" },
+    { "kind": "rules", "src": "Śani", "dst": "Kumbha" },
+
+    { "kind": "exalted_in", "src": "Sūrya", "dst": "Meṣa" },
+    { "kind": "exalted_in", "src": "Chandra", "dst": "Vṛṣabha" },
+    { "kind": "exalted_in", "src": "Maṅgala", "dst": "Makara" },
+    { "kind": "exalted_in", "src": "Budha", "dst": "Kanyā" },
+    { "kind": "exalted_in", "src": "Guru", "dst": "Karka" },
+    { "kind": "exalted_in", "src": "Śukra", "dst": "Mīna" },
+    { "kind": "exalted_in", "src": "Śani", "dst": "Tulā" },
+
+    { "kind": "debilitated_in", "src": "Sūrya", "dst": "Tulā" },
+    { "kind": "debilitated_in", "src": "Chandra", "dst": "Vṛścika" },
+    { "kind": "debilitated_in", "src": "Maṅgala", "dst": "Karka" },
+    { "kind": "debilitated_in", "src": "Budha", "dst": "Mīna" },
+    { "kind": "debilitated_in", "src": "Guru", "dst": "Makara" },
+    { "kind": "debilitated_in", "src": "Śukra", "dst": "Kanyā" },
+    { "kind": "debilitated_in", "src": "Śani", "dst": "Meṣa" },
+
+    { "kind": "natural_friend", "src": "Sūrya", "dst": "Chandra" },
+    { "kind": "natural_friend", "src": "Sūrya", "dst": "Maṅgala" },
+    { "kind": "natural_friend", "src": "Sūrya", "dst": "Guru" },
+    { "kind": "natural_enemy", "src": "Sūrya", "dst": "Śukra" },
+    { "kind": "natural_enemy", "src": "Sūrya", "dst": "Śani" },
+    { "kind": "natural_neutral", "src": "Sūrya", "dst": "Budha" },
+
+    { "kind": "natural_friend", "src": "Śani", "dst": "Budha" },
+    { "kind": "natural_friend", "src": "Śani", "dst": "Śukra" },
+    { "kind": "natural_enemy", "src": "Śani", "dst": "Sūrya" },
+    { "kind": "natural_enemy", "src": "Śani", "dst": "Chandra" },
+    { "kind": "natural_enemy", "src": "Śani", "dst": "Maṅgala" }
+  ]
+}
