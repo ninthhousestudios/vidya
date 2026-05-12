@@ -218,6 +218,7 @@ Key design choices:
   is a bug report. How to encode this as automated tests?
 - **Collaboration with domain experts.** Ruppel or other Sanskritists
   as advisors on rule encoding and pedagogical design?
+    yes...i want to make an mvp and then reach out to her and show it.
 
 ## References
 
