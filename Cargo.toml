@@ -49,3 +49,6 @@ tower-http = { version = "0.6", features = ["auth"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 sha2 = "0.11.0"
 jsonschema = "0.46"
+
+[dev-dependencies]
+serial_test = "3"
