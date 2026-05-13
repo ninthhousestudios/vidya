@@ -1,3 +1,4 @@
+use jsonschema::Validator;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -254,14 +255,18 @@ pub async fn handle(pool: &PgPool, args: LoadArgs) -> Result<LoadOutput> {
         }
     }
 
-    // Sources
+    // Sources (upsert on slug — sources are global, not domain-scoped)
     let mut source_map: std::collections::HashMap<String, Uuid> = std::collections::HashMap::new();
     for s in &payload.sources {
         let id = Uuid::now_v7();
         let row = sqlx::query_as::<_, db::SourceRow>(
-            "INSERT INTO sources (id, kind, reference, reliability) VALUES ($1, $2, $3, $4) RETURNING *",
+            "INSERT INTO sources (id, slug, kind, reference, reliability) \
+             VALUES ($1, $2, $3, $4, $5) \
+             ON CONFLICT (slug) DO UPDATE SET slug = sources.slug \
+             RETURNING *",
         )
         .bind(id)
+        .bind(&s.slug)
         .bind(&s.kind)
         .bind(&s.reference)
         .bind(s.reliability)
@@ -294,6 +299,40 @@ pub async fn handle(pool: &PgPool, args: LoadArgs) -> Result<LoadOutput> {
         .fetch_one(&mut *tx)
         .await?;
         entity_map.insert(e.name.clone(), row.id);
+    }
+
+    // Build validators from claim template param_schemas
+    let mut validators: std::collections::HashMap<String, Validator> =
+        std::collections::HashMap::new();
+    for ct in &payload.claim_templates {
+        if ct.param_schema.is_object() && !ct.param_schema.as_object().unwrap().is_empty() {
+            if let Ok(v) = Validator::new(&ct.param_schema) {
+                validators.insert(ct.slug.clone(), v);
+            }
+        }
+    }
+
+    // Validate all claim params before inserting any
+    for (i, c) in payload.claims.iter().enumerate() {
+        if let Some(validator) = validators.get(&c.template) {
+            if let Err(error) = validator.validate(&c.params) {
+                let path = error.instance_path().to_string();
+                let field = if path.is_empty() {
+                    "(root)".to_string()
+                } else {
+                    path
+                };
+                return Err(VidyaError::InvalidArgument {
+                    tool: "vidya_load".into(),
+                    argument: format!("claims[{i}].params"),
+                    constraint: format!(
+                        "must match template '{}' param_schema at {field}: {error}",
+                        c.template,
+                    ),
+                    received: c.params.to_string(),
+                });
+            }
+        }
     }
 
     // Claims + assertions

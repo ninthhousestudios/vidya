@@ -100,6 +100,7 @@ pub struct TraditionRow {
 #[derive(Debug, FromRow, Serialize)]
 pub struct SourceRow {
     pub id: Uuid,
+    pub slug: String,
     pub kind: String,
     pub reference: String,
     pub reliability: Option<f32>,
@@ -488,21 +489,55 @@ pub async fn upsert_tradition(
 
 pub async fn insert_source(
     pool: &PgPool,
+    slug: &str,
     kind: &str,
     reference: &str,
     reliability: Option<f32>,
 ) -> Result<SourceRow> {
     let id = Uuid::now_v7();
     let row = sqlx::query_as::<_, SourceRow>(
-        "INSERT INTO sources (id, kind, reference, reliability) \
-         VALUES ($1, $2, $3, $4) RETURNING *",
+        "INSERT INTO sources (id, slug, kind, reference, reliability) \
+         VALUES ($1, $2, $3, $4, $5) RETURNING *",
     )
     .bind(id)
+    .bind(slug)
     .bind(kind)
     .bind(reference)
     .bind(reliability)
     .fetch_one(pool)
     .await?;
+    Ok(row)
+}
+
+pub async fn upsert_source(
+    pool: &PgPool,
+    slug: &str,
+    kind: &str,
+    reference: &str,
+    reliability: Option<f32>,
+) -> Result<SourceRow> {
+    let id = Uuid::now_v7();
+    let row = sqlx::query_as::<_, SourceRow>(
+        "INSERT INTO sources (id, slug, kind, reference, reliability) \
+         VALUES ($1, $2, $3, $4, $5) \
+         ON CONFLICT (slug) DO UPDATE SET slug = sources.slug \
+         RETURNING *",
+    )
+    .bind(id)
+    .bind(slug)
+    .bind(kind)
+    .bind(reference)
+    .bind(reliability)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn get_source_by_slug(pool: &PgPool, slug: &str) -> Result<Option<SourceRow>> {
+    let row = sqlx::query_as::<_, SourceRow>("SELECT * FROM sources WHERE slug = $1")
+        .bind(slug)
+        .fetch_optional(pool)
+        .await?;
     Ok(row)
 }
 

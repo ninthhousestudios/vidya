@@ -82,7 +82,9 @@ pub async fn handle(pool: &PgPool, args: ClaimArgs) -> Result<ClaimOutput> {
             {
                 let tradition = db::upsert_tradition(pool, domain.id, &tradition_name, None).await?;
                 let source_kind = args.source_kind.as_deref().unwrap_or("text");
-                let source = db::insert_source(pool, source_kind, &source_ref, None).await?;
+                let source_slug = slug_from_ref(&source_ref);
+                let source =
+                    db::upsert_source(pool, &source_slug, source_kind, &source_ref, None).await?;
                 let pramana = args.pramana.as_deref().unwrap_or("shabda");
                 let confidence = args.confidence.unwrap_or(1.0);
                 let a = db::insert_assertion(
@@ -158,4 +160,21 @@ pub async fn handle(pool: &PgPool, args: ClaimArgs) -> Result<ClaimOutput> {
             received: other.into(),
         }),
     }
+}
+
+fn slug_from_ref(reference: &str) -> String {
+    reference
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
+        .collect::<String>()
+        .split('-')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
 }
