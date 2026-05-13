@@ -1546,3 +1546,247 @@ async fn query_cross_entity_predicate() {
 
     cleanup(&pool, slug).await;
 }
+
+#[tokio::test]
+#[serial]
+async fn query_all_modes_against_seeds() {
+    let pool = test_pool().await;
+
+    let vya_sources = &["ashtadhyayi", "shiva-sutras"];
+    let jyo_sources = &["bphs", "phala-dipika", "jataka-parijata", "saravali"];
+
+    cleanup(&pool, "vyakarana").await;
+    cleanup(&pool, "jyotish").await;
+    cleanup_sources(&pool, vya_sources).await;
+    cleanup_sources(&pool, jyo_sources).await;
+
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+    load_seed_file(&pool, Path::new("seeds/jyotish.json")).await;
+
+    // --- AC 1: entities by kind ---
+    let vowels = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "vyakarana".into(),
+            entity: None,
+            entity_kind: Some("varna".into()),
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("AC1: entities by kind");
+    let varna_entities = vowels.entities.unwrap();
+    assert!(varna_entities.len() > 10, "should have many varnas");
+
+    // --- AC 2: entities by name pattern ---
+    let pattern_result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "jyotish".into(),
+            entity: None,
+            entity_kind: None,
+            name_pattern: Some("Sū".into()),
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("AC2: name pattern");
+    let pattern_entities = pattern_result.entities.unwrap();
+    assert!(pattern_entities.iter().any(|e| e.name == "Sūrya"));
+
+    // --- AC 3: entities by attrs ---
+    let short_vowels = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "vyakarana".into(),
+            entity: None,
+            entity_kind: Some("varna".into()),
+            name_pattern: None,
+            attrs: Some(json!({ "class": "vowel", "short": true })),
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("AC3: attrs filter");
+    let sv = short_vowels.entities.unwrap();
+    assert!(sv.len() >= 4, "should have short vowels (a, i, u, ṛ, ḷ)");
+
+    // --- AC 4: claims for entity ---
+    let surya = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "jyotish".into(),
+            entity: Some("Sūrya".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: true,
+        },
+    )
+    .await
+    .expect("AC4: claims for entity");
+    let surya_ctx = surya.entity.unwrap();
+    assert!(!surya_ctx.claims.is_empty(), "Sūrya should have claims");
+
+    // --- AC 5: claims filtered by tradition ---
+    let panini_claims = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "vyakarana".into(),
+            entity: None,
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: Some("pāṇini".into()),
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: true,
+        },
+    )
+    .await
+    .expect("AC5: tradition filter");
+    let pc = panini_claims.claims.unwrap();
+    assert!(!pc.is_empty(), "should have pāṇini tradition claims");
+
+    // --- AC 6: claims filtered by template ---
+    let sandhi_claims = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "vyakarana".into(),
+            entity: None,
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: Some("sandhi_rule".into()),
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("AC6: template filter");
+    let sc = sandhi_claims.claims.unwrap();
+    assert!(sc.len() >= 10, "should have sandhi rules");
+
+    // --- AC 7: relation traversal by kind, depth=1 ---
+    let surya_exalt = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "jyotish".into(),
+            entity: Some("Sūrya".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: Some("exalted_in".into()),
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("AC7: relation kind filter");
+    let exalt_ctx = surya_exalt.entity.unwrap();
+    assert_eq!(exalt_ctx.relations.len(), 1, "Sūrya exalted in one rashi");
+    assert_eq!(exalt_ctx.relations[0].other_entity_name, "Meṣa");
+
+    // --- AC 9: provenance assertions ---
+    let surya_prov = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "jyotish".into(),
+            entity: Some("Sūrya".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: true,
+        },
+    )
+    .await
+    .expect("AC9: provenance");
+    let sp_ctx = surya_prov.entity.unwrap();
+    let has_assertions = sp_ctx.claims.iter().any(|c| {
+        c.assertions.as_ref().map_or(false, |a| !a.is_empty())
+    });
+    assert!(has_assertions, "Sūrya claims should have assertion provenance");
+
+    // --- AC 11: cross-entity predicate against jyotish ---
+    let exalted_grahas = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: "jyotish".into(),
+            entity: None,
+            entity_kind: Some("graha".into()),
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: Some("dignity".into()),
+            claim_params: Some(json!({ "dignity_type": "exaltation" })),
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("AC11: cross-entity predicate");
+    let eg = exalted_grahas.entities.unwrap();
+    assert!(eg.len() >= 7, "most grahas have exaltation");
+    let graha_names: Vec<&str> = eg.iter().map(|e| e.name.as_str()).collect();
+    assert!(graha_names.contains(&"Sūrya"), "Sūrya should be exalted");
+
+    cleanup(&pool, "jyotish").await;
+    cleanup(&pool, "vyakarana").await;
+    cleanup_sources(&pool, vya_sources).await;
+    cleanup_sources(&pool, jyo_sources).await;
+}

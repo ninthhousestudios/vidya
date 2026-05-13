@@ -81,7 +81,7 @@ impl VidyaServer {
         serde_json::to_string_pretty(&out).map_err(json_err)
     }
 
-    #[tool(description = "Flexible knowledge query. Requires domain slug. Optional: entity (lookup by name with relations/claims), tradition/pramana/claim_template filters, include_provenance flag.")]
+    #[tool(description = "Structured knowledge query. Requires domain. Modes: (1) entity lookup — entity name returns relations + claims with provenance; relation_kind and traverse_depth control graph walk. (2) entity search — entity_kind, name_pattern, attrs filter return matching entities. (3) cross-entity predicate — entity_kind + claim_template + claim_params finds entities linked to matching claims. (4) claim provenance — claim_id returns assertion chain + derivation chain. (5) domain claims — claim_template/tradition/pramana filters on all active claims.")]
     pub async fn vidya_query(
         &self,
         Parameters(args): Parameters<tools::QueryArgs>,
