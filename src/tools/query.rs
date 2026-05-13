@@ -141,35 +141,7 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
 
         let assertions = load_assertions_expanded(pool, claim.id, None, None).await?;
 
-        let derivation_rows = sqlx::query_as::<_, db::DerivationRow>(
-            "SELECT * FROM derivations WHERE conclusion_claim_id = $1 ORDER BY step_order",
-        )
-        .bind(claim.id)
-        .fetch_all(pool)
-        .await?;
-
-        let mut derivation_chain = Vec::new();
-        for d in derivation_rows {
-            let premise = sqlx::query_as::<_, db::ClaimRow>(
-                "SELECT * FROM claims WHERE id = $1",
-            )
-            .bind(d.premise_claim_id)
-            .fetch_one(pool)
-            .await?;
-
-            let premise_template_slug = sqlx::query_scalar::<_, String>(
-                "SELECT slug FROM claim_templates WHERE id = $1",
-            )
-            .bind(premise.template_id)
-            .fetch_one(pool)
-            .await?;
-
-            derivation_chain.push(DerivationStep {
-                step_order: d.step_order,
-                premise,
-                premise_template_slug,
-            });
-        }
+        let derivation_chain = load_derivation_chain(pool, claim.id).await?;
 
         return Ok(QueryOutput {
             domain: args.domain,
@@ -223,10 +195,10 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
             "SELECT DISTINCT e.* FROM entities e \
              JOIN entity_kinds ek ON e.kind_id = ek.id \
              JOIN claims c ON c.domain_id = e.domain_id AND c.status = 'active' \
-             AND c.params::text ILIKE '%' || e.name || '%' \
              JOIN claim_templates ct ON c.template_id = ct.id \
              WHERE e.domain_id = $1 AND ek.slug = $2 AND ct.slug = $3 \
              AND c.params @> $4 \
+             AND EXISTS (SELECT 1 FROM jsonb_each_text(c.params) kv WHERE kv.value = e.name) \
              ORDER BY e.name",
         )
         .bind(domain.id)
@@ -244,22 +216,42 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
             provenance: None,
         });
     } else if args.entity_kind.is_some() || args.name_pattern.is_some() || args.attrs.is_some() {
-        let mut entities = db::list_entities(pool, domain.id, args.entity_kind.as_deref()).await?;
-        if let Some(ref pattern) = args.name_pattern {
-            let pattern_lower = pattern.to_lowercase();
-            entities.retain(|e| e.name.to_lowercase().contains(&pattern_lower));
-        }
         if let Some(ref predicate) = args.attrs {
-            if let Some(pred_obj) = predicate.as_object() {
-                entities.retain(|e| {
-                    if let Some(attrs_obj) = e.attrs.as_object() {
-                        pred_obj.iter().all(|(k, v)| attrs_obj.get(k) == Some(v))
-                    } else {
-                        false
-                    }
+            if !predicate.is_object() {
+                return Err(VidyaError::InvalidArgument {
+                    tool: "vidya_query".into(),
+                    argument: "attrs".into(),
+                    constraint: "JSON object".into(),
+                    received: predicate.to_string(),
                 });
             }
         }
+
+        let entities = if let Some(ref predicate) = args.attrs {
+            sqlx::query_as::<_, db::EntityRow>(
+                "SELECT e.* FROM entities e \
+                 JOIN entity_kinds ek ON e.kind_id = ek.id \
+                 WHERE e.domain_id = $1 \
+                 AND ($2::text IS NULL OR ek.slug = $2) \
+                 AND e.attrs @> $3 \
+                 ORDER BY e.name",
+            )
+            .bind(domain.id)
+            .bind(args.entity_kind.as_deref())
+            .bind(predicate)
+            .fetch_all(pool)
+            .await?
+        } else {
+            db::list_entities(pool, domain.id, args.entity_kind.as_deref()).await?
+        };
+
+        let entities = if let Some(ref pattern) = args.name_pattern {
+            let pattern_lower = pattern.to_lowercase();
+            entities.into_iter().filter(|e| e.name.to_lowercase().contains(&pattern_lower)).collect()
+        } else {
+            entities
+        };
+
         return Ok(QueryOutput {
             domain: args.domain,
             entity: None,
@@ -398,7 +390,7 @@ async fn load_claims_for_entity(
         "SELECT c.* FROM claims c \
          LEFT JOIN claim_templates ct ON c.template_id = ct.id \
          WHERE c.domain_id = $1 AND c.status = 'active' \
-         AND c.params::text ILIKE '%' || $2 || '%' \
+         AND EXISTS (SELECT 1 FROM jsonb_each_text(c.params) kv WHERE kv.value = $2) \
          AND ($3::text IS NULL OR ct.slug = $3) \
          ORDER BY c.created_at",
     )
@@ -483,4 +475,54 @@ async fn load_assertions_expanded(
         });
     }
     Ok(expanded)
+}
+
+async fn load_derivation_chain(
+    pool: &PgPool,
+    root_claim_id: uuid::Uuid,
+) -> Result<Vec<DerivationStep>> {
+    use std::collections::HashSet;
+
+    let mut chain = Vec::new();
+    let mut visited = HashSet::new();
+    visited.insert(root_claim_id);
+    let mut queue = vec![root_claim_id];
+    let mut global_step = 0;
+
+    while let Some(conclusion_id) = queue.pop() {
+        let derivation_rows = sqlx::query_as::<_, db::DerivationRow>(
+            "SELECT * FROM derivations WHERE conclusion_claim_id = $1 ORDER BY step_order",
+        )
+        .bind(conclusion_id)
+        .fetch_all(pool)
+        .await?;
+
+        for d in derivation_rows {
+            let premise = sqlx::query_as::<_, db::ClaimRow>(
+                "SELECT * FROM claims WHERE id = $1",
+            )
+            .bind(d.premise_claim_id)
+            .fetch_one(pool)
+            .await?;
+
+            let premise_template_slug = sqlx::query_scalar::<_, String>(
+                "SELECT slug FROM claim_templates WHERE id = $1",
+            )
+            .bind(premise.template_id)
+            .fetch_one(pool)
+            .await?;
+
+            global_step += 1;
+            chain.push(DerivationStep {
+                step_order: global_step,
+                premise,
+                premise_template_slug,
+            });
+
+            if visited.insert(d.premise_claim_id) {
+                queue.push(d.premise_claim_id);
+            }
+        }
+    }
+    Ok(chain)
 }

@@ -1790,3 +1790,234 @@ async fn query_all_modes_against_seeds() {
     cleanup_sources(&pool, vya_sources).await;
     cleanup_sources(&pool, jyo_sources).await;
 }
+
+#[tokio::test]
+async fn cross_entity_predicate_no_false_match_short_names() {
+    let pool = test_pool().await;
+    let slug = "test-xpred-false";
+
+    cleanup(&pool, slug).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Cross-Entity False Match Test" },
+        "entity_kinds": [
+            { "slug": "varna", "schema": null }
+        ],
+        "claim_templates": [
+            { "slug": "classification", "param_schema": {} }
+        ],
+        "entities": [
+            { "kind": "varna", "name": "a", "attrs": {} },
+            { "kind": "varna", "name": "ka", "attrs": {} }
+        ],
+        "claims": [
+            { "template": "classification", "params": { "varna": "ka", "classification": "sparśa" }, "statement": "ka is sparśa" }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // "a" appears in JSON text ("sparśa", "classification", "varna") but is NOT a param value.
+    // Only "ka" is a param value, so only "ka" should match.
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: Some("varna".into()),
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: Some("classification".into()),
+            claim_params: Some(json!({ "classification": "sparśa" })),
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("cross-entity predicate");
+
+    let entities = result.entities.expect("should return entities");
+    let names: Vec<&str> = entities.iter().map(|e| e.name.as_str()).collect();
+    assert_eq!(names, vec!["ka"], "only 'ka' should match, not 'a'");
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn attrs_filter_rejects_non_object() {
+    let pool = test_pool().await;
+    let slug = "test-attrs-noobj";
+
+    cleanup(&pool, slug).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Attrs Non-Object Test" },
+        "entity_kinds": [
+            { "slug": "node", "schema": null }
+        ],
+        "entities": [
+            { "kind": "node", "name": "x", "attrs": {} }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: Some("node".into()),
+            name_pattern: None,
+            attrs: Some(json!("not-an-object")),
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await;
+
+    assert!(result.is_err(), "non-object attrs should return error");
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn derivation_chain_multi_level() {
+    let pool = test_pool().await;
+    let slug = "test-deriv-chain";
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, &["test-src-chain"]).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Derivation Chain Test" },
+        "entity_kinds": [],
+        "claim_templates": [
+            { "slug": "rule", "param_schema": {} }
+        ],
+        "traditions": [{ "name": "test-tradition" }],
+        "sources": [{ "slug": "test-src-chain", "kind": "text", "reference": "Test Source", "reliability": 1.0 }],
+        "claims": [
+            {
+                "template": "rule",
+                "params": { "name": "source-fact" },
+                "statement": "Source fact (no derivation)",
+                "tradition": "test-tradition",
+                "source": "test-src-chain",
+                "pramana": "pratyaksha",
+                "confidence": 1.0
+            }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    let source_claim = sqlx::query_as::<_, vidya::db::ClaimRow>(
+        "SELECT * FROM claims WHERE domain_id = (SELECT id FROM domains WHERE slug = $1) \
+         AND params @> '{\"name\": \"source-fact\"}'",
+    )
+    .bind(slug)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    let intermediate = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            template: Some("rule".into()),
+            params: Some(json!({ "name": "intermediate" })),
+            statement: Some("Intermediate derivation".into()),
+            status: Some("active".into()),
+            tradition: Some("test-tradition".into()),
+            source_ref: Some("test-src-chain".into()),
+            source_kind: None,
+            pramana: Some("anumana".into()),
+            confidence: Some(0.9),
+            id: None,
+        },
+    )
+    .await
+    .expect("create intermediate claim");
+    let intermediate_id = intermediate.claim.as_ref().unwrap().id;
+
+    let conclusion = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            template: Some("rule".into()),
+            params: Some(json!({ "name": "conclusion" })),
+            statement: Some("Final conclusion".into()),
+            status: Some("active".into()),
+            tradition: Some("test-tradition".into()),
+            source_ref: Some("test-src-chain".into()),
+            source_kind: None,
+            pramana: Some("anumana".into()),
+            confidence: Some(0.8),
+            id: None,
+        },
+    )
+    .await
+    .expect("create conclusion claim");
+    let conclusion_id = conclusion.claim.as_ref().unwrap().id;
+
+    // Wire: conclusion <- intermediate <- source
+    vidya::db::insert_derivation(&pool, conclusion_id, intermediate_id, 1)
+        .await
+        .expect("derivation: conclusion <- intermediate");
+    vidya::db::insert_derivation(&pool, intermediate_id, source_claim.id, 1)
+        .await
+        .expect("derivation: intermediate <- source");
+
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: Some(conclusion_id.to_string()),
+            include_provenance: true,
+        },
+    )
+    .await
+    .expect("query provenance");
+
+    let prov = result.provenance.expect("should have provenance");
+    assert_eq!(prov.claim.id, conclusion_id);
+    assert_eq!(
+        prov.derivation_chain.len(),
+        2,
+        "should trace through intermediate to source: got {:?}",
+        prov.derivation_chain.iter().map(|d| d.premise.statement.as_str()).collect::<Vec<_>>()
+    );
+
+    let statements: Vec<&str> = prov.derivation_chain.iter().map(|d| d.premise.statement.as_str()).collect();
+    assert!(statements.contains(&"Intermediate derivation"), "should include intermediate");
+    assert!(statements.contains(&"Source fact (no derivation)"), "should include source fact");
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, &["test-src-chain"]).await;
+}
