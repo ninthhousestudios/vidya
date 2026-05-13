@@ -1,6 +1,7 @@
 [package]
 name = "vidya"
 version = "0.1.0"
+default-run = "vidya"
 edition = "2024"
 description = "Structured knowledge graph with reasoning — domain knowledge as cited, queryable, derivable structure."
 license = "MPL-2.0"

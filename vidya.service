@@ -1,0 +1,12 @@
+[Unit]
+Description=vidya MCP server
+After=postgresql.service
+
+[Service]
+ExecStart=%h/.cargo/bin/vidya --http --auth-token-file %h/.vidya/auth-token
+Restart=always
+Environment=RUST_LOG=info
+Environment=DATABASE_URL=postgresql://localhost/vidya
+
+[Install]
+WantedBy=default.target
