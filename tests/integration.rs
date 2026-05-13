@@ -856,6 +856,8 @@ async fn full_integration_both_seeds() {
             domain: "jyotish".into(),
             entity: Some("Sūrya".into()),
             entity_kind: None,
+            name_pattern: None,
+            attrs: None,
             tradition: None,
             pramana: None,
             claim_template: None,
@@ -921,4 +923,198 @@ async fn full_integration_both_seeds() {
     cleanup(&pool, "vyakarana").await;
     cleanup_sources(&pool, vya_sources).await;
     cleanup_sources(&pool, jyo_sources).await;
+}
+
+// --- vidya_query expansion tests ---
+
+#[tokio::test]
+async fn query_entities_by_kind() {
+    let pool = test_pool().await;
+    let slug = "test-query-kind";
+
+    cleanup(&pool, slug).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Query Kind Test" },
+        "entity_kinds": [
+            { "slug": "vowel", "schema": null },
+            { "slug": "consonant", "schema": null }
+        ],
+        "entities": [
+            { "kind": "vowel", "name": "a", "attrs": { "class": "short" } },
+            { "kind": "vowel", "name": "ā", "attrs": { "class": "long" } },
+            { "kind": "vowel", "name": "i", "attrs": { "class": "short" } },
+            { "kind": "consonant", "name": "ka", "attrs": {} },
+            { "kind": "consonant", "name": "kha", "attrs": {} }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: Some("vowel".into()),
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("query by kind");
+
+    let entities = result.entities.expect("should return entities list");
+    assert_eq!(entities.len(), 3, "should find 3 vowels");
+    assert!(entities.iter().all(|e| e.name == "a" || e.name == "ā" || e.name == "i"));
+
+    // Verify single-entity mode still works
+    assert!(result.entity.is_none());
+    assert!(result.claims.is_none());
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn query_entities_by_name_pattern() {
+    let pool = test_pool().await;
+    let slug = "test-query-pattern";
+
+    cleanup(&pool, slug).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Query Pattern Test" },
+        "entity_kinds": [
+            { "slug": "varna", "schema": null }
+        ],
+        "entities": [
+            { "kind": "varna", "name": "ka", "attrs": {} },
+            { "kind": "varna", "name": "kha", "attrs": {} },
+            { "kind": "varna", "name": "ga", "attrs": {} },
+            { "kind": "varna", "name": "gha", "attrs": {} }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // Substring match: "kh" should find "kha"
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: None,
+            name_pattern: Some("kh".into()),
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("query by pattern");
+
+    let entities = result.entities.expect("should return entities list");
+    assert_eq!(entities.len(), 1);
+    assert_eq!(entities[0].name, "kha");
+
+    // Pattern "a" matches "ka", "kha", "ga", "gha" (all contain 'a')
+    let result2 = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: None,
+            name_pattern: Some("a".into()),
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("query by broad pattern");
+
+    let entities2 = result2.entities.expect("should return entities list");
+    assert_eq!(entities2.len(), 4);
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn query_entities_by_attrs() {
+    let pool = test_pool().await;
+    let slug = "test-query-attrs";
+
+    cleanup(&pool, slug).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Query Attrs Test" },
+        "entity_kinds": [
+            { "slug": "vowel", "schema": null }
+        ],
+        "entities": [
+            { "kind": "vowel", "name": "a", "attrs": { "class": "short", "type": "simple" } },
+            { "kind": "vowel", "name": "ā", "attrs": { "class": "long", "type": "simple" } },
+            { "kind": "vowel", "name": "e", "attrs": { "class": "long", "type": "guṇa" } },
+            { "kind": "vowel", "name": "ai", "attrs": { "class": "long", "type": "vṛddhi" } }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // Filter by single attr: class=short
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: Some("vowel".into()),
+            name_pattern: None,
+            attrs: Some(json!({ "class": "short" })),
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("query by attrs");
+
+    let entities = result.entities.expect("should return entities list");
+    assert_eq!(entities.len(), 1);
+    assert_eq!(entities[0].name, "a");
+
+    // Filter by multiple attrs: class=long AND type=guṇa
+    let result2 = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: Some("vowel".into()),
+            name_pattern: None,
+            attrs: Some(json!({ "class": "long", "type": "guṇa" })),
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("query by multiple attrs");
+
+    let entities2 = result2.entities.expect("should return entities list");
+    assert_eq!(entities2.len(), 1);
+    assert_eq!(entities2[0].name, "e");
+
+    cleanup(&pool, slug).await;
 }

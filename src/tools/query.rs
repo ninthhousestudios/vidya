@@ -13,6 +13,10 @@ pub struct QueryArgs {
     pub entity: Option<String>,
     /// Filter by entity kind slug
     pub entity_kind: Option<String>,
+    /// Entity name pattern (substring match, case-insensitive)
+    pub name_pattern: Option<String>,
+    /// Filter entities by attribute predicates (jsonb containment, e.g. {"class": "short"})
+    pub attrs: Option<serde_json::Value>,
     /// Filter claims by tradition name
     pub tradition: Option<String>,
     /// Filter assertions by pramana type
@@ -33,6 +37,8 @@ pub struct QueryOutput {
     pub domain: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub entity: Option<EntityWithContext>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub entities: Option<Vec<db::EntityRow>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub claims: Option<Vec<ClaimWithProvenance>>,
 }
@@ -102,8 +108,32 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
                 relations,
                 claims,
             }),
+            entities: None,
             claims: None,
         })
+    } else if args.entity_kind.is_some() || args.name_pattern.is_some() || args.attrs.is_some() {
+        let mut entities = db::list_entities(pool, domain.id, args.entity_kind.as_deref()).await?;
+        if let Some(ref pattern) = args.name_pattern {
+            let pattern_lower = pattern.to_lowercase();
+            entities.retain(|e| e.name.to_lowercase().contains(&pattern_lower));
+        }
+        if let Some(ref predicate) = args.attrs {
+            if let Some(pred_obj) = predicate.as_object() {
+                entities.retain(|e| {
+                    if let Some(attrs_obj) = e.attrs.as_object() {
+                        pred_obj.iter().all(|(k, v)| attrs_obj.get(k) == Some(v))
+                    } else {
+                        false
+                    }
+                });
+            }
+        }
+        return Ok(QueryOutput {
+            domain: args.domain,
+            entity: None,
+            entities: Some(entities),
+            claims: None,
+        });
     } else {
         let claims = db::list_claims(
             pool,
@@ -146,6 +176,7 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
         Ok(QueryOutput {
             domain: args.domain,
             entity: None,
+            entities: None,
             claims: Some(result),
         })
     }
