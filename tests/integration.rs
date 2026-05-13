@@ -604,6 +604,31 @@ async fn relation_create_and_list() {
     let rels = listed.relations.unwrap();
     assert_eq!(rels.len(), 1);
 
+    // Reject wrong entity kind: "rules" is graha→rashi, try rashi→rashi
+    let err = tools::relation::handle(
+        &pool,
+        tools::RelationArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            kind: Some("rules".into()),
+            src_entity: Some("Siṃha".into()),
+            dst_entity: Some("Meṣa".into()),
+            src_domain: None,
+            dst_domain: None,
+            attrs: None,
+            id: None,
+            entity: None,
+            entity_domain: None,
+        },
+    )
+    .await
+    .expect_err("should reject wrong src entity kind");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("src_entity") || msg.contains("declared kind"),
+        "error should mention kind mismatch: {msg}"
+    );
+
     cleanup(&pool, slug).await;
 }
 

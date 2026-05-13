@@ -75,26 +75,34 @@ pub async fn handle(pool: &PgPool, args: ClaimArgs) -> Result<ClaimOutput> {
                 })?;
             let params = args.params.unwrap_or(serde_json::json!({}));
 
-            if template.param_schema.is_object()
-                && !template.param_schema.as_object().unwrap().is_empty()
+            if !template.param_schema.is_null()
+                && template.param_schema != serde_json::json!({})
             {
-                if let Ok(validator) = Validator::new(&template.param_schema) {
-                    if let Err(error) = validator.validate(&params) {
-                        let path = error.instance_path().to_string();
-                        let field = if path.is_empty() {
-                            "(root)".to_string()
-                        } else {
-                            path
-                        };
-                        return Err(VidyaError::InvalidArgument {
-                            tool: "vidya_claim".into(),
-                            argument: "params".into(),
-                            constraint: format!(
-                                "must match template '{template_slug}' param_schema at {field}: {error}",
-                            ),
-                            received: params.to_string(),
-                        });
+                let validator = Validator::new(&template.param_schema).map_err(|e| {
+                    VidyaError::InvalidArgument {
+                        tool: "vidya_claim".into(),
+                        argument: "template.param_schema".into(),
+                        constraint: format!(
+                            "template '{template_slug}' has invalid param_schema: {e}",
+                        ),
+                        received: template.param_schema.to_string(),
                     }
+                })?;
+                if let Err(error) = validator.validate(&params) {
+                    let path = error.instance_path().to_string();
+                    let field = if path.is_empty() {
+                        "(root)".to_string()
+                    } else {
+                        path
+                    };
+                    return Err(VidyaError::InvalidArgument {
+                        tool: "vidya_claim".into(),
+                        argument: "params".into(),
+                        constraint: format!(
+                            "must match template '{template_slug}' param_schema at {field}: {error}",
+                        ),
+                        received: params.to_string(),
+                    });
                 }
             }
 
@@ -198,14 +206,18 @@ pub async fn handle(pool: &PgPool, args: ClaimArgs) -> Result<ClaimOutput> {
                 received: "null".into(),
             })?;
 
-            let current = sqlx::query_as::<_, db::ClaimRow>("SELECT * FROM claims WHERE id = $1")
-                .bind(id)
-                .fetch_optional(pool)
-                .await?
-                .ok_or_else(|| VidyaError::NotFound {
-                    tool: "vidya_claim".into(),
-                    kind: "claim".into(),
-                })?;
+            // Fetch current claim scoped by domain (fix #2: cross-domain boundary)
+            let current = sqlx::query_as::<_, db::ClaimRow>(
+                "SELECT * FROM claims WHERE id = $1 AND domain_id = $2",
+            )
+            .bind(id)
+            .bind(domain.id)
+            .fetch_optional(pool)
+            .await?
+            .ok_or_else(|| VidyaError::NotFound {
+                tool: "vidya_claim".into(),
+                kind: "claim".into(),
+            })?;
 
             let allowed = matches!(
                 (current.status.as_str(), new_status.as_str()),
@@ -223,7 +235,22 @@ pub async fn handle(pool: &PgPool, args: ClaimArgs) -> Result<ClaimOutput> {
                 });
             }
 
-            let claim = db::update_claim_status(pool, id, &new_status).await?;
+            // Atomic conditional update (fix #1: race condition)
+            let claim = db::update_claim_status(
+                pool,
+                id,
+                domain.id,
+                &current.status,
+                &new_status,
+            )
+            .await?
+            .ok_or_else(|| VidyaError::InvalidArgument {
+                tool: "vidya_claim".into(),
+                argument: "status".into(),
+                constraint: "status was concurrently modified".into(),
+                received: new_status,
+            })?;
+
             Ok(ClaimOutput {
                 action: "updated".into(),
                 claim: Some(claim),

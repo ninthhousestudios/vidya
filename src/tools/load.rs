@@ -305,10 +305,18 @@ pub async fn handle(pool: &PgPool, args: LoadArgs) -> Result<LoadOutput> {
     let mut validators: std::collections::HashMap<String, Validator> =
         std::collections::HashMap::new();
     for ct in &payload.claim_templates {
-        if ct.param_schema.is_object() && !ct.param_schema.as_object().unwrap().is_empty() {
-            if let Ok(v) = Validator::new(&ct.param_schema) {
-                validators.insert(ct.slug.clone(), v);
-            }
+        if !ct.param_schema.is_null()
+            && ct.param_schema != serde_json::json!({})
+        {
+            let v = Validator::new(&ct.param_schema).map_err(|e| {
+                VidyaError::InvalidArgument {
+                    tool: "vidya_load".into(),
+                    argument: format!("claim_templates[{}].param_schema", ct.slug),
+                    constraint: format!("invalid JSON Schema: {e}"),
+                    received: ct.param_schema.to_string(),
+                }
+            })?;
+            validators.insert(ct.slug.clone(), v);
         }
     }
 

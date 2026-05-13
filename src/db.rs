@@ -417,14 +417,20 @@ pub async fn list_claims(
 pub async fn update_claim_status(
     pool: &PgPool,
     id: Uuid,
+    domain_id: Uuid,
+    expected_status: &str,
     new_status: &str,
-) -> Result<ClaimRow> {
+) -> Result<Option<ClaimRow>> {
     let row = sqlx::query_as::<_, ClaimRow>(
-        "UPDATE claims SET status = $2 WHERE id = $1 RETURNING *",
+        "UPDATE claims SET status = $3 \
+         WHERE id = $1 AND domain_id = $2 AND status = $4 \
+         RETURNING *",
     )
     .bind(id)
+    .bind(domain_id)
     .bind(new_status)
-    .fetch_one(pool)
+    .bind(expected_status)
+    .fetch_optional(pool)
     .await?;
     Ok(row)
 }

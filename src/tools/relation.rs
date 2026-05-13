@@ -112,6 +112,31 @@ pub async fn handle(pool: &PgPool, args: RelationArgs) -> Result<RelationOutput>
                     kind: format!("entity '{dst_name}'"),
                 })?;
 
+            if let Some(expected) = kind.src_kind_id {
+                if src.kind_id != expected {
+                    return Err(VidyaError::InvalidArgument {
+                        tool: "vidya_relation".into(),
+                        argument: "src_entity".into(),
+                        constraint: format!(
+                            "relation_kind '{kind_slug}' requires src entity of the declared kind",
+                        ),
+                        received: src_name,
+                    });
+                }
+            }
+            if let Some(expected) = kind.dst_kind_id {
+                if dst.kind_id != expected {
+                    return Err(VidyaError::InvalidArgument {
+                        tool: "vidya_relation".into(),
+                        argument: "dst_entity".into(),
+                        constraint: format!(
+                            "relation_kind '{kind_slug}' requires dst entity of the declared kind",
+                        ),
+                        received: dst_name,
+                    });
+                }
+            }
+
             let attrs = args.attrs.unwrap_or(serde_json::json!({}));
             let relation =
                 db::insert_relation(pool, domain.id, kind.id, src.id, dst.id, attrs).await?;
