@@ -214,6 +214,21 @@ pub async fn insert_relation_kind(
     Ok(row)
 }
 
+pub async fn get_relation_kind(
+    pool: &PgPool,
+    domain_id: Uuid,
+    slug: &str,
+) -> Result<Option<RelationKindRow>> {
+    let row = sqlx::query_as::<_, RelationKindRow>(
+        "SELECT * FROM relation_kinds WHERE domain_id = $1 AND slug = $2",
+    )
+    .bind(domain_id)
+    .bind(slug)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
 // -- Claim template CRUD --
 
 pub async fn insert_claim_template(
@@ -397,6 +412,21 @@ pub async fn list_claims(
         .await?
     };
     Ok(rows)
+}
+
+pub async fn update_claim_status(
+    pool: &PgPool,
+    id: Uuid,
+    new_status: &str,
+) -> Result<ClaimRow> {
+    let row = sqlx::query_as::<_, ClaimRow>(
+        "UPDATE claims SET status = $2 WHERE id = $1 RETURNING *",
+    )
+    .bind(id)
+    .bind(new_status)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
 }
 
 // -- Relation CRUD --

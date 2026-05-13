@@ -1,3 +1,4 @@
+use jsonschema::Validator;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -7,7 +8,7 @@ use crate::error::{Result, VidyaError};
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ClaimArgs {
-    /// Action: "create", "get", or "list"
+    /// Action: "create", "get", "list", or "update"
     pub action: String,
     /// Domain slug
     pub domain: String,
@@ -73,6 +74,30 @@ pub async fn handle(pool: &PgPool, args: ClaimArgs) -> Result<ClaimOutput> {
                     kind: format!("claim_template '{template_slug}'"),
                 })?;
             let params = args.params.unwrap_or(serde_json::json!({}));
+
+            if template.param_schema.is_object()
+                && !template.param_schema.as_object().unwrap().is_empty()
+            {
+                if let Ok(validator) = Validator::new(&template.param_schema) {
+                    if let Err(error) = validator.validate(&params) {
+                        let path = error.instance_path().to_string();
+                        let field = if path.is_empty() {
+                            "(root)".to_string()
+                        } else {
+                            path
+                        };
+                        return Err(VidyaError::InvalidArgument {
+                            tool: "vidya_claim".into(),
+                            argument: "params".into(),
+                            constraint: format!(
+                                "must match template '{template_slug}' param_schema at {field}: {error}",
+                            ),
+                            received: params.to_string(),
+                        });
+                    }
+                }
+            }
+
             let status = args.status.as_deref().unwrap_or("active");
             let claim =
                 db::insert_claim(pool, domain.id, template.id, params, status, &statement).await?;
@@ -153,10 +178,63 @@ pub async fn handle(pool: &PgPool, args: ClaimArgs) -> Result<ClaimOutput> {
                 claims: Some(claims),
             })
         }
+        "update" => {
+            let id_str = args.id.ok_or_else(|| VidyaError::InvalidArgument {
+                tool: "vidya_claim".into(),
+                argument: "id".into(),
+                constraint: "required for update".into(),
+                received: "null".into(),
+            })?;
+            let id: uuid::Uuid = id_str.parse().map_err(|_| VidyaError::InvalidArgument {
+                tool: "vidya_claim".into(),
+                argument: "id".into(),
+                constraint: "valid UUID".into(),
+                received: id_str,
+            })?;
+            let new_status = args.status.ok_or_else(|| VidyaError::InvalidArgument {
+                tool: "vidya_claim".into(),
+                argument: "status".into(),
+                constraint: "required for update".into(),
+                received: "null".into(),
+            })?;
+
+            let current = sqlx::query_as::<_, db::ClaimRow>("SELECT * FROM claims WHERE id = $1")
+                .bind(id)
+                .fetch_optional(pool)
+                .await?
+                .ok_or_else(|| VidyaError::NotFound {
+                    tool: "vidya_claim".into(),
+                    kind: "claim".into(),
+                })?;
+
+            let allowed = matches!(
+                (current.status.as_str(), new_status.as_str()),
+                ("proposed", "active") | ("proposed", "historical") | ("active", "historical")
+            );
+            if !allowed {
+                return Err(VidyaError::InvalidArgument {
+                    tool: "vidya_claim".into(),
+                    argument: "status".into(),
+                    constraint: format!(
+                        "transition from '{}' to '{new_status}' is not allowed",
+                        current.status,
+                    ),
+                    received: new_status,
+                });
+            }
+
+            let claim = db::update_claim_status(pool, id, &new_status).await?;
+            Ok(ClaimOutput {
+                action: "updated".into(),
+                claim: Some(claim),
+                assertion: None,
+                claims: None,
+            })
+        }
         other => Err(VidyaError::InvalidArgument {
             tool: "vidya_claim".into(),
             argument: "action".into(),
-            constraint: "must be create, get, or list".into(),
+            constraint: "must be create, get, list, or update".into(),
             received: other.into(),
         }),
     }

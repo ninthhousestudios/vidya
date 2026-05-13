@@ -59,12 +59,23 @@ impl VidyaServer {
         serde_json::to_string_pretty(&out).map_err(json_err)
     }
 
-    #[tool(description = "Claim CRUD. Actions: create (domain+template+params+statement, optional tradition+source for inline assertion), get (id), list (domain, optional template/status filter).")]
+    #[tool(description = "Claim CRUD. Actions: create (domain+template+params+statement, optional tradition+source for inline assertion), get (id), list (domain, optional template/status filter), update (id+status — enforces valid transitions: proposed→active, proposed→historical, active→historical).")]
     pub async fn vidya_claim(
         &self,
         Parameters(args): Parameters<tools::ClaimArgs>,
     ) -> Result<String, ErrorData> {
         let out = tools::claim::handle(&self.pool, args)
+            .await
+            .map_err(to_error_data)?;
+        serde_json::to_string_pretty(&out).map_err(json_err)
+    }
+
+    #[tool(description = "Relation CRUD. Actions: create (domain+kind+src_entity+dst_entity, optional src_domain/dst_domain for cross-domain), get (id), list (entity — returns all relations involving that entity, optional entity_domain).")]
+    pub async fn vidya_relation(
+        &self,
+        Parameters(args): Parameters<tools::RelationArgs>,
+    ) -> Result<String, ErrorData> {
+        let out = tools::relation::handle(&self.pool, args)
             .await
             .map_err(to_error_data)?;
         serde_json::to_string_pretty(&out).map_err(json_err)
@@ -112,8 +123,8 @@ impl ServerHandler for VidyaServer {
                 "vidya v0.1.0 \u{2014} structured knowledge graph with reasoning. \
                  Three-layer model: ontology (entity_kinds, relation_kinds, claim_templates), \
                  facts (entities, claims, relations), epistemology (traditions, sources, \
-                 assertions with pramana). Seven tools: vidya_health, vidya_domain, \
-                 vidya_entity, vidya_claim, vidya_query, vidya_load, vidya_derive.",
+                 assertions with pramana). Eight tools: vidya_health, vidya_domain, \
+                 vidya_entity, vidya_claim, vidya_relation, vidya_query, vidya_load, vidya_derive.",
             )
     }
 }

@@ -267,3 +267,339 @@ async fn load_rejects_invalid_claim_params() {
 
     cleanup(&pool, slug).await;
 }
+
+#[tokio::test]
+async fn claim_create_rejects_invalid_params() {
+    let pool = test_pool().await;
+    let slug = "test-claim-validation";
+
+    cleanup(&pool, slug).await;
+
+    // Setup: load a domain with a claim_template that has param_schema
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Claim Validation Test" },
+        "entity_kinds": [],
+        "claim_templates": [
+            {
+                "slug": "typed_rule",
+                "param_schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": { "type": "string" },
+                        "count": { "type": "integer" }
+                    },
+                    "required": ["name", "count"]
+                }
+            }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load should succeed");
+
+    // Act: create a claim with invalid params (count should be integer, not string)
+    let err = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            template: Some("typed_rule".into()),
+            params: Some(json!({ "name": "test", "count": "not-a-number" })),
+            statement: Some("bad claim".into()),
+            status: None,
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: None,
+        },
+    )
+    .await
+    .expect_err("should reject invalid params");
+
+    let msg = err.to_string();
+    assert!(
+        msg.contains("count"),
+        "error should mention the bad field: {msg}"
+    );
+
+    // Also verify valid params succeed
+    let ok = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            template: Some("typed_rule".into()),
+            params: Some(json!({ "name": "test", "count": 42 })),
+            statement: Some("good claim".into()),
+            status: None,
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: None,
+        },
+    )
+    .await
+    .expect("valid params should succeed");
+
+    assert_eq!(ok.action, "created");
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn claim_status_transitions() {
+    let pool = test_pool().await;
+    let slug = "test-status-transitions";
+
+    cleanup(&pool, slug).await;
+
+    // Setup: domain with a claim_template
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Status Transition Test" },
+        "entity_kinds": [],
+        "claim_templates": [
+            { "slug": "rule", "param_schema": {} }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // Create a claim with status "proposed"
+    let created = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            template: Some("rule".into()),
+            params: Some(json!({})),
+            statement: Some("test claim".into()),
+            status: Some("proposed".into()),
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: None,
+        },
+    )
+    .await
+    .expect("create claim");
+    let claim_id = created.claim.unwrap().id.to_string();
+
+    // proposed → active: allowed
+    let updated = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "update".into(),
+            domain: slug.into(),
+            template: None,
+            params: None,
+            statement: None,
+            status: Some("active".into()),
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: Some(claim_id.clone()),
+        },
+    )
+    .await
+    .expect("proposed → active should succeed");
+    assert_eq!(updated.claim.as_ref().unwrap().status, "active");
+    assert_eq!(updated.action, "updated");
+
+    // active → historical: allowed
+    let updated2 = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "update".into(),
+            domain: slug.into(),
+            template: None,
+            params: None,
+            statement: None,
+            status: Some("historical".into()),
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: Some(claim_id.clone()),
+        },
+    )
+    .await
+    .expect("active → historical should succeed");
+    assert_eq!(updated2.claim.as_ref().unwrap().status, "historical");
+
+    // historical → anything: NOT allowed
+    let err = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "update".into(),
+            domain: slug.into(),
+            template: None,
+            params: None,
+            statement: None,
+            status: Some("active".into()),
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: Some(claim_id.clone()),
+        },
+    )
+    .await
+    .expect_err("historical → active should fail");
+    let msg = err.to_string();
+    assert!(msg.contains("historical"), "error should mention current status: {msg}");
+
+    // Create another claim and test active → proposed: NOT allowed
+    let created2 = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            template: Some("rule".into()),
+            params: Some(json!({"x": 1})),
+            statement: Some("another claim".into()),
+            status: Some("active".into()),
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: None,
+        },
+    )
+    .await
+    .expect("create second claim");
+    let claim2_id = created2.claim.unwrap().id.to_string();
+
+    let err2 = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "update".into(),
+            domain: slug.into(),
+            template: None,
+            params: None,
+            statement: None,
+            status: Some("proposed".into()),
+            tradition: None,
+            source_ref: None,
+            source_kind: None,
+            pramana: None,
+            confidence: None,
+            id: Some(claim2_id),
+        },
+    )
+    .await
+    .expect_err("active → proposed should fail");
+    let msg2 = err2.to_string();
+    assert!(msg2.contains("active"), "error should mention current status: {msg2}");
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn relation_create_and_list() {
+    let pool = test_pool().await;
+    let slug = "test-relations";
+
+    cleanup(&pool, slug).await;
+
+    // Setup: domain with entity_kinds, relation_kinds, and entities
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Relation Test" },
+        "entity_kinds": [
+            { "slug": "graha", "schema": null },
+            { "slug": "rashi", "schema": null }
+        ],
+        "relation_kinds": [
+            { "slug": "rules", "src_kind": "graha", "dst_kind": "rashi" }
+        ],
+        "entities": [
+            { "kind": "graha", "name": "Sūrya", "attrs": {} },
+            { "kind": "rashi", "name": "Siṃha", "attrs": {} },
+            { "kind": "rashi", "name": "Meṣa", "attrs": {} }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // Create a relation
+    let created = tools::relation::handle(
+        &pool,
+        tools::RelationArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            kind: Some("rules".into()),
+            src_entity: Some("Sūrya".into()),
+            dst_entity: Some("Siṃha".into()),
+            src_domain: None,
+            dst_domain: None,
+            attrs: None,
+            id: None,
+            entity: None,
+            entity_domain: None,
+        },
+    )
+    .await
+    .expect("create relation");
+    assert_eq!(created.action, "created");
+    let rel = created.relation.unwrap();
+    let rel_id = rel.id.to_string();
+
+    // Get by ID
+    let got = tools::relation::handle(
+        &pool,
+        tools::RelationArgs {
+            action: "get".into(),
+            domain: slug.into(),
+            kind: None,
+            src_entity: None,
+            dst_entity: None,
+            src_domain: None,
+            dst_domain: None,
+            attrs: None,
+            id: Some(rel_id),
+            entity: None,
+            entity_domain: None,
+        },
+    )
+    .await
+    .expect("get relation");
+    assert_eq!(got.action, "found");
+    assert_eq!(got.relation.unwrap().id, rel.id);
+
+    // List relations for Sūrya
+    let listed = tools::relation::handle(
+        &pool,
+        tools::RelationArgs {
+            action: "list".into(),
+            domain: slug.into(),
+            kind: None,
+            src_entity: None,
+            dst_entity: None,
+            src_domain: None,
+            dst_domain: None,
+            attrs: None,
+            id: None,
+            entity: Some("Sūrya".into()),
+            entity_domain: None,
+        },
+    )
+    .await
+    .expect("list relations");
+    assert_eq!(listed.action, "listed");
+    let rels = listed.relations.unwrap();
+    assert_eq!(rels.len(), 1);
+
+    cleanup(&pool, slug).await;
+}
