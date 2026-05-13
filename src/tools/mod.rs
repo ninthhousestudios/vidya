@@ -1,3 +1,4 @@
+pub mod analyze;
 pub mod claim;
 pub mod derive;
 pub mod domain;
@@ -7,6 +8,7 @@ pub mod load;
 pub mod query;
 pub mod relation;
 
+pub use analyze::AnalyzeArgs;
 pub use claim::ClaimArgs;
 pub use derive::DeriveArgs;
 pub use domain::DomainArgs;

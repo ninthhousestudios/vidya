@@ -23,17 +23,10 @@ impl EngineStrategy for VyakaranaSandhiStrategy {
 
     fn analyze<'a>(
         &'a self,
-        _pool: &'a PgPool,
-        _request: &'a AnalyzeRequest,
+        pool: &'a PgPool,
+        request: &'a AnalyzeRequest,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<AnalysisCandidate>>> + Send + 'a>> {
-        Box::pin(async {
-            Err(VidyaError::InvalidArgument {
-                tool: "vidya_analyze".into(),
-                argument: "operation".into(),
-                constraint: "analyze not yet implemented for sandhi".into(),
-                received: "sandhi".into(),
-            })
-        })
+        Box::pin(analyze_sandhi(pool, request))
     }
 }
 
@@ -41,6 +34,11 @@ impl EngineStrategy for VyakaranaSandhiStrategy {
 struct SandhiInput {
     first: String,
     second: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct AnalyzeInput {
+    form: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -149,4 +147,79 @@ async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<DeriveR
         }),
         trace,
     })
+}
+
+async fn analyze_sandhi(pool: &PgPool, request: &AnalyzeRequest) -> Result<Vec<AnalysisCandidate>> {
+    let input: AnalyzeInput =
+        serde_json::from_value(request.input.clone()).map_err(|e| VidyaError::InvalidArgument {
+            tool: "vidya_analyze".into(),
+            argument: "input".into(),
+            constraint: "requires {form} field".into(),
+            received: e.to_string(),
+        })?;
+
+    let rules = sqlx::query_as::<_, ClaimRow>(
+        "SELECT c.* FROM claims c \
+         JOIN claim_templates ct ON c.template_id = ct.id \
+         WHERE c.domain_id = $1 AND ct.slug = 'sandhi_rule' AND c.status = 'active' \
+         ORDER BY c.created_at",
+    )
+    .bind(request.domain_id)
+    .fetch_all(pool)
+    .await?;
+
+    let parsed_rules: Vec<(SandhiParams, &ClaimRow)> = rules
+        .iter()
+        .filter_map(|rule| {
+            serde_json::from_value::<SandhiParams>(rule.params.clone())
+                .ok()
+                .map(|p| (p, rule))
+        })
+        .collect();
+
+    let form_phonemes = super::phoneme::tokenize(&input.form);
+    let mut candidates = Vec::new();
+
+    for (params, rule) in &parsed_rules {
+        let result_phonemes = super::phoneme::tokenize(&params.result);
+        if result_phonemes.is_empty() {
+            continue;
+        }
+
+        // Find every position where rule.result appears as a contiguous subsequence
+        let rlen = result_phonemes.len();
+        let flen = form_phonemes.len();
+        if rlen > flen {
+            continue;
+        }
+
+        for start in 0..=(flen - rlen) {
+            if form_phonemes[start..start + rlen] == result_phonemes[..] {
+                let prefix: String = form_phonemes[..start].concat();
+                let suffix: String = form_phonemes[start + rlen..].concat();
+
+                let first = format!("{}{}", prefix, params.first);
+                let second = format!("{}{}", params.second, suffix);
+
+                candidates.push(AnalysisCandidate {
+                    decomposition: serde_json::json!({
+                        "first": first,
+                        "second": second,
+                    }),
+                    rule: rule.statement.clone(),
+                    rule_ref: if params.sutra.is_empty() {
+                        None
+                    } else {
+                        Some(params.sutra.clone())
+                    },
+                    specificity: rule_type_priority(&params.rule_type) as f64,
+                });
+            }
+        }
+    }
+
+    // Sort by specificity descending (higher = more specific rule)
+    candidates.sort_by(|a, b| b.specificity.partial_cmp(&a.specificity).unwrap());
+
+    Ok(candidates)
 }

@@ -2257,3 +2257,297 @@ async fn derive_sandhi_diphthong_inputs() {
     cleanup(&pool, slug).await;
     cleanup_sources(&pool, source_slugs).await;
 }
+
+// ── analyze (reverse sandhi) ─────────────────────────────────────
+
+#[tokio::test]
+#[serial]
+async fn analyze_sandhi_aa_returns_candidates() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "sandhi".into(),
+        input: json!({ "form": "ā" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+
+    // ā can be produced by: a+a, a+ā, ā+a, ā+ā — all via 6.1.101
+    assert!(
+        candidates.len() >= 4,
+        "expected at least 4 candidates for ā, got {}",
+        candidates.len()
+    );
+
+    let decomps: Vec<_> = candidates
+        .iter()
+        .map(|c| {
+            let d = &c.decomposition;
+            (
+                d["first"].as_str().unwrap().to_string(),
+                d["second"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+
+    assert!(decomps.contains(&("a".into(), "a".into())), "missing a+a");
+    assert!(decomps.contains(&("a".into(), "ā".into())), "missing a+ā");
+    assert!(decomps.contains(&("ā".into(), "a".into())), "missing ā+a");
+    assert!(decomps.contains(&("ā".into(), "ā".into())), "missing ā+ā");
+
+    // Every candidate should have a rule and sūtra reference
+    for c in &candidates {
+        assert!(!c.rule.is_empty(), "candidate should have rule text");
+        assert!(c.rule_ref.is_some(), "candidate should have sūtra ref");
+        assert!(
+            c.rule_ref.as_deref().unwrap().contains("6.1.101"),
+            "ā decompositions should reference 6.1.101"
+        );
+    }
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_sandhi_no_match_returns_empty() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    // "k" alone can't be a sandhi result — no rule produces just a consonant
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "sandhi".into(),
+        input: json!({ "form": "k" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+    assert!(
+        candidates.is_empty(),
+        "expected no candidates for 'k', got {}",
+        candidates.len()
+    );
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_sandhi_guna_results() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    // "e" is the guṇa result of a+i and a+ī (6.1.87)
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "sandhi".into(),
+        input: json!({ "form": "e" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+
+    let decomps: Vec<_> = candidates
+        .iter()
+        .map(|c| {
+            let d = &c.decomposition;
+            (
+                d["first"].as_str().unwrap().to_string(),
+                d["second"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+
+    assert!(decomps.contains(&("a".into(), "i".into())), "missing a+i for e");
+    assert!(decomps.contains(&("a".into(), "ī".into())), "missing a+ī for e");
+
+    for c in &candidates {
+        assert!(c.rule_ref.as_deref().unwrap().contains("6.1.87"));
+    }
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_sandhi_specificity_ranking() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    // Add an apavāda rule that also produces "e"
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+    let template = vidya::db::get_claim_template(&pool, domain.id, "sandhi_rule")
+        .await
+        .unwrap()
+        .unwrap();
+
+    vidya::db::insert_claim(
+        &pool,
+        domain.id,
+        template.id,
+        json!({
+            "first": "a", "second": "i", "result": "e",
+            "sutra": "99.99.99", "sutra_position": "99.99.099", "rule_type": "apavāda"
+        }),
+        "active",
+        "a + i → e (fictional apavāda duplicate)",
+    )
+    .await
+    .expect("insert apavāda rule");
+
+    let engine = vidya::engine::Engine::new();
+
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "sandhi".into(),
+        input: json!({ "form": "e" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+
+    // The apavāda candidate should come before the utsarga one
+    assert!(candidates.len() >= 2, "expected at least 2 candidates");
+    assert!(
+        candidates[0].specificity > candidates.last().unwrap().specificity
+            || candidates[0].specificity == candidates.last().unwrap().specificity,
+        "candidates should be sorted by specificity descending"
+    );
+
+    // First candidate with a+i decomposition should be the apavāda
+    let first_ai = candidates
+        .iter()
+        .find(|c| {
+            c.decomposition["first"] == "a" && c.decomposition["second"] == "i"
+        })
+        .expect("should have a+i candidate");
+    assert_eq!(first_ai.specificity, 4.0, "apavāda should have highest specificity");
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_sandhi_via_mcp_tool() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let result = tools::analyze::handle(
+        &pool,
+        tools::AnalyzeArgs {
+            domain: slug.into(),
+            operation: "sandhi".into(),
+            input: json!({ "form": "e" }),
+        },
+    )
+    .await
+    .expect("analyze via MCP tool");
+
+    assert_eq!(result.domain, "vyakarana");
+    assert_eq!(result.operation, "sandhi");
+    assert!(!result.candidates.is_empty());
+    assert!(result.candidates[0].rule_ref.as_deref().unwrap().contains("6.1.87"));
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_roundtrip_with_derive() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    // Forward: derive a+i → e
+    let derive_req = vidya::engine::DeriveRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "sandhi".into(),
+        input: json!({ "first": "a", "second": "i" }),
+    };
+    let derive_result = engine.derive(&pool, derive_req).await.expect("derive should succeed");
+    let combined = derive_result.output["result"].as_str().unwrap();
+    assert_eq!(combined, "e");
+
+    // Reverse: analyze "e" → should contain (a, i) as a candidate
+    let analyze_req = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "sandhi".into(),
+        input: json!({ "form": combined }),
+    };
+    let candidates = engine.analyze(&pool, analyze_req).await.expect("analyze should succeed");
+
+    let found = candidates.iter().any(|c| {
+        c.decomposition["first"] == "a" && c.decomposition["second"] == "i"
+    });
+    assert!(found, "analyze should find the original (a, i) decomposition for 'e'");
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}

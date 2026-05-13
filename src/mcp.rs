@@ -118,6 +118,17 @@ impl VidyaServer {
             .map_err(to_error_data)?;
         serde_json::to_string_pretty(&out).map_err(json_err)
     }
+
+    #[tool(description = "Reverse analysis engine. Given a surface form, enumerate valid decompositions. Requires domain, operation (e.g. 'sandhi'), and input (e.g. {\"form\": \"ā\"}). Returns ranked candidates with decomposition (first, second), rule applied, sūtra reference, and specificity score.")]
+    pub async fn vidya_analyze(
+        &self,
+        Parameters(args): Parameters<tools::AnalyzeArgs>,
+    ) -> Result<String, ErrorData> {
+        let out = tools::analyze::handle_with_engine(&self.pool, &self.engine, args)
+            .await
+            .map_err(to_error_data)?;
+        serde_json::to_string_pretty(&out).map_err(json_err)
+    }
 }
 
 #[tool_handler(router = self.tool_router)]
@@ -128,8 +139,9 @@ impl ServerHandler for VidyaServer {
                 "vidya v0.1.0 \u{2014} structured knowledge graph with reasoning. \
                  Three-layer model: ontology (entity_kinds, relation_kinds, claim_templates), \
                  facts (entities, claims, relations), epistemology (traditions, sources, \
-                 assertions with pramana). Eight tools: vidya_health, vidya_domain, \
-                 vidya_entity, vidya_claim, vidya_relation, vidya_query, vidya_load, vidya_derive.",
+                 assertions with pramana). Nine tools: vidya_health, vidya_domain, \
+                 vidya_entity, vidya_claim, vidya_relation, vidya_query, vidya_load, \
+                 vidya_derive, vidya_analyze.",
             )
     }
 }
