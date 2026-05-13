@@ -4,6 +4,7 @@ use sqlx::PgPool;
 use crate::db::ClaimRow;
 use crate::error::{Result, VidyaError};
 use super::{AnalyzeRequest, AnalysisCandidate, DeriveRequest, DeriveResult, EngineStrategy, TraceStep};
+use super::phoneme::{phoneme_ends_with, phoneme_starts_with, phoneme_strip_suffix, phoneme_strip_prefix};
 
 pub struct VyakaranaSandhiStrategy;
 
@@ -109,11 +110,11 @@ async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<DeriveR
         let mut matched = false;
 
         for (params, rule) in &parsed_rules {
-            if current_first.ends_with(&params.first) && current_second.starts_with(&params.second) {
+            if phoneme_ends_with(&current_first, &params.first) && phoneme_starts_with(&current_second, &params.second) {
                 let input_state = format!("{} + {}", current_first, current_second);
 
-                let prefix = &current_first[..current_first.len() - params.first.len()];
-                let suffix = &current_second[params.second.len()..];
+                let prefix = phoneme_strip_suffix(&current_first, &params.first).unwrap();
+                let suffix = phoneme_strip_prefix(&current_second, &params.second).unwrap();
                 result_str = format!("{}{}{}", prefix, params.result, suffix);
 
                 trace.push(TraceStep {

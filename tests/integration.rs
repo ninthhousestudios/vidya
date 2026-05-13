@@ -2212,3 +2212,48 @@ async fn derive_conflict_resolution_apavada_beats_utsarga() {
     cleanup(&pool, slug).await;
     cleanup_sources(&pool, source_slugs).await;
 }
+
+#[tokio::test]
+#[serial]
+async fn derive_sandhi_diphthong_inputs() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+
+    let diphthong_cases = vec![
+        ("a", "ai", "ai"),
+        ("a", "au", "au"),
+    ];
+
+    for (first, second, expected) in &diphthong_cases {
+        let request = vidya::engine::DeriveRequest {
+            domain_id: vidya::db::get_domain_by_slug(&pool, slug)
+                .await
+                .unwrap()
+                .unwrap()
+                .id,
+            domain_slug: slug.into(),
+            operation: "sandhi".into(),
+            input: json!({ "first": first, "second": second }),
+        };
+
+        let result = engine.derive(&pool, request).await.unwrap_or_else(|e| {
+            panic!("{first} + {second}: {e}");
+        });
+
+        let actual = result.output["result"].as_str().unwrap();
+        assert_eq!(
+            actual, *expected,
+            "{first} + {second} → {actual} (expected {expected})"
+        );
+    }
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
