@@ -23,6 +23,11 @@ pub struct QueryArgs {
     pub pramana: Option<String>,
     /// Filter claims by template slug
     pub claim_template: Option<String>,
+    /// Filter relations by kind slug (single-entity mode)
+    pub relation_kind: Option<String>,
+    /// Relation traversal depth (default 1, single-entity mode)
+    #[serde(default = "default_one")]
+    pub traverse_depth: i32,
     /// Include provenance (assertions + sources) in results
     #[serde(default = "default_true")]
     pub include_provenance: bool,
@@ -30,6 +35,10 @@ pub struct QueryArgs {
 
 fn default_true() -> bool {
     true
+}
+
+fn default_one() -> i32 {
+    1
 }
 
 #[derive(Debug, Serialize)]
@@ -56,6 +65,7 @@ pub struct RelationExpanded {
     pub kind_slug: String,
     pub other_entity_name: String,
     pub direction: String,
+    pub depth: i32,
 }
 
 #[derive(Debug, Serialize)]
@@ -89,7 +99,7 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
                 kind: format!("entity '{entity_name}'"),
             })?;
 
-        let relations = load_relations_expanded(pool, &entity).await?;
+        let relations = load_relations_expanded(pool, &entity, args.relation_kind.as_deref(), args.traverse_depth).await?;
         let claims = load_claims_for_entity(
             pool,
             domain.id,
@@ -185,34 +195,66 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
 async fn load_relations_expanded(
     pool: &PgPool,
     entity: &db::EntityRow,
+    relation_kind_filter: Option<&str>,
+    max_depth: i32,
 ) -> Result<Vec<RelationExpanded>> {
-    let relations = db::list_relations_for_entity(pool, entity.id).await?;
+    use std::collections::HashSet;
+
+    let max_depth = max_depth.max(1).min(10);
     let mut expanded = Vec::new();
-    for rel in relations {
-        let kind_slug =
-            sqlx::query_scalar::<_, String>("SELECT slug FROM relation_kinds WHERE id = $1")
-                .bind(rel.kind_id)
-                .fetch_one(pool)
-                .await?;
+    let mut visited = HashSet::new();
+    visited.insert(entity.id);
+    let mut frontier = vec![entity.id];
 
-        let (other_id, direction) = if rel.src_entity_id == entity.id {
-            (rel.dst_entity_id, "outgoing")
-        } else {
-            (rel.src_entity_id, "incoming")
-        };
+    for current_depth in 1..=max_depth {
+        let mut next_frontier = Vec::new();
+        for entity_id in &frontier {
+            let relations = db::list_relations_for_entity(pool, *entity_id).await?;
+            for rel in relations {
+                let kind_slug =
+                    sqlx::query_scalar::<_, String>("SELECT slug FROM relation_kinds WHERE id = $1")
+                        .bind(rel.kind_id)
+                        .fetch_one(pool)
+                        .await?;
 
-        let other_name =
-            sqlx::query_scalar::<_, String>("SELECT name FROM entities WHERE id = $1")
-                .bind(other_id)
-                .fetch_one(pool)
-                .await?;
+                if let Some(filter) = relation_kind_filter {
+                    if kind_slug != filter {
+                        continue;
+                    }
+                }
 
-        expanded.push(RelationExpanded {
-            relation: rel,
-            kind_slug,
-            other_entity_name: other_name,
-            direction: direction.into(),
-        });
+                let (other_id, direction) = if rel.src_entity_id == *entity_id {
+                    (rel.dst_entity_id, "outgoing")
+                } else {
+                    (rel.src_entity_id, "incoming")
+                };
+
+                if visited.contains(&other_id) {
+                    continue;
+                }
+
+                let other_name =
+                    sqlx::query_scalar::<_, String>("SELECT name FROM entities WHERE id = $1")
+                        .bind(other_id)
+                        .fetch_one(pool)
+                        .await?;
+
+                visited.insert(other_id);
+                next_frontier.push(other_id);
+
+                expanded.push(RelationExpanded {
+                    relation: rel,
+                    kind_slug,
+                    other_entity_name: other_name,
+                    direction: direction.into(),
+                    depth: current_depth,
+                });
+            }
+        }
+        if next_frontier.is_empty() {
+            break;
+        }
+        frontier = next_frontier;
     }
     Ok(expanded)
 }

@@ -861,6 +861,8 @@ async fn full_integration_both_seeds() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
             include_provenance: true,
         },
     )
@@ -963,6 +965,8 @@ async fn query_entities_by_kind() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
             include_provenance: false,
         },
     )
@@ -1015,6 +1019,8 @@ async fn query_entities_by_name_pattern() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
             include_provenance: false,
         },
     )
@@ -1037,6 +1043,8 @@ async fn query_entities_by_name_pattern() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
             include_provenance: false,
         },
     )
@@ -1084,6 +1092,8 @@ async fn query_entities_by_attrs() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
             include_provenance: false,
         },
     )
@@ -1106,6 +1116,8 @@ async fn query_entities_by_attrs() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
             include_provenance: false,
         },
     )
@@ -1115,6 +1127,200 @@ async fn query_entities_by_attrs() {
     let entities2 = result2.entities.expect("should return entities list");
     assert_eq!(entities2.len(), 1);
     assert_eq!(entities2[0].name, "e");
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn query_relation_kind_filter() {
+    let pool = test_pool().await;
+    let slug = "test-query-relkind";
+
+    cleanup(&pool, slug).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Relation Kind Filter Test" },
+        "entity_kinds": [
+            { "slug": "graha", "schema": null },
+            { "slug": "rashi", "schema": null }
+        ],
+        "relation_kinds": [
+            { "slug": "rules", "src_kind": "graha", "dst_kind": "rashi" },
+            { "slug": "exalted_in", "src_kind": "graha", "dst_kind": "rashi" }
+        ],
+        "entities": [
+            { "kind": "graha", "name": "Sūrya", "attrs": {} },
+            { "kind": "rashi", "name": "Siṃha", "attrs": {} },
+            { "kind": "rashi", "name": "Meṣa", "attrs": {} }
+        ],
+        "relations": [
+            { "kind": "rules", "src": "Sūrya", "dst": "Siṃha" },
+            { "kind": "exalted_in", "src": "Sūrya", "dst": "Meṣa" }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // No filter: both relations
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: Some("Sūrya".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("query all relations");
+
+    let ctx = result.entity.as_ref().expect("should have entity context");
+    assert_eq!(ctx.relations.len(), 2);
+
+    // Filter by "exalted_in": only one relation
+    let result2 = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: Some("Sūrya".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            relation_kind: Some("exalted_in".into()),
+            traverse_depth: 1,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("query filtered relations");
+
+    let ctx2 = result2.entity.as_ref().expect("should have entity context");
+    assert_eq!(ctx2.relations.len(), 1);
+    assert_eq!(ctx2.relations[0].kind_slug, "exalted_in");
+    assert_eq!(ctx2.relations[0].other_entity_name, "Meṣa");
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn query_relation_traverse_depth() {
+    let pool = test_pool().await;
+    let slug = "test-query-traverse";
+
+    cleanup(&pool, slug).await;
+
+    // Chain: A -[links_to]-> B -[links_to]-> C -[links_to]-> D
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Traverse Test" },
+        "entity_kinds": [
+            { "slug": "node", "schema": null }
+        ],
+        "relation_kinds": [
+            { "slug": "links_to", "src_kind": "node", "dst_kind": "node" }
+        ],
+        "entities": [
+            { "kind": "node", "name": "A", "attrs": {} },
+            { "kind": "node", "name": "B", "attrs": {} },
+            { "kind": "node", "name": "C", "attrs": {} },
+            { "kind": "node", "name": "D", "attrs": {} }
+        ],
+        "relations": [
+            { "kind": "links_to", "src": "A", "dst": "B" },
+            { "kind": "links_to", "src": "B", "dst": "C" },
+            { "kind": "links_to", "src": "C", "dst": "D" }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // depth=1: only B
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: Some("A".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("depth=1 query");
+
+    let ctx = result.entity.as_ref().unwrap();
+    assert_eq!(ctx.relations.len(), 1);
+    assert_eq!(ctx.relations[0].other_entity_name, "B");
+    assert_eq!(ctx.relations[0].depth, 1);
+
+    // depth=2: B and C
+    let result2 = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: Some("A".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            relation_kind: None,
+            traverse_depth: 2,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("depth=2 query");
+
+    let ctx2 = result2.entity.as_ref().unwrap();
+    assert_eq!(ctx2.relations.len(), 2);
+    let depth1: Vec<_> = ctx2.relations.iter().filter(|r| r.depth == 1).collect();
+    let depth2: Vec<_> = ctx2.relations.iter().filter(|r| r.depth == 2).collect();
+    assert_eq!(depth1.len(), 1);
+    assert_eq!(depth2.len(), 1);
+
+    // depth=3: B, C, and D
+    let result3 = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: Some("A".into()),
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            relation_kind: None,
+            traverse_depth: 3,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("depth=3 query");
+
+    let ctx3 = result3.entity.as_ref().unwrap();
+    assert_eq!(ctx3.relations.len(), 3);
+    let depth3: Vec<_> = ctx3.relations.iter().filter(|r| r.depth == 3).collect();
+    assert_eq!(depth3.len(), 1);
 
     cleanup(&pool, slug).await;
 }
