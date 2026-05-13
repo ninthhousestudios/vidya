@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use vidya::{
     config::{Config, vidya_home},
     db,
-    engine,
+    engine::{self, Engine},
 };
 
 #[tokio::main]
@@ -18,6 +18,8 @@ async fn main() -> Result<()> {
         .await
         .map_err(|e| anyhow::anyhow!("{e}"))?
         .ok_or_else(|| anyhow::anyhow!("vyakarana domain not found"))?;
+
+    let eng = Engine::new();
 
     let test_cases = vec![
         ("a", "a", "ā"),
@@ -46,7 +48,7 @@ async fn main() -> Result<()> {
             input: serde_json::json!({ "first": first, "second": second }),
         };
 
-        let result = engine::derive(&pool, request)
+        let result = eng.derive(&pool, request)
             .await
             .map_err(|e| anyhow::anyhow!("{e}"))?;
 

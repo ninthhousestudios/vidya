@@ -9,8 +9,6 @@ use uuid::Uuid;
 
 use crate::error::{Result, VidyaError};
 
-// -- Request/response types --
-
 #[derive(Debug)]
 pub struct DeriveRequest {
     pub domain_id: Uuid,
@@ -50,8 +48,6 @@ pub struct AnalysisCandidate {
     pub specificity: f64,
 }
 
-// -- Strategy trait --
-
 pub trait EngineStrategy: Send + Sync {
     fn can_handle(&self, domain: &str, operation: &str) -> bool;
 
@@ -68,16 +64,47 @@ pub trait EngineStrategy: Send + Sync {
     ) -> Pin<Box<dyn Future<Output = Result<Vec<AnalysisCandidate>>> + Send + 'a>>;
 }
 
-// -- Dispatch (hardcoded until strategies are registered) --
+pub struct Engine {
+    strategies: Vec<Box<dyn EngineStrategy>>,
+}
 
-pub async fn derive(pool: &PgPool, request: DeriveRequest) -> Result<DeriveResult> {
-    match request.operation.as_str() {
-        "sandhi" => sandhi::derive_sandhi(pool, &request).await,
-        other => Err(VidyaError::InvalidArgument {
+impl Engine {
+    pub fn new() -> Self {
+        let strategies: Vec<Box<dyn EngineStrategy>> = vec![
+            Box::new(sandhi::VyakaranaSandhiStrategy),
+        ];
+        Self { strategies }
+    }
+
+    pub async fn derive(&self, pool: &PgPool, request: DeriveRequest) -> Result<DeriveResult> {
+        for strategy in &self.strategies {
+            if strategy.can_handle(&request.domain_slug, &request.operation) {
+                return strategy.derive(pool, &request).await;
+            }
+        }
+        Err(VidyaError::InvalidArgument {
             tool: "vidya_derive".into(),
-            argument: "operation".into(),
-            constraint: "supported operations: sandhi".into(),
-            received: other.into(),
-        }),
+            argument: "domain/operation".into(),
+            constraint: "no strategy registered for this domain/operation combination".into(),
+            received: format!("{}/{}", request.domain_slug, request.operation),
+        })
+    }
+
+    pub async fn analyze(
+        &self,
+        pool: &PgPool,
+        request: AnalyzeRequest,
+    ) -> Result<Vec<AnalysisCandidate>> {
+        for strategy in &self.strategies {
+            if strategy.can_handle(&request.domain_slug, &request.operation) {
+                return strategy.analyze(pool, &request).await;
+            }
+        }
+        Err(VidyaError::InvalidArgument {
+            tool: "vidya_analyze".into(),
+            argument: "domain/operation".into(),
+            constraint: "no strategy registered for this domain/operation combination".into(),
+            received: format!("{}/{}", request.domain_slug, request.operation),
+        })
     }
 }

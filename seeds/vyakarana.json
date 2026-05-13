@@ -112,133 +112,133 @@
   "claims": [
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "a", "result": "ā", "sutra": "6.1.101" },
+      "params": { "first": "a", "second": "a", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
       "statement": "a + a → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ā", "result": "ā", "sutra": "6.1.101" },
+      "params": { "first": "a", "second": "ā", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
       "statement": "a + ā → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "ā", "second": "a", "result": "ā", "sutra": "6.1.101" },
+      "params": { "first": "ā", "second": "a", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
       "statement": "ā + a → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "ā", "second": "ā", "result": "ā", "sutra": "6.1.101" },
+      "params": { "first": "ā", "second": "ā", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
       "statement": "ā + ā → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "i", "result": "ī", "sutra": "6.1.101" },
+      "params": { "first": "i", "second": "i", "result": "ī", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
       "statement": "i + i → ī (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "u", "result": "ū", "sutra": "6.1.101" },
+      "params": { "first": "u", "second": "u", "result": "ū", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
       "statement": "u + u → ū (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "i", "result": "e", "sutra": "6.1.87" },
+      "params": { "first": "a", "second": "i", "result": "e", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
       "statement": "a + i → e (guṇa-sandhi, Aṣṭ. 6.1.87)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ī", "result": "e", "sutra": "6.1.87" },
+      "params": { "first": "a", "second": "ī", "result": "e", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
       "statement": "a + ī → e (guṇa-sandhi, Aṣṭ. 6.1.87)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "u", "result": "o", "sutra": "6.1.87" },
+      "params": { "first": "a", "second": "u", "result": "o", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
       "statement": "a + u → o (guṇa-sandhi, Aṣṭ. 6.1.87)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ū", "result": "o", "sutra": "6.1.87" },
+      "params": { "first": "a", "second": "ū", "result": "o", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
       "statement": "a + ū → o (guṇa-sandhi, Aṣṭ. 6.1.87)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ṛ", "result": "ar", "sutra": "6.1.87" },
+      "params": { "first": "a", "second": "ṛ", "result": "ar", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
       "statement": "a + ṛ → ar (guṇa-sandhi, Aṣṭ. 6.1.87)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "e", "result": "ai", "sutra": "6.1.88" },
+      "params": { "first": "a", "second": "e", "result": "ai", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
       "statement": "a + e → ai (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "o", "result": "au", "sutra": "6.1.88" },
+      "params": { "first": "a", "second": "o", "result": "au", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
       "statement": "a + o → au (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ai", "result": "ai", "sutra": "6.1.88" },
+      "params": { "first": "a", "second": "ai", "result": "ai", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
       "statement": "a + ai → ai (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "au", "result": "au", "sutra": "6.1.88" },
+      "params": { "first": "a", "second": "au", "result": "au", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
       "statement": "a + au → au (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "a", "result": "ya", "sutra": "6.1.77" },
+      "params": { "first": "i", "second": "a", "result": "ya", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
       "statement": "i + a → ya (yaṇ-sandhi, Aṣṭ. 6.1.77)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "ā", "result": "yā", "sutra": "6.1.77" },
+      "params": { "first": "i", "second": "ā", "result": "yā", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
       "statement": "i + ā → yā (yaṇ-sandhi, Aṣṭ. 6.1.77)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "u", "result": "yu", "sutra": "6.1.77" },
+      "params": { "first": "i", "second": "u", "result": "yu", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
       "statement": "i + u → yu (yaṇ-sandhi, Aṣṭ. 6.1.77)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "a", "result": "va", "sutra": "6.1.77" },
+      "params": { "first": "u", "second": "a", "result": "va", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
       "statement": "u + a → va (yaṇ-sandhi, Aṣṭ. 6.1.77)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "ā", "result": "vā", "sutra": "6.1.77" },
+      "params": { "first": "u", "second": "ā", "result": "vā", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
       "statement": "u + ā → vā (yaṇ-sandhi, Aṣṭ. 6.1.77)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "i", "result": "vi", "sutra": "6.1.77" },
+      "params": { "first": "u", "second": "i", "result": "vi", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
       "statement": "u + i → vi (yaṇ-sandhi, Aṣṭ. 6.1.77)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "ṛ", "second": "a", "result": "ra", "sutra": "6.1.77" },
+      "params": { "first": "ṛ", "second": "a", "result": "ra", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
       "statement": "ṛ + a → ra (yaṇ-sandhi, Aṣṭ. 6.1.77)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },

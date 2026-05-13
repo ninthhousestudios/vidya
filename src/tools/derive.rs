@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::db;
-use crate::engine;
+use crate::engine::{self, Engine};
 use crate::error::{Result, VidyaError};
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -26,6 +26,11 @@ pub struct DeriveOutput {
 }
 
 pub async fn handle(pool: &PgPool, args: DeriveArgs) -> Result<DeriveOutput> {
+    let engine = Engine::new();
+    handle_with_engine(pool, &engine, args).await
+}
+
+pub async fn handle_with_engine(pool: &PgPool, engine: &Engine, args: DeriveArgs) -> Result<DeriveOutput> {
     let domain = db::get_domain_by_slug(pool, &args.domain)
         .await?
         .ok_or_else(|| VidyaError::NotFound {
@@ -40,7 +45,7 @@ pub async fn handle(pool: &PgPool, args: DeriveArgs) -> Result<DeriveOutput> {
         input: args.input.clone(),
     };
 
-    let result = engine::derive(pool, request).await?;
+    let result = engine.derive(pool, request).await?;
 
     Ok(DeriveOutput {
         domain: args.domain,

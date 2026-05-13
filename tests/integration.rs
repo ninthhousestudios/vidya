@@ -2021,3 +2021,194 @@ async fn derivation_chain_multi_level() {
     cleanup(&pool, slug).await;
     cleanup_sources(&pool, &["test-src-chain"]).await;
 }
+
+// --- Engine strategy + sandhi derivation tests ---
+
+#[tokio::test]
+#[serial]
+async fn derive_sandhi_all_ten_cases() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let test_cases = vec![
+        ("a", "a", "ā"),
+        ("a", "i", "e"),
+        ("a", "u", "o"),
+        ("a", "e", "ai"),
+        ("a", "o", "au"),
+        ("i", "a", "ya"),
+        ("u", "a", "va"),
+        ("i", "i", "ī"),
+        ("u", "u", "ū"),
+        ("ṛ", "a", "ra"),
+    ];
+
+    let engine = vidya::engine::Engine::new();
+
+    for (first, second, expected) in &test_cases {
+        let request = vidya::engine::DeriveRequest {
+            domain_id: vidya::db::get_domain_by_slug(&pool, slug)
+                .await
+                .unwrap()
+                .unwrap()
+                .id,
+            domain_slug: slug.into(),
+            operation: "sandhi".into(),
+            input: json!({ "first": first, "second": second }),
+        };
+
+        let result = engine.derive(&pool, request).await.unwrap_or_else(|e| {
+            panic!("{first} + {second}: {e}");
+        });
+
+        let actual = result.output["result"].as_str().unwrap();
+        assert_eq!(
+            actual, *expected,
+            "{first} + {second} → {actual} (expected {expected})"
+        );
+
+        // Verify trace has rule name, sutra ref, input state, output state
+        assert!(!result.trace.is_empty(), "{first} + {second}: no trace steps");
+        for step in &result.trace {
+            assert!(!step.rule.is_empty(), "trace step should have rule name");
+            assert!(step.rule_ref.is_some(), "trace step should have sūtra reference");
+            assert!(!step.input_state.is_empty(), "trace step should have input state");
+            assert!(!step.output_state.is_empty(), "trace step should have output state");
+        }
+    }
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn derive_unknown_operation_returns_error() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let request = vidya::engine::DeriveRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "nonexistent".into(),
+        input: json!({}),
+    };
+
+    let err = engine
+        .derive(&pool, request)
+        .await
+        .expect_err("unknown operation should fail");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("nonexistent") || msg.contains("no strategy"),
+        "error should mention the unknown operation: {msg}"
+    );
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn derive_sandhi_via_mcp_tool() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let result = tools::derive::handle(
+        &pool,
+        tools::DeriveArgs {
+            domain: slug.into(),
+            operation: "sandhi".into(),
+            input: json!({ "first": "a", "second": "i" }),
+        },
+    )
+    .await
+    .expect("derive via MCP tool");
+
+    assert_eq!(result.result["result"], "e");
+    assert_eq!(result.domain, "vyakarana");
+    assert_eq!(result.operation, "sandhi");
+    assert!(!result.trace.is_empty());
+    assert!(result.trace[0].rule_ref.as_deref().unwrap().contains("6.1.87"));
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn derive_conflict_resolution_apavada_beats_utsarga() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    // Add a fictional apavāda rule that matches the same input as guṇa (a + i).
+    // The apavāda should win over the utsarga guṇa rule.
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+    let template = vidya::db::get_claim_template(&pool, domain.id, "sandhi_rule")
+        .await
+        .unwrap()
+        .unwrap();
+
+    vidya::db::insert_claim(
+        &pool,
+        domain.id,
+        template.id,
+        json!({
+            "first": "a", "second": "i", "result": "X",
+            "sutra": "99.99.99", "sutra_position": "99.99.099", "rule_type": "apavāda"
+        }),
+        "active",
+        "a + i → X (fictional apavāda override)",
+    )
+    .await
+    .expect("insert apavāda rule");
+
+    let engine = vidya::engine::Engine::new();
+
+    let request = vidya::engine::DeriveRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "sandhi".into(),
+        input: json!({ "first": "a", "second": "i" }),
+    };
+
+    let result = engine.derive(&pool, request).await.expect("derive should succeed");
+    assert_eq!(
+        result.output["result"].as_str().unwrap(),
+        "X",
+        "apavāda rule should win over utsarga"
+    );
+    assert!(result.trace[0].rule.contains("apavāda"));
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}

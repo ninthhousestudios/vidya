@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rmcp::{
     ErrorData, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
@@ -6,12 +8,14 @@ use rmcp::{
 };
 use sqlx::PgPool;
 
+use crate::engine::Engine;
 use crate::error::to_error_data;
 use crate::tools;
 
 #[derive(Clone)]
 pub struct VidyaServer {
     pool: PgPool,
+    engine: Arc<Engine>,
     tool_router: ToolRouter<Self>,
 }
 
@@ -19,6 +23,7 @@ impl VidyaServer {
     pub fn new(pool: PgPool) -> Self {
         Self {
             pool,
+            engine: Arc::new(Engine::new()),
             tool_router: Self::tool_router(),
         }
     }
@@ -103,12 +108,12 @@ impl VidyaServer {
         serde_json::to_string_pretty(&out).map_err(json_err)
     }
 
-    #[tool(description = "Run the derivation engine. Requires domain, operation (e.g. 'sandhi'), and input (domain-specific JSON). Returns result and full derivation trace.")]
+    #[tool(description = "Run the derivation engine. Requires domain, operation (e.g. 'sandhi'), and input (domain-specific JSON). Returns result and full derivation trace. Dispatches to the registered engine strategy for the given domain/operation.")]
     pub async fn vidya_derive(
         &self,
         Parameters(args): Parameters<tools::DeriveArgs>,
     ) -> Result<String, ErrorData> {
-        let out = tools::derive::handle(&self.pool, args)
+        let out = tools::derive::handle_with_engine(&self.pool, &self.engine, args)
             .await
             .map_err(to_error_data)?;
         serde_json::to_string_pretty(&out).map_err(json_err)

@@ -3,7 +3,38 @@ use sqlx::PgPool;
 
 use crate::db::ClaimRow;
 use crate::error::{Result, VidyaError};
-use super::{DeriveRequest, DeriveResult, TraceStep};
+use super::{AnalyzeRequest, AnalysisCandidate, DeriveRequest, DeriveResult, EngineStrategy, TraceStep};
+
+pub struct VyakaranaSandhiStrategy;
+
+impl EngineStrategy for VyakaranaSandhiStrategy {
+    fn can_handle(&self, domain: &str, operation: &str) -> bool {
+        domain == "vyakarana" && operation == "sandhi"
+    }
+
+    fn derive<'a>(
+        &'a self,
+        pool: &'a PgPool,
+        request: &'a DeriveRequest,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<DeriveResult>> + Send + 'a>> {
+        Box::pin(derive_sandhi(pool, request))
+    }
+
+    fn analyze<'a>(
+        &'a self,
+        _pool: &'a PgPool,
+        _request: &'a AnalyzeRequest,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<AnalysisCandidate>>> + Send + 'a>> {
+        Box::pin(async {
+            Err(VidyaError::InvalidArgument {
+                tool: "vidya_analyze".into(),
+                argument: "operation".into(),
+                constraint: "analyze not yet implemented for sandhi".into(),
+                received: "sandhi".into(),
+            })
+        })
+    }
+}
 
 #[derive(Debug, Deserialize)]
 struct SandhiInput {
@@ -18,9 +49,23 @@ struct SandhiParams {
     result: String,
     #[serde(default)]
     sutra: String,
+    #[serde(default)]
+    sutra_position: String,
+    #[serde(default)]
+    rule_type: String,
 }
 
-pub async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<DeriveResult> {
+fn rule_type_priority(rule_type: &str) -> u8 {
+    match rule_type {
+        "apavāda" | "apavada" => 4,
+        "nitya" => 3,
+        "paribhāṣā" | "paribhasha" => 2,
+        "utsarga" => 1,
+        _ => 0,
+    }
+}
+
+async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<DeriveResult> {
     let input: SandhiInput =
         serde_json::from_value(request.input.clone()).map_err(|e| VidyaError::InvalidArgument {
             tool: "vidya_derive".into(),
@@ -29,7 +74,6 @@ pub async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<Der
             received: e.to_string(),
         })?;
 
-    // Load all active sandhi_rule claims for this domain
     let rules = sqlx::query_as::<_, ClaimRow>(
         "SELECT c.* FROM claims c \
          JOIN claim_templates ct ON c.template_id = ct.id \
@@ -40,28 +84,34 @@ pub async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<Der
     .fetch_all(pool)
     .await?;
 
+    let mut parsed_rules: Vec<(SandhiParams, &ClaimRow)> = rules
+        .iter()
+        .filter_map(|rule| {
+            serde_json::from_value::<SandhiParams>(rule.params.clone())
+                .ok()
+                .map(|p| (p, rule))
+        })
+        .collect();
+
+    // Sort by conflict resolution: apavāda > nitya > utsarga, then by sutra_position (later wins)
+    parsed_rules.sort_by(|(a, _), (b, _)| {
+        let pa = rule_type_priority(&a.rule_type);
+        let pb = rule_type_priority(&b.rule_type);
+        pb.cmp(&pa).then_with(|| b.sutra_position.cmp(&a.sutra_position))
+    });
+
     let mut trace = Vec::new();
     let mut current_first = input.first.clone();
     let mut current_second = input.second.clone();
     let mut result_str = format!("{}{}", current_first, current_second);
-    let max_iterations = 100;
 
-    for iteration in 0..max_iterations {
+    for iteration in 0..100 {
         let mut matched = false;
 
-        for rule in &rules {
-            let params: SandhiParams = match serde_json::from_value(rule.params.clone()) {
-                Ok(p) => p,
-                Err(_) => continue,
-            };
-
-            // Check if this rule matches: the end of first matches params.first
-            // and the start of second matches params.second
-            if current_first.ends_with(&params.first) && current_second.starts_with(&params.second)
-            {
+        for (params, rule) in &parsed_rules {
+            if current_first.ends_with(&params.first) && current_second.starts_with(&params.second) {
                 let input_state = format!("{} + {}", current_first, current_second);
 
-                // Apply the rule: replace the junction
                 let prefix = &current_first[..current_first.len() - params.first.len()];
                 let suffix = &current_second[params.second.len()..];
                 result_str = format!("{}{}{}", prefix, params.result, suffix);
@@ -78,7 +128,6 @@ pub async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<Der
                     output_state: result_str.clone(),
                 });
 
-                // For subsequent iterations, treat result as a single unit
                 current_first = result_str.clone();
                 current_second = String::new();
                 matched = true;
@@ -86,11 +135,7 @@ pub async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<Der
             }
         }
 
-        if !matched {
-            break;
-        }
-
-        if current_second.is_empty() {
+        if !matched || current_second.is_empty() {
             break;
         }
     }
