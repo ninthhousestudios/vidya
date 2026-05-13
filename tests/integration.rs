@@ -16,6 +16,16 @@ async fn test_pool() -> sqlx::PgPool {
 
 async fn cleanup(pool: &sqlx::PgPool, domain_slug: &str) {
     let _ = sqlx::query(
+        "DELETE FROM derivations WHERE conclusion_claim_id IN \
+         (SELECT id FROM claims WHERE domain_id = (SELECT id FROM domains WHERE slug = $1)) \
+         OR premise_claim_id IN \
+         (SELECT id FROM claims WHERE domain_id = (SELECT id FROM domains WHERE slug = $1))",
+    )
+    .bind(domain_slug)
+    .bind(domain_slug)
+    .execute(pool)
+    .await;
+    let _ = sqlx::query(
         "DELETE FROM assertions WHERE claim_id IN \
          (SELECT id FROM claims WHERE domain_id = (SELECT id FROM domains WHERE slug = $1))",
     )
@@ -861,8 +871,10 @@ async fn full_integration_both_seeds() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: true,
         },
     )
@@ -965,8 +977,10 @@ async fn query_entities_by_kind() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1019,8 +1033,10 @@ async fn query_entities_by_name_pattern() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1043,8 +1059,10 @@ async fn query_entities_by_name_pattern() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1092,8 +1110,10 @@ async fn query_entities_by_attrs() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1116,8 +1136,10 @@ async fn query_entities_by_attrs() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1174,8 +1196,10 @@ async fn query_relation_kind_filter() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1197,8 +1221,10 @@ async fn query_relation_kind_filter() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: Some("exalted_in".into()),
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1257,8 +1283,10 @@ async fn query_relation_traverse_depth() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 1,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1282,8 +1310,10 @@ async fn query_relation_traverse_depth() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 2,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1309,8 +1339,10 @@ async fn query_relation_traverse_depth() {
             tradition: None,
             pramana: None,
             claim_template: None,
+            claim_params: None,
             relation_kind: None,
             traverse_depth: 3,
+            claim_id: None,
             include_provenance: false,
         },
     )
@@ -1321,6 +1353,196 @@ async fn query_relation_traverse_depth() {
     assert_eq!(ctx3.relations.len(), 3);
     let depth3: Vec<_> = ctx3.relations.iter().filter(|r| r.depth == 3).collect();
     assert_eq!(depth3.len(), 1);
+
+    cleanup(&pool, slug).await;
+}
+
+#[tokio::test]
+async fn query_claim_provenance_with_derivation() {
+    let pool = test_pool().await;
+    let slug = "test-query-provenance";
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, &["test-src-prov"]).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Provenance Test" },
+        "entity_kinds": [],
+        "claim_templates": [
+            { "slug": "rule", "param_schema": {} }
+        ],
+        "traditions": [{ "name": "test-tradition" }],
+        "sources": [{ "slug": "test-src-prov", "kind": "text", "reference": "Test Source", "reliability": 1.0 }],
+        "claims": [
+            {
+                "template": "rule",
+                "params": { "name": "premise-1" },
+                "statement": "First premise",
+                "tradition": "test-tradition",
+                "source": "test-src-prov",
+                "pramana": "pratyaksha",
+                "confidence": 1.0
+            },
+            {
+                "template": "rule",
+                "params": { "name": "premise-2" },
+                "statement": "Second premise",
+                "tradition": "test-tradition",
+                "source": "test-src-prov",
+                "pramana": "shabda",
+                "confidence": 0.9
+            }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // Create a conclusion claim via vidya_claim
+    let conclusion = tools::claim::handle(
+        &pool,
+        tools::ClaimArgs {
+            action: "create".into(),
+            domain: slug.into(),
+            template: Some("rule".into()),
+            params: Some(json!({ "name": "conclusion" })),
+            statement: Some("Derived conclusion".into()),
+            status: Some("active".into()),
+            tradition: Some("test-tradition".into()),
+            source_ref: Some("test-src-prov".into()),
+            source_kind: None,
+            pramana: Some("anumana".into()),
+            confidence: Some(0.8),
+            id: None,
+        },
+    )
+    .await
+    .expect("create conclusion claim");
+    let conclusion_id = conclusion.claim.as_ref().unwrap().id;
+
+    // Get the premise claim IDs
+    let premise1 = sqlx::query_as::<_, vidya::db::ClaimRow>(
+        "SELECT * FROM claims WHERE domain_id = (SELECT id FROM domains WHERE slug = $1) \
+         AND params @> '{\"name\": \"premise-1\"}'",
+    )
+    .bind(slug)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    let premise2 = sqlx::query_as::<_, vidya::db::ClaimRow>(
+        "SELECT * FROM claims WHERE domain_id = (SELECT id FROM domains WHERE slug = $1) \
+         AND params @> '{\"name\": \"premise-2\"}'",
+    )
+    .bind(slug)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    // Insert derivation links
+    vidya::db::insert_derivation(&pool, conclusion_id, premise1.id, 1)
+        .await
+        .expect("insert derivation 1");
+    vidya::db::insert_derivation(&pool, conclusion_id, premise2.id, 2)
+        .await
+        .expect("insert derivation 2");
+
+    // Query provenance for the conclusion
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: None,
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: None,
+            claim_params: None,
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: Some(conclusion_id.to_string()),
+            include_provenance: true,
+        },
+    )
+    .await
+    .expect("query provenance");
+
+    let prov = result.provenance.expect("should have provenance");
+    assert_eq!(prov.claim.id, conclusion_id);
+    assert_eq!(prov.template_slug, "rule");
+    assert_eq!(prov.assertions.len(), 1);
+    assert_eq!(prov.assertions[0].tradition_name, "test-tradition");
+    assert_eq!(prov.derivation_chain.len(), 2);
+    assert_eq!(prov.derivation_chain[0].step_order, 1);
+    assert_eq!(prov.derivation_chain[0].premise.statement, "First premise");
+    assert_eq!(prov.derivation_chain[1].step_order, 2);
+    assert_eq!(prov.derivation_chain[1].premise.statement, "Second premise");
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, &["test-src-prov"]).await;
+}
+
+#[tokio::test]
+async fn query_cross_entity_predicate() {
+    let pool = test_pool().await;
+    let slug = "test-query-xpred";
+
+    cleanup(&pool, slug).await;
+
+    let payload = json!({
+        "domain": { "slug": slug, "title": "Cross-Entity Predicate Test" },
+        "entity_kinds": [
+            { "slug": "varna", "schema": null }
+        ],
+        "claim_templates": [
+            { "slug": "sound_classification", "param_schema": {} }
+        ],
+        "entities": [
+            { "kind": "varna", "name": "a", "attrs": {} },
+            { "kind": "varna", "name": "ā", "attrs": {} },
+            { "kind": "varna", "name": "e", "attrs": {} },
+            { "kind": "varna", "name": "ka", "attrs": {} }
+        ],
+        "claims": [
+            { "template": "sound_classification", "params": { "varna": "a", "classification": "guṇa" }, "statement": "a is guṇa" },
+            { "template": "sound_classification", "params": { "varna": "ā", "classification": "vṛddhi" }, "statement": "ā is vṛddhi" },
+            { "template": "sound_classification", "params": { "varna": "e", "classification": "guṇa" }, "statement": "e is guṇa" },
+            { "template": "sound_classification", "params": { "varna": "ka", "classification": "sparśa" }, "statement": "ka is sparśa" }
+        ]
+    });
+    tools::load::handle(&pool, tools::LoadArgs { payload })
+        .await
+        .expect("setup load");
+
+    // Cross-entity: all varnas where sound_classification has classification=guṇa
+    let result = tools::query::handle(
+        &pool,
+        tools::QueryArgs {
+            domain: slug.into(),
+            entity: None,
+            entity_kind: Some("varna".into()),
+            name_pattern: None,
+            attrs: None,
+            tradition: None,
+            pramana: None,
+            claim_template: Some("sound_classification".into()),
+            claim_params: Some(json!({ "classification": "guṇa" })),
+            relation_kind: None,
+            traverse_depth: 1,
+            claim_id: None,
+            include_provenance: false,
+        },
+    )
+    .await
+    .expect("cross-entity predicate query");
+
+    let entities = result.entities.expect("should return entities list");
+    assert_eq!(entities.len(), 2, "should find 2 guṇa varnas");
+    let names: Vec<&str> = entities.iter().map(|e| e.name.as_str()).collect();
+    assert!(names.contains(&"a"));
+    assert!(names.contains(&"e"));
 
     cleanup(&pool, slug).await;
 }

@@ -23,11 +23,15 @@ pub struct QueryArgs {
     pub pramana: Option<String>,
     /// Filter claims by template slug
     pub claim_template: Option<String>,
+    /// Filter claims by param values (jsonb containment, for cross-entity predicate queries)
+    pub claim_params: Option<serde_json::Value>,
     /// Filter relations by kind slug (single-entity mode)
     pub relation_kind: Option<String>,
     /// Relation traversal depth (default 1, single-entity mode)
     #[serde(default = "default_one")]
     pub traverse_depth: i32,
+    /// Claim UUID for direct provenance lookup (assertions + derivation chain)
+    pub claim_id: Option<String>,
     /// Include provenance (assertions + sources) in results
     #[serde(default = "default_true")]
     pub include_provenance: bool,
@@ -50,6 +54,8 @@ pub struct QueryOutput {
     pub entities: Option<Vec<db::EntityRow>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub claims: Option<Vec<ClaimWithProvenance>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<ProvenanceResult>,
 }
 
 #[derive(Debug, Serialize)]
@@ -83,6 +89,21 @@ pub struct AssertionExpanded {
     pub source_reference: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct ProvenanceResult {
+    pub claim: db::ClaimRow,
+    pub template_slug: String,
+    pub assertions: Vec<AssertionExpanded>,
+    pub derivation_chain: Vec<DerivationStep>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DerivationStep {
+    pub step_order: i32,
+    pub premise: db::ClaimRow,
+    pub premise_template_slug: String,
+}
+
 pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
     let domain = db::get_domain_by_slug(pool, &args.domain)
         .await?
@@ -91,7 +112,78 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
             kind: format!("domain '{}'", args.domain),
         })?;
 
-    if let Some(entity_name) = &args.entity {
+    if let Some(ref claim_id_str) = args.claim_id {
+        let claim_id: uuid::Uuid = claim_id_str.parse().map_err(|_| VidyaError::InvalidArgument {
+            tool: "vidya_query".into(),
+            argument: "claim_id".into(),
+            constraint: "valid UUID".into(),
+            received: claim_id_str.clone(),
+        })?;
+
+        let claim = sqlx::query_as::<_, db::ClaimRow>(
+            "SELECT * FROM claims WHERE id = $1 AND domain_id = $2",
+        )
+        .bind(claim_id)
+        .bind(domain.id)
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| VidyaError::NotFound {
+            tool: "vidya_query".into(),
+            kind: format!("claim '{claim_id_str}'"),
+        })?;
+
+        let template_slug = sqlx::query_scalar::<_, String>(
+            "SELECT slug FROM claim_templates WHERE id = $1",
+        )
+        .bind(claim.template_id)
+        .fetch_one(pool)
+        .await?;
+
+        let assertions = load_assertions_expanded(pool, claim.id, None, None).await?;
+
+        let derivation_rows = sqlx::query_as::<_, db::DerivationRow>(
+            "SELECT * FROM derivations WHERE conclusion_claim_id = $1 ORDER BY step_order",
+        )
+        .bind(claim.id)
+        .fetch_all(pool)
+        .await?;
+
+        let mut derivation_chain = Vec::new();
+        for d in derivation_rows {
+            let premise = sqlx::query_as::<_, db::ClaimRow>(
+                "SELECT * FROM claims WHERE id = $1",
+            )
+            .bind(d.premise_claim_id)
+            .fetch_one(pool)
+            .await?;
+
+            let premise_template_slug = sqlx::query_scalar::<_, String>(
+                "SELECT slug FROM claim_templates WHERE id = $1",
+            )
+            .bind(premise.template_id)
+            .fetch_one(pool)
+            .await?;
+
+            derivation_chain.push(DerivationStep {
+                step_order: d.step_order,
+                premise,
+                premise_template_slug,
+            });
+        }
+
+        return Ok(QueryOutput {
+            domain: args.domain,
+            entity: None,
+            entities: None,
+            claims: None,
+            provenance: Some(ProvenanceResult {
+                claim,
+                template_slug,
+                assertions,
+                derivation_chain,
+            }),
+        });
+    } else if let Some(entity_name) = &args.entity {
         let entity = db::get_entity_by_name(pool, domain.id, entity_name)
             .await?
             .ok_or_else(|| VidyaError::NotFound {
@@ -120,7 +212,37 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
             }),
             entities: None,
             claims: None,
+            provenance: None,
         })
+    } else if args.entity_kind.is_some() && args.claim_template.is_some() && args.claim_params.is_some() {
+        let kind_slug = args.entity_kind.as_ref().unwrap();
+        let tmpl_slug = args.claim_template.as_ref().unwrap();
+        let params = args.claim_params.as_ref().unwrap();
+
+        let entities = sqlx::query_as::<_, db::EntityRow>(
+            "SELECT DISTINCT e.* FROM entities e \
+             JOIN entity_kinds ek ON e.kind_id = ek.id \
+             JOIN claims c ON c.domain_id = e.domain_id AND c.status = 'active' \
+             AND c.params::text ILIKE '%' || e.name || '%' \
+             JOIN claim_templates ct ON c.template_id = ct.id \
+             WHERE e.domain_id = $1 AND ek.slug = $2 AND ct.slug = $3 \
+             AND c.params @> $4 \
+             ORDER BY e.name",
+        )
+        .bind(domain.id)
+        .bind(kind_slug)
+        .bind(tmpl_slug)
+        .bind(params)
+        .fetch_all(pool)
+        .await?;
+
+        return Ok(QueryOutput {
+            domain: args.domain,
+            entity: None,
+            entities: Some(entities),
+            claims: None,
+            provenance: None,
+        });
     } else if args.entity_kind.is_some() || args.name_pattern.is_some() || args.attrs.is_some() {
         let mut entities = db::list_entities(pool, domain.id, args.entity_kind.as_deref()).await?;
         if let Some(ref pattern) = args.name_pattern {
@@ -143,6 +265,7 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
             entity: None,
             entities: Some(entities),
             claims: None,
+            provenance: None,
         });
     } else {
         let claims = db::list_claims(
@@ -188,6 +311,7 @@ pub async fn handle(pool: &PgPool, args: QueryArgs) -> Result<QueryOutput> {
             entity: None,
             entities: None,
             claims: Some(result),
+            provenance: None,
         })
     }
 }
