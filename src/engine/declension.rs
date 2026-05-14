@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use serde_json::json;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::db::ClaimRow;
 use crate::error::{Result, VidyaError};
@@ -119,6 +120,74 @@ fn rule_priority(rule_type: &str) -> u8 {
     }
 }
 
+struct DeclensionRuleSets {
+    sup_suffixes: Vec<SupSuffix>,
+    pratyaya_rules: Vec<PratyayaRule>,
+    anga_rules: Vec<AngaRule>,
+    sandhi_rules: Vec<SandhiRule>,
+    tripadi_rules: Vec<TripadiRule>,
+}
+
+fn parse_claims<T: for<'de> Deserialize<'de>>(claims: &[ClaimRow], label: &str) -> Vec<T> {
+    claims
+        .iter()
+        .filter_map(|c| {
+            serde_json::from_value(c.params.clone()).map_err(|e| {
+                tracing::warn!(claim_id = %c.id, template = label, error = %e, "claim deserialization failed, skipping");
+                e
+            }).ok()
+        })
+        .collect()
+}
+
+fn sort_by_priority<T>(rules: &mut [T], get_rule_type: impl Fn(&T) -> &str, get_position: impl Fn(&T) -> &str) {
+    rules.sort_by(|a, b| {
+        rule_priority(get_rule_type(b))
+            .cmp(&rule_priority(get_rule_type(a)))
+            .then_with(|| get_position(b).cmp(get_position(a)))
+    });
+}
+
+async fn load_rule_sets(pool: &PgPool, domain_id: Uuid) -> Result<DeclensionRuleSets> {
+    let query = |slug: &'static str| {
+        sqlx::query_as::<_, ClaimRow>(
+            "SELECT c.* FROM claims c \
+             JOIN claim_templates ct ON c.template_id = ct.id \
+             WHERE c.domain_id = $1 AND ct.slug = $2 AND c.status = 'active' \
+             ORDER BY c.created_at",
+        )
+        .bind(domain_id)
+        .bind(slug)
+        .fetch_all(pool)
+    };
+
+    let (sup_claims, pratyaya_claims, anga_claims, sandhi_claims, tripadi_claims) = tokio::try_join!(
+        query("sup_suffix"),
+        query("pratyaya_rule"),
+        query("anga_rule"),
+        query("sandhi_rule"),
+        query("tripadi_rule"),
+    )?;
+
+    let sup_suffixes = parse_claims(&sup_claims, "sup_suffix");
+    let mut pratyaya_rules: Vec<PratyayaRule> = parse_claims(&pratyaya_claims, "pratyaya_rule");
+    let mut anga_rules: Vec<AngaRule> = parse_claims(&anga_claims, "anga_rule");
+    let mut sandhi_rules: Vec<SandhiRule> = parse_claims(&sandhi_claims, "sandhi_rule");
+    let mut tripadi_rules: Vec<TripadiRule> = parse_claims(&tripadi_claims, "tripadi_rule");
+
+    sort_by_priority(&mut pratyaya_rules, |r| &r.rule_type, |r| &r.sutra_position);
+    sort_by_priority(&mut anga_rules, |r| &r.rule_type, |r| &r.sutra_position);
+    sort_by_priority(&mut sandhi_rules, |r| &r.rule_type, |r| &r.sutra_position);
+    // Tripadi: ascending sutra_position (rules apply in forward order within 8.2-8.4)
+    tripadi_rules.sort_by(|a, b| {
+        rule_priority(&b.rule_type)
+            .cmp(&rule_priority(&a.rule_type))
+            .then_with(|| a.sutra_position.cmp(&b.sutra_position))
+    });
+
+    Ok(DeclensionRuleSets { sup_suffixes, pratyaya_rules, anga_rules, sandhi_rules, tripadi_rules })
+}
+
 async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<DeriveResult> {
     let input: DeclensionInput =
         serde_json::from_value(request.input.clone()).map_err(|e| VidyaError::InvalidArgument {
@@ -128,23 +197,14 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
             received: e.to_string(),
         })?;
 
+    let rules = load_rule_sets(pool, request.domain_id).await?;
+
     let mut trace = Vec::new();
     let mut step_num = 0;
 
     // ── Layer 1: Suffix selection ──
-    let sup_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'sup_suffix' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let sup = sup_claims
+    let sup = rules.sup_suffixes
         .iter()
-        .filter_map(|c| serde_json::from_value::<SupSuffix>(c.params.clone()).ok())
         .find(|s| {
             s.stem_class == input.stem_class
                 && s.vibhakti == input.vibhakti
@@ -162,7 +222,6 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
 
     let mut current_suffix = sup.suffix.clone();
     let pratyaya_name = sup.pratyaya.clone();
-    let _markers = sup.markers.clone();
 
     step_num += 1;
     trace.push(TraceStep {
@@ -177,29 +236,7 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
     });
 
     // ── Layer 2: Pratyaya modification ──
-    let pratyaya_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'pratyaya_rule' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let mut pratyaya_rules: Vec<PratyayaRule> = pratyaya_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-
-    pratyaya_rules.sort_by(|a, b| {
-        let pa = rule_priority(&a.rule_type);
-        let pb = rule_priority(&b.rule_type);
-        pb.cmp(&pa)
-            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
-    });
-
-    for rule in &pratyaya_rules {
+    for rule in &rules.pratyaya_rules {
         if rule.condition_stem_class != input.stem_class {
             continue;
         }
@@ -227,33 +264,11 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
     }
 
     // ── Layer 3: Anga modification ──
-    let anga_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'anga_rule' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let mut anga_rules: Vec<AngaRule> = anga_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-
-    anga_rules.sort_by(|a, b| {
-        let pa = rule_priority(&a.rule_type);
-        let pb = rule_priority(&b.rule_type);
-        pb.cmp(&pa)
-            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
-    });
-
     let stem_final = input.stem.chars().last().map(|c| c.to_string()).unwrap_or_default();
     let suffix_initial = first_phoneme(&current_suffix);
     let mut current_stem = input.stem.clone();
 
-    for rule in &anga_rules {
+    for rule in &rules.anga_rules {
         if rule.condition_stem_final != stem_final {
             continue;
         }
@@ -288,32 +303,10 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
 
     // ── Layer 4: Junction sandhi ──
     if !current_suffix.is_empty() {
-        let sandhi_claims = sqlx::query_as::<_, ClaimRow>(
-            "SELECT c.* FROM claims c \
-             JOIN claim_templates ct ON c.template_id = ct.id \
-             WHERE c.domain_id = $1 AND ct.slug = 'sandhi_rule' AND c.status = 'active' \
-             ORDER BY c.created_at",
-        )
-        .bind(request.domain_id)
-        .fetch_all(pool)
-        .await?;
-
-        let mut sandhi_rules: Vec<SandhiRule> = sandhi_claims
-            .iter()
-            .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-            .collect();
-
-        sandhi_rules.sort_by(|a, b| {
-            let pa = rule_priority(&a.rule_type);
-            let pb = rule_priority(&b.rule_type);
-            pb.cmp(&pa)
-                .then_with(|| b.sutra_position.cmp(&a.sutra_position))
-        });
-
         let stem_end = last_phoneme(&current_stem);
         let suf_start = first_phoneme(&current_suffix);
 
-        for rule in &sandhi_rules {
+        for rule in &rules.sandhi_rules {
             if let Some(ref required) = rule.condition_pratyaya {
                 if *required != pratyaya_name {
                     continue;
@@ -353,29 +346,7 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
     };
 
     // ── Layer 5: Tripadi ──
-    let tripadi_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'tripadi_rule' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let mut tripadi_rules: Vec<TripadiRule> = tripadi_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-
-    tripadi_rules.sort_by(|a, b| {
-        let pa = rule_priority(&a.rule_type);
-        let pb = rule_priority(&b.rule_type);
-        pb.cmp(&pa)
-            .then_with(|| a.sutra_position.cmp(&b.sutra_position))
-    });
-
-    for rule in &tripadi_rules {
+    for rule in &rules.tripadi_rules {
         let applied = match rule.position.as_str() {
             "word_final" => {
                 if result.ends_with(&rule.input) {
@@ -497,6 +468,7 @@ fn try_apply_iuk_retroflexion(word: &str, input: &str, output: &str) -> Option<S
     None
 }
 
+// Assumes stem class naming: "{stem-final-vowel}-stem-{gender}" (e.g. "a-stem-m")
 fn stem_final_for_class(stem_class: &str) -> String {
     stem_class.split('-').next().unwrap_or("a").to_string()
 }
@@ -514,111 +486,18 @@ async fn analyze_declension(
         })?;
     let form = &input.form;
 
-    let sup_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'sup_suffix' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let pratyaya_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'pratyaya_rule' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let anga_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'anga_rule' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let sandhi_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'sandhi_rule' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let tripadi_claims = sqlx::query_as::<_, ClaimRow>(
-        "SELECT c.* FROM claims c \
-         JOIN claim_templates ct ON c.template_id = ct.id \
-         WHERE c.domain_id = $1 AND ct.slug = 'tripadi_rule' AND c.status = 'active' \
-         ORDER BY c.created_at",
-    )
-    .bind(request.domain_id)
-    .fetch_all(pool)
-    .await?;
-
-    let sup_suffixes: Vec<SupSuffix> = sup_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-
-    let mut pratyaya_rules: Vec<PratyayaRule> = pratyaya_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-    pratyaya_rules.sort_by(|a, b| {
-        rule_priority(&b.rule_type)
-            .cmp(&rule_priority(&a.rule_type))
-            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
-    });
-
-    let mut anga_rules: Vec<AngaRule> = anga_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-    anga_rules.sort_by(|a, b| {
-        rule_priority(&b.rule_type)
-            .cmp(&rule_priority(&a.rule_type))
-            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
-    });
-
-    let mut sandhi_rules: Vec<SandhiRule> = sandhi_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-    sandhi_rules.sort_by(|a, b| {
-        rule_priority(&b.rule_type)
-            .cmp(&rule_priority(&a.rule_type))
-            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
-    });
-
-    let mut tripadi_rules: Vec<TripadiRule> = tripadi_claims
-        .iter()
-        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
-        .collect();
-    tripadi_rules.sort_by(|a, b| {
-        rule_priority(&b.rule_type)
-            .cmp(&rule_priority(&a.rule_type))
-            .then_with(|| a.sutra_position.cmp(&b.sutra_position))
-    });
+    let rules = load_rule_sets(pool, request.domain_id).await?;
 
     let mut candidates = Vec::new();
 
-    for sup in &sup_suffixes {
+    for sup in &rules.sup_suffixes {
         if let Some(candidate) = try_match_sup(
             form,
             sup,
-            &pratyaya_rules,
-            &anga_rules,
-            &sandhi_rules,
-            &tripadi_rules,
+            &rules.pratyaya_rules,
+            &rules.anga_rules,
+            &rules.sandhi_rules,
+            &rules.tripadi_rules,
         ) {
             candidates.push(candidate);
         }
@@ -795,6 +674,6 @@ fn try_match_sup(
         }),
         rule: format!("{} {} {}", sup.stem_class, sup.vibhakti, sup.vacana),
         rule_ref: Some(sup.sutra.clone()),
-        specificity: final_tail.len() as f64,
+        specificity: final_tail.chars().count() as f64,
     })
 }
