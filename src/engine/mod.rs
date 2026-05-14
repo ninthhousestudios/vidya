@@ -1,4 +1,5 @@
 pub mod phoneme;
+mod declension;
 mod sandhi;
 
 use std::future::Future;
@@ -73,6 +74,7 @@ impl Engine {
     pub fn new() -> Self {
         let strategies: Vec<Box<dyn EngineStrategy>> = vec![
             Box::new(sandhi::VyakaranaSandhiStrategy),
+            Box::new(declension::VyakaranaDeclensionStrategy),
         ];
         Self { strategies }
     }

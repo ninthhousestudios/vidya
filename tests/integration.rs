@@ -190,12 +190,12 @@ async fn load_vyakarana_seed() {
     assert_eq!(result.domain, "vyakarana");
     assert_eq!(result.entity_kinds, 5);
     assert_eq!(result.relation_kinds, 3);
-    assert_eq!(result.claim_templates, 3);
+    assert_eq!(result.claim_templates, 7);
     assert_eq!(result.traditions, 3);
     assert_eq!(result.sources, 2);
-    assert_eq!(result.entities, 44);
-    assert_eq!(result.claims, 32);
-    assert_eq!(result.assertions, 32);
+    assert_eq!(result.entities, 57);
+    assert_eq!(result.claims, 76);
+    assert_eq!(result.assertions, 76);
     assert_eq!(result.relations, 0);
 
     // Idempotent reload
@@ -849,11 +849,11 @@ async fn full_integration_both_seeds() {
     let jyo = load_seed_file(&pool, Path::new("seeds/jyotish.json")).await;
 
     // Verify entity counts per domain
-    assert_eq!(vya.entities, 44);
+    assert_eq!(vya.entities, 57);
     assert!(jyo.entities > 0);
 
     // Verify claim counts per domain
-    assert_eq!(vya.claims, 32);
+    assert_eq!(vya.claims, 76);
     assert!(jyo.claims > 0);
 
     // Verify relations exist in jyotish
@@ -2547,6 +2547,120 @@ async fn analyze_roundtrip_with_derive() {
         c.decomposition["first"] == "a" && c.decomposition["second"] == "i"
     });
     assert!(found, "analyze should find the original (a, i) decomposition for 'e'");
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+// ── Declension derivation tests ─────────────────────────────────
+
+#[tokio::test]
+#[serial]
+async fn derive_declension_deva_full_paradigm() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let paradigm = vec![
+        ("prathama",   "ekavacana",   "devaḥ"),
+        ("prathama",   "dvivacana",   "devau"),
+        ("prathama",   "bahuvacana",  "devāḥ"),
+        ("dvitiya",    "ekavacana",   "devam"),
+        ("dvitiya",    "dvivacana",   "devau"),
+        ("dvitiya",    "bahuvacana",  "devān"),
+        ("tritiya",    "ekavacana",   "devena"),
+        ("tritiya",    "dvivacana",   "devābhyām"),
+        ("tritiya",    "bahuvacana",  "devaiḥ"),
+        ("caturthi",   "ekavacana",   "devāya"),
+        ("caturthi",   "dvivacana",   "devābhyām"),
+        ("caturthi",   "bahuvacana",  "devebhyaḥ"),
+        ("pancami",    "ekavacana",   "devāt"),
+        ("pancami",    "dvivacana",   "devābhyām"),
+        ("pancami",    "bahuvacana",  "devebhyaḥ"),
+        ("sasthi",     "ekavacana",   "devasya"),
+        ("sasthi",     "dvivacana",   "devayoḥ"),
+        ("sasthi",     "bahuvacana",  "devānām"),
+        ("saptami",    "ekavacana",   "deve"),
+        ("saptami",    "dvivacana",   "devayoḥ"),
+        ("saptami",    "bahuvacana",  "deveṣu"),
+        ("sambodhana", "ekavacana",   "deva"),
+        ("sambodhana", "dvivacana",   "devau"),
+        ("sambodhana", "bahuvacana",  "devāḥ"),
+    ];
+
+    for (vibhakti, vacana, expected) in &paradigm {
+        let request = vidya::engine::DeriveRequest {
+            domain_id: domain.id,
+            domain_slug: slug.into(),
+            operation: "declension".into(),
+            input: json!({
+                "stem": "deva",
+                "stem_class": "a-stem-m",
+                "vibhakti": vibhakti,
+                "vacana": vacana,
+            }),
+        };
+
+        let result = engine.derive(&pool, request).await.unwrap_or_else(|e| {
+            panic!("deva {} {}: {}", vibhakti, vacana, e);
+        });
+
+        let form = result.output["form"].as_str().unwrap();
+        assert_eq!(
+            form, *expected,
+            "deva {} {} → {} (expected {})",
+            vibhakti, vacana, form, expected
+        );
+
+        assert!(!result.trace.is_empty(), "deva {} {}: no trace", vibhakti, vacana);
+        for step in &result.trace {
+            assert!(step.rule_ref.is_some(), "trace step should have sūtra ref");
+        }
+    }
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn derive_declension_via_mcp_tool() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let result = tools::derive::handle(
+        &pool,
+        tools::DeriveArgs {
+            domain: slug.into(),
+            operation: "declension".into(),
+            input: json!({
+                "stem": "deva",
+                "stem_class": "a-stem-m",
+                "vibhakti": "dvitiya",
+                "vacana": "ekavacana",
+            }),
+        },
+    )
+    .await
+    .expect("derive via MCP tool");
+
+    assert_eq!(result.operation, "declension");
+    assert_eq!(result.result["form"].as_str().unwrap(), "devam");
 
     cleanup(&pool, slug).await;
     cleanup_sources(&pool, source_slugs).await;
