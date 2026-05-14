@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use rmcp::{ServiceExt, transport::stdio};
 use tracing_subscriber::EnvFilter;
 
@@ -13,23 +13,43 @@ use vidya::{
 };
 
 #[derive(Debug, Parser)]
-#[command(name = "vidya", version, about = "Structured knowledge graph with reasoning — MCP server")]
+#[command(
+    name = "vidya",
+    version,
+    about = "Structured knowledge graph with reasoning — MCP server",
+    arg_required_else_help = true
+)]
 struct Cli {
-    /// Run as a Streamable HTTP server instead of stdio.
-    #[arg(long)]
-    http: bool,
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    /// HTTP listen address (used with --http).
-    #[arg(long)]
-    http_addr: Option<String>,
+#[derive(Debug, Subcommand)]
+enum Commands {
+    /// Start the MCP server (stdio by default, --http for Streamable HTTP).
+    Serve {
+        /// Run as a Streamable HTTP server instead of stdio.
+        #[arg(long)]
+        http: bool,
 
-    /// HTTP listen port (used with --http).
-    #[arg(long)]
-    http_port: Option<u16>,
+        /// HTTP listen address (used with --http).
+        #[arg(long)]
+        http_addr: Option<String>,
 
-    /// Path to a file containing the bearer token for HTTP auth.
-    #[arg(long)]
-    auth_token_file: Option<PathBuf>,
+        /// HTTP listen port (used with --http).
+        #[arg(long)]
+        http_port: Option<u16>,
+
+        /// Path to a file containing the bearer token for HTTP auth.
+        #[arg(long)]
+        auth_token_file: Option<PathBuf>,
+    },
+    /// Install systemd user service for vidya.
+    InstallServices {
+        /// Enable and start the service after installing.
+        #[arg(long)]
+        enable: bool,
+    },
 }
 
 #[tokio::main]
@@ -38,26 +58,38 @@ async fn main() -> Result<()> {
     let _ = dotenvy::dotenv();
 
     let cli = Cli::parse();
-    let cfg = Config::from_env();
 
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_new(&cfg.log_level).unwrap_or_else(|_| EnvFilter::new("info")),
-        )
-        .with_writer(std::io::stderr)
-        .init();
+    match cli.command {
+        Commands::Serve {
+            http,
+            http_addr,
+            http_port,
+            auth_token_file,
+        } => {
+            let cfg = Config::from_env();
 
-    tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting vidya");
+            tracing_subscriber::fmt()
+                .with_env_filter(
+                    EnvFilter::try_new(&cfg.log_level)
+                        .unwrap_or_else(|_| EnvFilter::new("info")),
+                )
+                .with_writer(std::io::stderr)
+                .init();
 
-    let pool = db::connect(&cfg).await.context("connecting to database")?;
-    db::run_migrations(&pool)
-        .await
-        .context("running migrations")?;
+            tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting vidya");
 
-    if cli.http {
-        serve_http(cli, cfg, pool).await
-    } else {
-        serve_stdio(pool).await
+            let pool = db::connect(&cfg).await.context("connecting to database")?;
+            db::run_migrations(&pool)
+                .await
+                .context("running migrations")?;
+
+            if http {
+                serve_http(http_addr, http_port, auth_token_file, cfg, pool).await
+            } else {
+                serve_stdio(pool).await
+            }
+        }
+        Commands::InstallServices { enable } => cmd_install_services(enable),
     }
 }
 
@@ -82,7 +114,13 @@ async fn serve_stdio(pool: sqlx::PgPool) -> Result<()> {
     Ok(())
 }
 
-async fn serve_http(cli: Cli, cfg: Config, pool: sqlx::PgPool) -> Result<()> {
+async fn serve_http(
+    http_addr: Option<String>,
+    http_port: Option<u16>,
+    auth_token_file: Option<PathBuf>,
+    cfg: Config,
+    pool: sqlx::PgPool,
+) -> Result<()> {
     use axum::routing::any_service;
     use rmcp::transport::streamable_http_server::{
         session::local::LocalSessionManager,
@@ -91,7 +129,7 @@ async fn serve_http(cli: Cli, cfg: Config, pool: sqlx::PgPool) -> Result<()> {
     use tokio_util::sync::CancellationToken;
     use tower_http::validate_request::ValidateRequestHeaderLayer;
 
-    let token_path = cli.auth_token_file.ok_or_else(|| {
+    let token_path = auth_token_file.ok_or_else(|| {
         anyhow::anyhow!("--auth-token-file is required when running in --http mode")
     })?;
     let bearer_token = std::fs::read_to_string(&token_path)
@@ -101,8 +139,8 @@ async fn serve_http(cli: Cli, cfg: Config, pool: sqlx::PgPool) -> Result<()> {
 
     let cancel = CancellationToken::new();
 
-    let http_addr = cli.http_addr.unwrap_or_else(|| cfg.http_addr.clone());
-    let http_port = cli.http_port.unwrap_or(cfg.http_port);
+    let http_addr = http_addr.unwrap_or_else(|| cfg.http_addr.clone());
+    let http_port = http_port.unwrap_or(cfg.http_port);
 
     let config = StreamableHttpServerConfig::default()
         .with_cancellation_token(cancel.clone())
@@ -179,6 +217,58 @@ async fn serve_http(cli: Cli, cfg: Config, pool: sqlx::PgPool) -> Result<()> {
         .context("HTTP server exited with error")?;
 
     Ok(())
+}
+
+fn cmd_install_services(enable: bool) -> Result<()> {
+    let home = std::env::var("HOME").map_err(|_| anyhow::anyhow!("HOME not set"))?;
+    let vidya_bin = format!("{home}/.cargo/bin/vidya");
+
+    let unit = service_unit_content(&vidya_bin);
+
+    let service_dir = format!("{home}/.config/systemd/user");
+    std::fs::create_dir_all(&service_dir)?;
+
+    let service_path = format!("{service_dir}/vidya.service");
+    std::fs::write(&service_path, unit)?;
+    println!("Wrote {service_path}");
+
+    let status = std::process::Command::new("systemctl")
+        .args(["--user", "daemon-reload"])
+        .status()?;
+    if !status.success() {
+        anyhow::bail!("systemctl --user daemon-reload failed");
+    }
+    println!("Reloaded systemd user daemon");
+
+    if enable {
+        let status = std::process::Command::new("systemctl")
+            .args(["--user", "enable", "--now", "vidya.service"])
+            .status()?;
+        if !status.success() {
+            anyhow::bail!("systemctl --user enable --now vidya.service failed");
+        }
+        println!("Enabled and started vidya.service");
+    }
+
+    Ok(())
+}
+
+fn service_unit_content(vidya_bin: &str) -> String {
+    format!(
+        r#"[Unit]
+Description=vidya MCP server (HTTP)
+After=postgresql.service
+
+[Service]
+ExecStartPre=/bin/sh -c 'until /usr/bin/pg_isready -q; do sleep 1; done'
+ExecStart={vidya_bin} serve --http --auth-token-file %h/.vidya/auth-token
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
+"#
+    )
 }
 
 #[cfg(unix)]

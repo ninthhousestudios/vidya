@@ -26,7 +26,7 @@ impl Config {
                 env_or("VIDYA_DB_IDLE_TIMEOUT_SECS", "300").parse().unwrap_or(300),
             ),
             http_addr: env_or("VIDYA_HTTP_ADDR", "127.0.0.1"),
-            http_port: env_or("VIDYA_HTTP_PORT", "3200").parse().unwrap_or(3200),
+            http_port: env_or("VIDYA_HTTP_PORT", "3300").parse().unwrap_or(3300),
         }
     }
 }
