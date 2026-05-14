@@ -25,7 +25,8 @@
           "second": { "type": "string", "description": "Initial sound of second word" },
           "result": { "type": "string", "description": "Resulting sound(s) after sandhi" },
           "sutra": { "type": "string", "description": "Ashtadhyayi sutra reference" },
-          "context": { "type": "string", "description": "Application context" }
+          "context": { "type": "string", "description": "Application context" },
+          "condition_pratyaya": { "type": "string", "description": "If set, rule only applies when the active pratyaya matches" }
         }
       }
     },
@@ -179,6 +180,7 @@
     { "kind": "sutra", "name": "6.1.101", "attrs": { "text": "akaḥ savarṇe dīrghaḥ", "translation": "A simple vowel followed by its savarṇa (homogeneous vowel) is replaced by its long form" } },
     { "kind": "sutra", "name": "4.1.2", "attrs": { "text": "svaujasamauṭchaṣṭā...", "translation": "The sUP suffixes are ordained after nominal stems" } },
     { "kind": "sutra", "name": "6.1.103", "attrs": { "text": "tasmāc chasoḥ naḥ puṁsi", "translation": "After a-stem, śas is replaced by n in masculine" } },
+    { "kind": "sutra", "name": "6.1.107", "attrs": { "text": "ami pūrvaḥ", "translation": "Before am pratyaya, the prior vowel prevails (absorbs the a of am)" } },
     { "kind": "sutra", "name": "6.1.69", "attrs": { "text": "eṅhrasvāt sambuddheh", "translation": "The su of sambodhana is deleted (luk) after a short vowel" } },
     { "kind": "sutra", "name": "7.1.9", "attrs": { "text": "ato bhisa ais", "translation": "After a-stem, bhis is replaced by ais" } },
     { "kind": "sutra", "name": "7.1.12", "attrs": { "text": "ṭānāsinasos tānāsināstasya...", "translation": "After a-stem, ṭā→ina, ṅasi→t, ṅas→sya" } },
@@ -193,6 +195,12 @@
     { "kind": "sutra", "name": "8.3.59", "attrs": { "text": "ādeśapratyayoḥ", "translation": "s becomes ṣ after i/u/ṛ/e/o when in an ādeśa or pratyaya" } }
   ],
   "claims": [
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "a", "second": "a", "result": "a", "sutra": "6.1.107", "sutra_position": "06.01.107", "rule_type": "apavada", "condition_pratyaya": "am" },
+      "statement": "a + a(m) → a (ami pūrvaḥ — prior vowel prevails before am, Aṣṭ. 6.1.107)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
     {
       "template": "sandhi_rule",
       "params": { "first": "a", "second": "a", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },

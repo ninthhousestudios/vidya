@@ -96,6 +96,8 @@ struct SandhiRule {
     sutra: String,
     sutra_position: String,
     rule_type: String,
+    #[serde(default)]
+    condition_pratyaya: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -163,8 +165,6 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
     let mut current_suffix = sup.suffix.clone();
     let pratyaya_name = sup.pratyaya.clone();
     let _markers = sup.markers.clone();
-    let l1_suffix = current_suffix.clone();
-    let mut pratyaya_modified = false;
 
     step_num += 1;
     trace.push(TraceStep {
@@ -216,7 +216,6 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
         if rule.input_suffix == current_suffix {
             let old = current_suffix.clone();
             current_suffix = rule.output_suffix.clone();
-            pratyaya_modified = true;
             step_num += 1;
             trace.push(TraceStep {
                 step: step_num,
@@ -316,28 +315,12 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
         let stem_end = last_phoneme(&current_stem);
         let suf_start = first_phoneme(&current_suffix);
 
-        // Sthānivat: skip savarṇa-dīrgha (a+a→ā etc.) when the suffix
-        // vowel at the junction is "inherited" — same vowel as stem-final,
-        // not introduced by anubandha stripping or pratyaya modification.
-        // When pratyaya "jas" → suffix "as", the initial vowel changed
-        // (j stripped), so the suffix 'a' is genuinely new at the boundary.
-        // When pratyaya "am" → suffix "am" (unchanged), the 'a' is the
-        // stem vowel continuing — no savarṇa meeting.
-        let suffix_vowel_is_new = pratyaya_modified
-            || first_phoneme(&pratyaya_name) != first_phoneme(&l1_suffix);
-
-        // When the suffix vowel is inherited (not new), absorb the
-        // duplicate at the junction: deva + am → devam (not devaam).
-        // The stem-final vowel subsumes the suffix-initial.
-        if !suffix_vowel_is_new && is_savarna(&stem_end, &suf_start) {
-            let remainder = strip_first_phoneme(&current_suffix, &suf_start);
-            current_suffix = remainder;
-        }
-
-        let stem_end = last_phoneme(&current_stem);
-        let suf_start = first_phoneme(&current_suffix);
-
         for rule in &sandhi_rules {
+            if let Some(ref required) = rule.condition_pratyaya {
+                if *required != pratyaya_name {
+                    continue;
+                }
+            }
             if rule.first == stem_end && rule.second == suf_start {
                 let old_stem = current_stem.clone();
                 let old_suffix = current_suffix.clone();
@@ -497,21 +480,6 @@ fn strip_first_phoneme(s: &str, phoneme: &str) -> String {
 }
 
 const IUK_VOWELS: &[char] = &['i', 'u', 'e', 'o'];
-
-fn base_vowel(phoneme: &str) -> &str {
-    match phoneme {
-        "a" | "ā" => "a",
-        "i" | "ī" => "i",
-        "u" | "ū" => "u",
-        "ṛ" | "ṝ" => "ṛ",
-        "ḷ" => "ḷ",
-        _ => phoneme,
-    }
-}
-
-fn is_savarna(a: &str, b: &str) -> bool {
-    base_vowel(a) == base_vowel(b)
-}
 
 fn try_apply_iuk_retroflexion(word: &str, input: &str, output: &str) -> Option<String> {
     let chars: Vec<char> = word.chars().collect();

@@ -52,6 +52,8 @@ struct SandhiParams {
     sutra_position: String,
     #[serde(default)]
     rule_type: String,
+    #[serde(default)]
+    condition_pratyaya: Option<String>,
 }
 
 fn rule_type_priority(rule_type: &str) -> u8 {
@@ -88,6 +90,7 @@ async fn derive_sandhi(pool: &PgPool, request: &DeriveRequest) -> Result<DeriveR
         .filter_map(|rule| {
             serde_json::from_value::<SandhiParams>(rule.params.clone())
                 .ok()
+                .filter(|p| p.condition_pratyaya.is_none())
                 .map(|p| (p, rule))
         })
         .collect();
@@ -173,6 +176,7 @@ async fn analyze_sandhi(pool: &PgPool, request: &AnalyzeRequest) -> Result<Vec<A
         .filter_map(|rule| {
             serde_json::from_value::<SandhiParams>(rule.params.clone())
                 .ok()
+                .filter(|p| p.condition_pratyaya.is_none())
                 .map(|p| (p, rule))
         })
         .collect();
