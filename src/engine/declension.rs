@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use serde_json::json;
 use sqlx::PgPool;
 
 use crate::db::ClaimRow;
@@ -27,15 +28,7 @@ impl EngineStrategy for VyakaranaDeclensionStrategy {
         request: &'a super::AnalyzeRequest,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<super::AnalysisCandidate>>> + Send + 'a>>
     {
-        Box::pin(async move {
-            let _ = (pool, request);
-            Err(VidyaError::InvalidArgument {
-                tool: "vidya_analyze".into(),
-                argument: "operation".into(),
-                constraint: "declension analysis not yet implemented".into(),
-                received: "declension".into(),
-            })
-        })
+        Box::pin(analyze_declension(pool, request))
     }
 }
 
@@ -45,6 +38,11 @@ struct DeclensionInput {
     stem_class: String,
     vibhakti: String,
     vacana: String,
+}
+
+#[derive(Deserialize)]
+struct AnalyzeDeclensionInput {
+    form: String,
 }
 
 #[derive(Deserialize)]
@@ -497,4 +495,306 @@ fn try_apply_iuk_retroflexion(word: &str, input: &str, output: &str) -> Option<S
         }
     }
     None
+}
+
+fn stem_final_for_class(stem_class: &str) -> String {
+    stem_class.split('-').next().unwrap_or("a").to_string()
+}
+
+async fn analyze_declension(
+    pool: &PgPool,
+    request: &super::AnalyzeRequest,
+) -> Result<Vec<super::AnalysisCandidate>> {
+    let input: AnalyzeDeclensionInput =
+        serde_json::from_value(request.input.clone()).map_err(|e| VidyaError::InvalidArgument {
+            tool: "vidya_analyze".into(),
+            argument: "input".into(),
+            constraint: "requires {form} field".into(),
+            received: e.to_string(),
+        })?;
+    let form = &input.form;
+
+    let sup_claims = sqlx::query_as::<_, ClaimRow>(
+        "SELECT c.* FROM claims c \
+         JOIN claim_templates ct ON c.template_id = ct.id \
+         WHERE c.domain_id = $1 AND ct.slug = 'sup_suffix' AND c.status = 'active' \
+         ORDER BY c.created_at",
+    )
+    .bind(request.domain_id)
+    .fetch_all(pool)
+    .await?;
+
+    let pratyaya_claims = sqlx::query_as::<_, ClaimRow>(
+        "SELECT c.* FROM claims c \
+         JOIN claim_templates ct ON c.template_id = ct.id \
+         WHERE c.domain_id = $1 AND ct.slug = 'pratyaya_rule' AND c.status = 'active' \
+         ORDER BY c.created_at",
+    )
+    .bind(request.domain_id)
+    .fetch_all(pool)
+    .await?;
+
+    let anga_claims = sqlx::query_as::<_, ClaimRow>(
+        "SELECT c.* FROM claims c \
+         JOIN claim_templates ct ON c.template_id = ct.id \
+         WHERE c.domain_id = $1 AND ct.slug = 'anga_rule' AND c.status = 'active' \
+         ORDER BY c.created_at",
+    )
+    .bind(request.domain_id)
+    .fetch_all(pool)
+    .await?;
+
+    let sandhi_claims = sqlx::query_as::<_, ClaimRow>(
+        "SELECT c.* FROM claims c \
+         JOIN claim_templates ct ON c.template_id = ct.id \
+         WHERE c.domain_id = $1 AND ct.slug = 'sandhi_rule' AND c.status = 'active' \
+         ORDER BY c.created_at",
+    )
+    .bind(request.domain_id)
+    .fetch_all(pool)
+    .await?;
+
+    let tripadi_claims = sqlx::query_as::<_, ClaimRow>(
+        "SELECT c.* FROM claims c \
+         JOIN claim_templates ct ON c.template_id = ct.id \
+         WHERE c.domain_id = $1 AND ct.slug = 'tripadi_rule' AND c.status = 'active' \
+         ORDER BY c.created_at",
+    )
+    .bind(request.domain_id)
+    .fetch_all(pool)
+    .await?;
+
+    let sup_suffixes: Vec<SupSuffix> = sup_claims
+        .iter()
+        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
+        .collect();
+
+    let mut pratyaya_rules: Vec<PratyayaRule> = pratyaya_claims
+        .iter()
+        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
+        .collect();
+    pratyaya_rules.sort_by(|a, b| {
+        rule_priority(&b.rule_type)
+            .cmp(&rule_priority(&a.rule_type))
+            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
+    });
+
+    let mut anga_rules: Vec<AngaRule> = anga_claims
+        .iter()
+        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
+        .collect();
+    anga_rules.sort_by(|a, b| {
+        rule_priority(&b.rule_type)
+            .cmp(&rule_priority(&a.rule_type))
+            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
+    });
+
+    let mut sandhi_rules: Vec<SandhiRule> = sandhi_claims
+        .iter()
+        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
+        .collect();
+    sandhi_rules.sort_by(|a, b| {
+        rule_priority(&b.rule_type)
+            .cmp(&rule_priority(&a.rule_type))
+            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
+    });
+
+    let mut tripadi_rules: Vec<TripadiRule> = tripadi_claims
+        .iter()
+        .filter_map(|c| serde_json::from_value(c.params.clone()).ok())
+        .collect();
+    tripadi_rules.sort_by(|a, b| {
+        rule_priority(&b.rule_type)
+            .cmp(&rule_priority(&a.rule_type))
+            .then_with(|| a.sutra_position.cmp(&b.sutra_position))
+    });
+
+    let mut candidates = Vec::new();
+
+    for sup in &sup_suffixes {
+        if let Some(candidate) = try_match_sup(
+            form,
+            sup,
+            &pratyaya_rules,
+            &anga_rules,
+            &sandhi_rules,
+            &tripadi_rules,
+        ) {
+            candidates.push(candidate);
+        }
+    }
+
+    candidates.sort_by(|a, b| {
+        b.specificity
+            .partial_cmp(&a.specificity)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    Ok(candidates)
+}
+
+fn try_match_sup(
+    form: &str,
+    sup: &SupSuffix,
+    pratyaya_rules: &[PratyayaRule],
+    anga_rules: &[AngaRule],
+    sandhi_rules: &[SandhiRule],
+    tripadi_rules: &[TripadiRule],
+) -> Option<super::AnalysisCandidate> {
+    let stem_final = stem_final_for_class(&sup.stem_class);
+    let mut trace = Vec::new();
+    let mut step_num = 0usize;
+
+    step_num += 1;
+    trace.push(json!({
+        "step": step_num,
+        "rule": format!("sup_suffix: {} → {}", sup.pratyaya, sup.suffix),
+        "sutra": sup.sutra,
+    }));
+
+    // Layer 2: Pratyaya modification
+    let mut current_suffix = sup.suffix.clone();
+    for rule in pratyaya_rules {
+        if rule.condition_stem_class != sup.stem_class {
+            continue;
+        }
+        if rule.condition_suffix != sup.pratyaya {
+            continue;
+        }
+        if let Some(ref cv) = rule.condition_vibhakti {
+            if *cv != sup.vibhakti {
+                continue;
+            }
+        }
+        if rule.input_suffix == current_suffix {
+            let old = current_suffix.clone();
+            current_suffix = rule.output_suffix.clone();
+            step_num += 1;
+            trace.push(json!({
+                "step": step_num,
+                "rule": format!("pratyaya_rule: {} → {}", old, current_suffix),
+                "sutra": rule.sutra,
+            }));
+            break;
+        }
+    }
+
+    // Layer 3: Anga modification
+    let suffix_initial = first_phoneme(&current_suffix);
+    let mut modified_final = stem_final.clone();
+    for rule in anga_rules {
+        if rule.condition_stem_final != stem_final {
+            continue;
+        }
+        if let Some(ref si) = rule.condition_suffix_initial {
+            if *si != suffix_initial {
+                continue;
+            }
+        }
+        if let Some(ref cv) = rule.condition_vacana {
+            if *cv != sup.vacana {
+                continue;
+            }
+        }
+        if modified_final == rule.operation_input {
+            let old = modified_final.clone();
+            modified_final = rule.operation_output.clone();
+            step_num += 1;
+            trace.push(json!({
+                "step": step_num,
+                "rule": format!("anga_rule: {} → {}", old, modified_final),
+                "sutra": rule.sutra,
+            }));
+            break;
+        }
+    }
+
+    // Layer 4: Junction sandhi
+    let tail = if current_suffix.is_empty() {
+        modified_final.clone()
+    } else {
+        let stem_end = &modified_final;
+        let suf_start = first_phoneme(&current_suffix);
+        let mut tail_result = format!("{}{}", modified_final, current_suffix);
+
+        for rule in sandhi_rules {
+            if let Some(ref required) = rule.condition_pratyaya {
+                if *required != sup.pratyaya {
+                    continue;
+                }
+            }
+            if rule.first == *stem_end && rule.second == suf_start {
+                let remainder = strip_first_phoneme(&current_suffix, &suf_start);
+                tail_result = format!("{}{}", rule.result, remainder);
+                step_num += 1;
+                trace.push(json!({
+                    "step": step_num,
+                    "rule": format!("sandhi: {} + {} → {}", rule.first, rule.second, rule.result),
+                    "sutra": rule.sutra,
+                }));
+                break;
+            }
+        }
+        tail_result
+    };
+
+    // Layer 5: Tripadi
+    let mut final_tail = tail;
+    for rule in tripadi_rules {
+        let applied = match rule.position.as_str() {
+            "word_final" => {
+                if final_tail.ends_with(&rule.input) {
+                    let prefix = &final_tail[..final_tail.len() - rule.input.len()];
+                    Some(format!("{}{}", prefix, rule.output))
+                } else {
+                    None
+                }
+            }
+            "internal" => {
+                if let Some(ref prec) = rule.condition_preceding {
+                    if prec == "iuk" {
+                        try_apply_iuk_retroflexion(&final_tail, &rule.input, &rule.output)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        };
+        if let Some(new_tail) = applied {
+            step_num += 1;
+            trace.push(json!({
+                "step": step_num,
+                "rule": format!("tripadi: {} → {}", rule.input, rule.output),
+                "sutra": rule.sutra,
+            }));
+            final_tail = new_tail;
+        }
+    }
+
+    // Match against form
+    if final_tail.is_empty() || form.len() < final_tail.len() {
+        return None;
+    }
+    if !form.ends_with(&final_tail) {
+        return None;
+    }
+
+    let prefix = &form[..form.len() - final_tail.len()];
+    let stem = format!("{}{}", prefix, stem_final);
+
+    Some(super::AnalysisCandidate {
+        decomposition: json!({
+            "stem": stem,
+            "stem_class": sup.stem_class,
+            "vibhakti": sup.vibhakti,
+            "vacana": sup.vacana,
+            "trace": trace,
+        }),
+        rule: format!("{} {} {}", sup.stem_class, sup.vibhakti, sup.vacana),
+        rule_ref: Some(sup.sutra.clone()),
+        specificity: final_tail.len() as f64,
+    })
 }

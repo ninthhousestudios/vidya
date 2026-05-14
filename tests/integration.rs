@@ -2665,3 +2665,374 @@ async fn derive_declension_via_mcp_tool() {
     cleanup(&pool, slug).await;
     cleanup_sources(&pool, source_slugs).await;
 }
+
+// ── Declension reverse analysis tests ──
+
+#[tokio::test]
+#[serial]
+async fn analyze_declension_devam() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "declension".into(),
+        input: json!({ "form": "devam" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+
+    assert!(!candidates.is_empty(), "should return at least one candidate");
+
+    let found = candidates.iter().any(|c| {
+        c.decomposition["stem"] == "deva"
+            && c.decomposition["vibhakti"] == "dvitiya"
+            && c.decomposition["vacana"] == "ekavacana"
+    });
+    assert!(
+        found,
+        "should find (deva, dvitiya, ekavacana) among candidates: {:?}",
+        candidates
+            .iter()
+            .map(|c| &c.decomposition)
+            .collect::<Vec<_>>()
+    );
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_declension_deve() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "declension".into(),
+        input: json!({ "form": "deve" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+
+    let found = candidates.iter().any(|c| {
+        c.decomposition["stem"] == "deva"
+            && c.decomposition["vibhakti"] == "saptami"
+            && c.decomposition["vacana"] == "ekavacana"
+    });
+    assert!(
+        found,
+        "should find (deva, saptami, ekavacana) among candidates: {:?}",
+        candidates
+            .iter()
+            .map(|c| &c.decomposition)
+            .collect::<Vec<_>>()
+    );
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_declension_devah_tripadi() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "declension".into(),
+        input: json!({ "form": "devaḥ" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+
+    let found = candidates.iter().any(|c| {
+        c.decomposition["stem"] == "deva"
+            && c.decomposition["vibhakti"] == "prathama"
+            && c.decomposition["vacana"] == "ekavacana"
+    });
+    assert!(
+        found,
+        "should find (deva, prathama, ekavacana): {:?}",
+        candidates
+            .iter()
+            .map(|c| &c.decomposition)
+            .collect::<Vec<_>>()
+    );
+
+    // Trace should include tripadi step
+    let candidate = candidates
+        .iter()
+        .find(|c| {
+            c.decomposition["stem"] == "deva"
+                && c.decomposition["vibhakti"] == "prathama"
+                && c.decomposition["vacana"] == "ekavacana"
+        })
+        .unwrap();
+    let trace = candidate.decomposition["trace"].as_array().unwrap();
+    let has_tripadi = trace
+        .iter()
+        .any(|s| s["rule"].as_str().unwrap().contains("tripadi"));
+    assert!(has_tripadi, "trace should include tripadi step");
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_declension_multiple_candidates() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    // devau is ambiguous: prathama-dvi, dvitiya-dvi, sambodhana-dvi
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "declension".into(),
+        input: json!({ "form": "devau" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+
+    let decomps: Vec<(&str, &str)> = candidates
+        .iter()
+        .filter(|c| c.decomposition["stem"] == "deva")
+        .map(|c| {
+            (
+                c.decomposition["vibhakti"].as_str().unwrap(),
+                c.decomposition["vacana"].as_str().unwrap(),
+            )
+        })
+        .collect();
+
+    assert!(
+        decomps.contains(&("prathama", "dvivacana")),
+        "should contain prathama-dvi: {:?}",
+        decomps
+    );
+    assert!(
+        decomps.contains(&("dvitiya", "dvivacana")),
+        "should contain dvitiya-dvi: {:?}",
+        decomps
+    );
+    assert!(
+        decomps.contains(&("sambodhana", "dvivacana")),
+        "should contain sambodhana-dvi: {:?}",
+        decomps
+    );
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_declension_unknown_returns_empty() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let request = vidya::engine::AnalyzeRequest {
+        domain_id: domain.id,
+        domain_slug: slug.into(),
+        operation: "declension".into(),
+        input: json!({ "form": "xyz" }),
+    };
+
+    let candidates = engine.analyze(&pool, request).await.expect("analyze should succeed");
+    assert!(
+        candidates.is_empty(),
+        "expected no candidates for 'xyz', got {}",
+        candidates.len()
+    );
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_declension_full_paradigm_roundtrip() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let engine = vidya::engine::Engine::new();
+    let domain = vidya::db::get_domain_by_slug(&pool, slug)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let paradigm = vec![
+        ("prathama", "ekavacana", "devaḥ"),
+        ("prathama", "dvivacana", "devau"),
+        ("prathama", "bahuvacana", "devāḥ"),
+        ("dvitiya", "ekavacana", "devam"),
+        ("dvitiya", "dvivacana", "devau"),
+        ("dvitiya", "bahuvacana", "devān"),
+        ("tritiya", "ekavacana", "devena"),
+        ("tritiya", "dvivacana", "devābhyām"),
+        ("tritiya", "bahuvacana", "devaiḥ"),
+        ("caturthi", "ekavacana", "devāya"),
+        ("caturthi", "dvivacana", "devābhyām"),
+        ("caturthi", "bahuvacana", "devebhyaḥ"),
+        ("pancami", "ekavacana", "devāt"),
+        ("pancami", "dvivacana", "devābhyām"),
+        ("pancami", "bahuvacana", "devebhyaḥ"),
+        ("sasthi", "ekavacana", "devasya"),
+        ("sasthi", "dvivacana", "devayoḥ"),
+        ("sasthi", "bahuvacana", "devānām"),
+        ("saptami", "ekavacana", "deve"),
+        ("saptami", "dvivacana", "devayoḥ"),
+        ("saptami", "bahuvacana", "deveṣu"),
+        ("sambodhana", "ekavacana", "deva"),
+        ("sambodhana", "dvivacana", "devau"),
+        ("sambodhana", "bahuvacana", "devāḥ"),
+    ];
+
+    for (vibhakti, vacana, form) in &paradigm {
+        let request = vidya::engine::AnalyzeRequest {
+            domain_id: domain.id,
+            domain_slug: slug.into(),
+            operation: "declension".into(),
+            input: json!({ "form": form }),
+        };
+
+        let candidates = engine.analyze(&pool, request).await.unwrap_or_else(|e| {
+            panic!("analyze {} ({}): {}", form, vibhakti, e);
+        });
+
+        let found = candidates.iter().any(|c| {
+            c.decomposition["stem"] == "deva"
+                && c.decomposition["vibhakti"] == *vibhakti
+                && c.decomposition["vacana"] == *vacana
+        });
+        assert!(
+            found,
+            "{} should produce candidate (deva, {}, {}), got: {:?}",
+            form,
+            vibhakti,
+            vacana,
+            candidates
+                .iter()
+                .map(|c| &c.decomposition)
+                .collect::<Vec<_>>()
+        );
+
+        // Every candidate should have a trace with sutra citations
+        for c in &candidates {
+            let trace = c.decomposition["trace"].as_array().unwrap();
+            assert!(!trace.is_empty(), "{}: candidate should have trace", form);
+            for step in trace {
+                assert!(
+                    step["sutra"].as_str().is_some(),
+                    "{}: trace step should have sutra",
+                    form
+                );
+            }
+        }
+    }
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
+
+#[tokio::test]
+#[serial]
+async fn analyze_declension_via_mcp_tool() {
+    let pool = test_pool().await;
+    let slug = "vyakarana";
+    let source_slugs = &["ashtadhyayi", "shiva-sutras"];
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+    load_seed_file(&pool, Path::new("seeds/vyakarana.json")).await;
+
+    let result = tools::analyze::handle(
+        &pool,
+        tools::AnalyzeArgs {
+            domain: slug.into(),
+            operation: "declension".into(),
+            input: json!({ "form": "devam" }),
+        },
+    )
+    .await
+    .expect("analyze via MCP tool");
+
+    assert_eq!(result.operation, "declension");
+    assert!(!result.candidates.is_empty());
+
+    let found = result.candidates.iter().any(|c| {
+        c.decomposition["stem"] == "deva"
+            && c.decomposition["vibhakti"] == "dvitiya"
+            && c.decomposition["vacana"] == "ekavacana"
+    });
+    assert!(found, "MCP tool should return (deva, dvitiya, ekavacana)");
+
+    cleanup(&pool, slug).await;
+    cleanup_sources(&pool, source_slugs).await;
+}
