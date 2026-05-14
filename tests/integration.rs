@@ -193,9 +193,9 @@ async fn load_vyakarana_seed() {
     assert_eq!(result.claim_templates, 7);
     assert_eq!(result.traditions, 3);
     assert_eq!(result.sources, 2);
-    assert_eq!(result.entities, 57);
-    assert_eq!(result.claims, 76);
-    assert_eq!(result.assertions, 76);
+    assert_eq!(result.entities, 58);
+    assert_eq!(result.claims, 77);
+    assert_eq!(result.assertions, 77);
     assert_eq!(result.relations, 0);
 
     // Idempotent reload
@@ -849,11 +849,11 @@ async fn full_integration_both_seeds() {
     let jyo = load_seed_file(&pool, Path::new("seeds/jyotish.json")).await;
 
     // Verify entity counts per domain
-    assert_eq!(vya.entities, 57);
+    assert_eq!(vya.entities, 58);
     assert!(jyo.entities > 0);
 
     // Verify claim counts per domain
-    assert_eq!(vya.claims, 76);
+    assert_eq!(vya.claims, 77);
     assert!(jyo.claims > 0);
 
     // Verify relations exist in jyotish

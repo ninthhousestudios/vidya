@@ -188,7 +188,8 @@
     { "kind": "sutra", "name": "7.3.102", "attrs": { "text": "supi ca", "translation": "Extends 7.3.101 to sUP context" } },
     { "kind": "sutra", "name": "7.3.103", "attrs": { "text": "bahuvacane jhalyeṭ", "translation": "Final a of aṅga becomes e before jhaL-initial suffix in bahuvacana" } },
     { "kind": "sutra", "name": "7.3.104", "attrs": { "text": "osi ca", "translation": "Final a of aṅga becomes e before os (gen/loc dual)" } },
-    { "kind": "sutra", "name": "8.2.66", "attrs": { "text": "sasajuṣo ruḥ", "translation": "Word-final s is replaced by visarga (ru)" } },
+    { "kind": "sutra", "name": "8.2.66", "attrs": { "text": "sasajuṣo ruḥ", "translation": "Word-final s (and ṣ of sajuṣ) is replaced by ru (= r, u is it-marker)" } },
+    { "kind": "sutra", "name": "8.3.15", "attrs": { "text": "kharavasānayorvisarjanīyaḥ", "translation": "r (from ru-substitution) becomes visarjanīya at avasāna (pause/word-end) or before khar consonant" } },
     { "kind": "sutra", "name": "8.3.59", "attrs": { "text": "ādeśapratyayoḥ", "translation": "s becomes ṣ after i/u/ṛ/e/o when in an ādeśa or pratyaya" } }
   ],
   "claims": [
@@ -583,8 +584,14 @@
 
     {
       "template": "tripadi_rule",
-      "params": { "context": "word_final", "condition_preceding": null, "condition_following": null, "input": "s", "output": "ḥ", "position": "word_final", "sutra": "8.2.66", "sutra_position": "08.02.066", "rule_type": "nitya" },
-      "statement": "s → ḥ word-finally (visarjanīya, Aṣṭ. 8.2.66)",
+      "params": { "context": "word_final", "condition_preceding": null, "condition_following": null, "input": "s", "output": "r", "position": "word_final", "sutra": "8.2.66", "sutra_position": "08.02.066", "rule_type": "nitya" },
+      "statement": "s → ru (= r) word-finally (sasajuṣo ruḥ, Aṣṭ. 8.2.66)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "tripadi_rule",
+      "params": { "context": "word_final", "condition_preceding": null, "condition_following": null, "input": "r", "output": "ḥ", "position": "word_final", "sutra": "8.3.15", "sutra_position": "08.03.015", "rule_type": "nitya" },
+      "statement": "r → ḥ at avasāna (kharavasānayorvisarjanīyaḥ, Aṣṭ. 8.3.15)",
       "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
     },
     {

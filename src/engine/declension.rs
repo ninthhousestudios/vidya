@@ -391,7 +391,7 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
         let pa = rule_priority(&a.rule_type);
         let pb = rule_priority(&b.rule_type);
         pb.cmp(&pa)
-            .then_with(|| b.sutra_position.cmp(&a.sutra_position))
+            .then_with(|| a.sutra_position.cmp(&b.sutra_position))
     });
 
     for rule in &tripadi_rules {
@@ -429,7 +429,6 @@ async fn derive_declension(pool: &PgPool, request: &DeriveRequest) -> Result<Der
                 input_state: old,
                 output_state: result.clone(),
             });
-            break;
         }
     }
 
