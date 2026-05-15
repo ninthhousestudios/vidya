@@ -354,6 +354,91 @@
     },
 
     {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "a", "result": "o '", "sutra": "6.1.109", "sutra_position": "06.01.109", "rule_type": "utsarga" },
+      "statement": "aḥ + a → o ' (eṅaḥ padāntād ati, Aṣṭ. 6.1.109)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "i", "result": "a i", "sutra": "8.3.19", "sutra_position": "08.03.019", "rule_type": "utsarga" },
+      "statement": "aḥ + vowel (not a) → a + vowel (lopaḥ śākalyasya, Aṣṭ. 8.3.19)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "u", "result": "a u", "sutra": "8.3.19", "sutra_position": "08.03.019", "rule_type": "utsarga" },
+      "statement": "aḥ + vowel (not a) → a + vowel (lopaḥ śākalyasya, Aṣṭ. 8.3.19)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "g", "result": "og", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "d", "result": "od", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "b", "result": "ob", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "j", "result": "oj", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "n", "result": "on", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "m", "result": "om", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "y", "result": "oy", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "v", "result": "ov", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "r", "result": "or", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "l", "result": "ol", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": { "first": "aḥ", "second": "h", "result": "oh", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
+      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+    },
+
+    {
       "template": "sup_suffix",
       "params": { "stem_class": "a-stem-m", "vibhakti": "prathama", "vacana": "ekavacana", "pratyaya": "su", "suffix": "s", "markers": ["u"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
       "statement": "prathama ekavacana: su → s (Aṣṭ. 4.1.2)",
