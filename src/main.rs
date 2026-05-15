@@ -150,7 +150,9 @@ async fn serve_http(
             "::1".to_string(),
         ]);
 
-    let session_manager = Arc::new(LocalSessionManager::default());
+    let mut session_manager = LocalSessionManager::default();
+    session_manager.session_config.keep_alive = None;
+    let session_manager = Arc::new(session_manager);
 
     let pool_clone = pool.clone();
     let mcp_service = StreamableHttpService::new(
