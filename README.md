@@ -1,6 +1,6 @@
 # vidya
 
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Vidya is a structured knowledge graph for domain reasoning with
 provenance. It gives LLM agents access to cited, tradition-aware facts
@@ -132,6 +132,3 @@ Same pattern as chitta and smriti:
 - Software/methodology domains loaded for manas dev workflows
 - Both deployments cite kosha for provenance
 
-## License
-
-MPL-2.0.

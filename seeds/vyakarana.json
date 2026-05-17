@@ -4,16 +4,75 @@
     "title": "Sanskrit Grammar (Pāṇinian)"
   },
   "entity_kinds": [
-    { "slug": "varna", "schema": { "type": "phoneme", "fields": ["transliteration", "devanagari", "class"] } },
-    { "slug": "pratyahara", "schema": { "type": "phoneme_class", "fields": ["start", "marker", "members"] } },
-    { "slug": "dhatu", "schema": { "type": "verb_root", "fields": ["meaning", "gana"] } },
-    { "slug": "pratyaya", "schema": { "type": "suffix", "fields": ["function"] } },
-    { "slug": "sutra", "schema": { "type": "rule", "fields": ["number", "text", "translation"] } }
+    {
+      "slug": "varna",
+      "schema": {
+        "type": "phoneme",
+        "fields": [
+          "transliteration",
+          "devanagari",
+          "class"
+        ]
+      }
+    },
+    {
+      "slug": "pratyahara",
+      "schema": {
+        "type": "phoneme_class",
+        "fields": [
+          "start",
+          "marker",
+          "members"
+        ]
+      }
+    },
+    {
+      "slug": "dhatu",
+      "schema": {
+        "type": "verb_root",
+        "fields": [
+          "meaning",
+          "gana"
+        ]
+      }
+    },
+    {
+      "slug": "pratyaya",
+      "schema": {
+        "type": "suffix",
+        "fields": [
+          "function"
+        ]
+      }
+    },
+    {
+      "slug": "sutra",
+      "schema": {
+        "type": "rule",
+        "fields": [
+          "number",
+          "text",
+          "translation"
+        ]
+      }
+    }
   ],
   "relation_kinds": [
-    { "slug": "member_of", "src_kind": "varna", "dst_kind": "pratyahara" },
-    { "slug": "defined_by", "src_kind": "pratyahara", "dst_kind": "sutra" },
-    { "slug": "applies_to", "src_kind": "sutra", "dst_kind": "pratyahara" }
+    {
+      "slug": "member_of",
+      "src_kind": "varna",
+      "dst_kind": "pratyahara"
+    },
+    {
+      "slug": "defined_by",
+      "src_kind": "pratyahara",
+      "dst_kind": "sutra"
+    },
+    {
+      "slug": "applies_to",
+      "src_kind": "sutra",
+      "dst_kind": "pratyahara"
+    }
   ],
   "claim_templates": [
     {
@@ -21,12 +80,30 @@
       "param_schema": {
         "type": "object",
         "properties": {
-          "first": { "type": "string", "description": "Final sound of first word" },
-          "second": { "type": "string", "description": "Initial sound of second word" },
-          "result": { "type": "string", "description": "Resulting sound(s) after sandhi" },
-          "sutra": { "type": "string", "description": "Ashtadhyayi sutra reference" },
-          "context": { "type": "string", "description": "Application context" },
-          "condition_pratyaya": { "type": "string", "description": "If set, rule only applies when the active pratyaya matches" }
+          "first": {
+            "type": "string",
+            "description": "Final sound of first word"
+          },
+          "second": {
+            "type": "string",
+            "description": "Initial sound of second word"
+          },
+          "result": {
+            "type": "string",
+            "description": "Resulting sound(s) after sandhi"
+          },
+          "sutra": {
+            "type": "string",
+            "description": "Ashtadhyayi sutra reference"
+          },
+          "context": {
+            "type": "string",
+            "description": "Application context"
+          },
+          "condition_pratyaya": {
+            "type": "string",
+            "description": "If set, rule only applies when the active pratyaya matches"
+          }
         }
       }
     },
@@ -35,9 +112,18 @@
       "param_schema": {
         "type": "object",
         "properties": {
-          "pratyahara": { "type": "string" },
-          "members": { "type": "array", "items": { "type": "string" } },
-          "shiva_sutra": { "type": "string" }
+          "pratyahara": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shiva_sutra": {
+            "type": "string"
+          }
         }
       }
     },
@@ -46,9 +132,18 @@
       "param_schema": {
         "type": "object",
         "properties": {
-          "sound": { "type": "string" },
-          "class": { "type": "string" },
-          "properties": { "type": "array", "items": { "type": "string" } }
+          "sound": {
+            "type": "string"
+          },
+          "class": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -57,14 +152,39 @@
       "param_schema": {
         "type": "object",
         "properties": {
-          "stem_class": { "type": "string", "description": "Stem classification (e.g. a-stem-m)" },
-          "vibhakti": { "type": "string", "description": "Case name" },
-          "vacana": { "type": "string", "description": "Number" },
-          "pratyaya": { "type": "string", "description": "Raw sUP pratyaya with markers" },
-          "suffix": { "type": "string", "description": "Processed suffix after marker removal" },
-          "markers": { "type": "array", "items": { "type": "string" }, "description": "Anubandha markers" },
-          "sutra": { "type": "string" },
-          "sutra_position": { "type": "string" }
+          "stem_class": {
+            "type": "string",
+            "description": "Stem classification (e.g. a-stem-m)"
+          },
+          "vibhakti": {
+            "type": "string",
+            "description": "Case name"
+          },
+          "vacana": {
+            "type": "string",
+            "description": "Number"
+          },
+          "pratyaya": {
+            "type": "string",
+            "description": "Raw sUP pratyaya with markers"
+          },
+          "suffix": {
+            "type": "string",
+            "description": "Processed suffix after marker removal"
+          },
+          "markers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Anubandha markers"
+          },
+          "sutra": {
+            "type": "string"
+          },
+          "sutra_position": {
+            "type": "string"
+          }
         }
       }
     },
@@ -73,15 +193,41 @@
       "param_schema": {
         "type": "object",
         "properties": {
-          "condition_stem_class": { "type": "string", "description": "Stem class condition" },
-          "condition_suffix": { "type": "string", "description": "Suffix to match" },
-          "condition_markers": { "type": "array", "items": { "type": "string" } },
-          "input_suffix": { "type": "string" },
-          "output_suffix": { "type": "string" },
-          "sutra": { "type": "string" },
-          "sutra_position": { "type": "string" },
-          "rule_type": { "type": "string" },
-          "condition_vibhakti": { "type": ["string", "null"] }
+          "condition_stem_class": {
+            "type": "string",
+            "description": "Stem class condition"
+          },
+          "condition_suffix": {
+            "type": "string",
+            "description": "Suffix to match"
+          },
+          "condition_markers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "input_suffix": {
+            "type": "string"
+          },
+          "output_suffix": {
+            "type": "string"
+          },
+          "sutra": {
+            "type": "string"
+          },
+          "sutra_position": {
+            "type": "string"
+          },
+          "rule_type": {
+            "type": "string"
+          },
+          "condition_vibhakti": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         }
       }
     },
@@ -90,17 +236,48 @@
       "param_schema": {
         "type": "object",
         "properties": {
-          "condition_stem_final": { "type": "string" },
-          "condition_markers": { "type": "array", "items": { "type": "string" } },
-          "condition_suffix_initial": { "type": ["string", "null"] },
-          "condition_vacana": { "type": ["string", "null"] },
-          "operation": { "type": "string" },
-          "operation_target": { "type": "string" },
-          "operation_input": { "type": "string" },
-          "operation_output": { "type": "string" },
-          "sutra": { "type": "string" },
-          "sutra_position": { "type": "string" },
-          "rule_type": { "type": "string" }
+          "condition_stem_final": {
+            "type": "string"
+          },
+          "condition_markers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "condition_suffix_initial": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "condition_vacana": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "type": "string"
+          },
+          "operation_target": {
+            "type": "string"
+          },
+          "operation_input": {
+            "type": "string"
+          },
+          "operation_output": {
+            "type": "string"
+          },
+          "sutra": {
+            "type": "string"
+          },
+          "sutra_position": {
+            "type": "string"
+          },
+          "rule_type": {
+            "type": "string"
+          }
         }
       }
     },
@@ -109,651 +286,4921 @@
       "param_schema": {
         "type": "object",
         "properties": {
-          "context": { "type": "string" },
-          "condition_preceding": { "type": ["string", "null"] },
-          "condition_following": { "type": ["string", "null"] },
-          "input": { "type": "string" },
-          "output": { "type": "string" },
-          "position": { "type": "string" },
-          "sutra": { "type": "string" },
-          "sutra_position": { "type": "string" },
-          "rule_type": { "type": "string" }
+          "context": {
+            "type": "string"
+          },
+          "condition_preceding": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "condition_following": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "input": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string"
+          },
+          "sutra": {
+            "type": "string"
+          },
+          "sutra_position": {
+            "type": "string"
+          },
+          "rule_type": {
+            "type": "string"
+          }
         }
       }
     }
   ],
   "traditions": [
-    { "name": "pāṇini" },
-    { "name": "kāśikā", "parent": "pāṇini" },
-    { "name": "siddhānta-kaumudī", "parent": "pāṇini" }
+    {
+      "name": "pāṇini"
+    },
+    {
+      "name": "kāśikā",
+      "parent": "pāṇini"
+    },
+    {
+      "name": "siddhānta-kaumudī",
+      "parent": "pāṇini"
+    }
   ],
   "sources": [
-    { "slug": "ashtadhyayi", "kind": "text", "reference": "Pāṇini, Aṣṭādhyāyī", "reliability": 1.0 },
-    { "slug": "shiva-sutras", "kind": "text", "reference": "Māheśvara Sūtrāṇi (Śiva Sūtras)", "reliability": 1.0 }
+    {
+      "slug": "ashtadhyayi",
+      "kind": "text",
+      "reference": "Pāṇini, Aṣṭādhyāyī",
+      "reliability": 1.0
+    },
+    {
+      "slug": "shiva-sutras",
+      "kind": "text",
+      "reference": "Māheśvara Sūtrāṇi (Śiva Sūtras)",
+      "reliability": 1.0
+    }
   ],
   "entities": [
-    { "kind": "varna", "name": "a", "attrs": { "devanagari": "अ", "class": "vowel", "short": true } },
-    { "kind": "varna", "name": "i", "attrs": { "devanagari": "इ", "class": "vowel", "short": true } },
-    { "kind": "varna", "name": "u", "attrs": { "devanagari": "उ", "class": "vowel", "short": true } },
-    { "kind": "varna", "name": "ṛ", "attrs": { "devanagari": "ऋ", "class": "vowel", "short": true } },
-    { "kind": "varna", "name": "ḷ", "attrs": { "devanagari": "ऌ", "class": "vowel", "short": true } },
-    { "kind": "varna", "name": "ā", "attrs": { "devanagari": "आ", "class": "vowel", "long": true } },
-    { "kind": "varna", "name": "ī", "attrs": { "devanagari": "ई", "class": "vowel", "long": true } },
-    { "kind": "varna", "name": "ū", "attrs": { "devanagari": "ऊ", "class": "vowel", "long": true } },
-    { "kind": "varna", "name": "e", "attrs": { "devanagari": "ए", "class": "vowel", "diphthong": true } },
-    { "kind": "varna", "name": "o", "attrs": { "devanagari": "ओ", "class": "vowel", "diphthong": true } },
-    { "kind": "varna", "name": "ai", "attrs": { "devanagari": "ऐ", "class": "vowel", "diphthong": true } },
-    { "kind": "varna", "name": "au", "attrs": { "devanagari": "औ", "class": "vowel", "diphthong": true } },
-    { "kind": "varna", "name": "y", "attrs": { "devanagari": "य", "class": "semivowel" } },
-    { "kind": "varna", "name": "v", "attrs": { "devanagari": "व", "class": "semivowel" } },
-    { "kind": "varna", "name": "r", "attrs": { "devanagari": "र", "class": "semivowel" } },
-    { "kind": "varna", "name": "l", "attrs": { "devanagari": "ल", "class": "semivowel" } },
-    { "kind": "varna", "name": "h", "attrs": { "devanagari": "ह", "class": "consonant", "place": "glottal" } },
-    { "kind": "varna", "name": "k", "attrs": { "devanagari": "क", "class": "stop", "place": "velar", "voicing": "unvoiced" } },
-    { "kind": "varna", "name": "g", "attrs": { "devanagari": "ग", "class": "stop", "place": "velar", "voicing": "voiced" } },
-    { "kind": "varna", "name": "ṅ", "attrs": { "devanagari": "ङ", "class": "nasal", "place": "velar" } },
-    { "kind": "varna", "name": "t", "attrs": { "devanagari": "त", "class": "stop", "place": "dental", "voicing": "unvoiced" } },
-    { "kind": "varna", "name": "d", "attrs": { "devanagari": "द", "class": "stop", "place": "dental", "voicing": "voiced" } },
-    { "kind": "varna", "name": "n", "attrs": { "devanagari": "न", "class": "nasal", "place": "dental" } },
-    { "kind": "varna", "name": "p", "attrs": { "devanagari": "प", "class": "stop", "place": "labial", "voicing": "unvoiced" } },
-    { "kind": "varna", "name": "b", "attrs": { "devanagari": "ब", "class": "stop", "place": "labial", "voicing": "voiced" } },
-    { "kind": "varna", "name": "m", "attrs": { "devanagari": "म", "class": "nasal", "place": "labial" } },
-    { "kind": "varna", "name": "s", "attrs": { "devanagari": "स", "class": "sibilant", "place": "dental" } },
-    { "kind": "varna", "name": "ś", "attrs": { "devanagari": "श", "class": "sibilant", "place": "palatal" } },
-    { "kind": "varna", "name": "ṣ", "attrs": { "devanagari": "ष", "class": "sibilant", "place": "retroflex" } },
-
-    { "kind": "pratyahara", "name": "ac", "attrs": { "meaning": "all vowels", "members": ["a","i","u","ṛ","ḷ","e","o","ai","au"] } },
-    { "kind": "pratyahara", "name": "hal", "attrs": { "meaning": "all consonants" } },
-    { "kind": "pratyahara", "name": "ik", "attrs": { "meaning": "simple vowels", "members": ["i","u","ṛ","ḷ"] } },
-    { "kind": "pratyahara", "name": "aṇ", "attrs": { "meaning": "a, i, u", "members": ["a","i","u"] } },
-    { "kind": "pratyahara", "name": "yaṇ", "attrs": { "meaning": "semivowels", "members": ["y","v","r","l"] } },
-    { "kind": "pratyahara", "name": "eṅ", "attrs": { "meaning": "e and o", "members": ["e","o"] } },
-    { "kind": "pratyahara", "name": "ec", "attrs": { "meaning": "e, o, ai, au", "members": ["e","o","ai","au"] } },
-    { "kind": "pratyahara", "name": "ak", "attrs": { "meaning": "simple vowels including a", "members": ["a","i","u","ṛ","ḷ"] } },
-
-    { "kind": "sutra", "name": "1.1.1", "attrs": { "text": "vṛddhir ādaic", "translation": "The vowels ā, ai, au are called vṛddhi" } },
-    { "kind": "sutra", "name": "1.1.2", "attrs": { "text": "adeṅ guṇaḥ", "translation": "The vowels a, e, o are called guṇa" } },
-    { "kind": "sutra", "name": "6.1.77", "attrs": { "text": "iko yaṇ aci", "translation": "An ik vowel is replaced by the corresponding yaṇ semivowel when followed by a vowel" } },
-    { "kind": "sutra", "name": "6.1.78", "attrs": { "text": "eco'yavāyāvaḥ", "translation": "e and o are replaced by ay and av before a vowel" } },
-    { "kind": "sutra", "name": "6.1.87", "attrs": { "text": "ād guṇaḥ", "translation": "When a/ā is followed by a simple vowel, guṇa replaces both" } },
-    { "kind": "sutra", "name": "6.1.88", "attrs": { "text": "vṛddhir eci", "translation": "When a/ā is followed by e, o, ai, or au, vṛddhi replaces both" } },
-    { "kind": "sutra", "name": "6.1.101", "attrs": { "text": "akaḥ savarṇe dīrghaḥ", "translation": "A simple vowel followed by its savarṇa (homogeneous vowel) is replaced by its long form" } },
-    { "kind": "sutra", "name": "4.1.2", "attrs": { "text": "svaujasamauṭchaṣṭā...", "translation": "The sUP suffixes are ordained after nominal stems" } },
-    { "kind": "sutra", "name": "6.1.103", "attrs": { "text": "tasmāc chasoḥ naḥ puṁsi", "translation": "After a-stem, śas is replaced by n in masculine" } },
-    { "kind": "sutra", "name": "6.1.107", "attrs": { "text": "ami pūrvaḥ", "translation": "Before am pratyaya, the prior vowel prevails (absorbs the a of am)" } },
-    { "kind": "sutra", "name": "6.1.69", "attrs": { "text": "eṅhrasvāt sambuddheh", "translation": "The su of sambodhana is deleted (luk) after a short vowel" } },
-    { "kind": "sutra", "name": "7.1.9", "attrs": { "text": "ato bhisa ais", "translation": "After a-stem, bhis is replaced by ais" } },
-    { "kind": "sutra", "name": "7.1.12", "attrs": { "text": "ṭānāsinasos tānāsināstasya...", "translation": "After a-stem, ṭā→ina, ṅasi→t, ṅas→sya" } },
-    { "kind": "sutra", "name": "7.1.13", "attrs": { "text": "ṅe yaḥ", "translation": "After a-stem, ṅe is replaced by ya" } },
-    { "kind": "sutra", "name": "7.1.54", "attrs": { "text": "hrasvanadasāpadeśasya nuṭ", "translation": "nuṬ augment is prefixed to am (gen pl) after short vowel" } },
-    { "kind": "sutra", "name": "7.3.101", "attrs": { "text": "ato dīrgho yañi", "translation": "Final a of aṅga is lengthened before yaÑ-initial suffix" } },
-    { "kind": "sutra", "name": "7.3.102", "attrs": { "text": "supi ca", "translation": "Extends 7.3.101 to sUP context" } },
-    { "kind": "sutra", "name": "7.3.103", "attrs": { "text": "bahuvacane jhalyeṭ", "translation": "Final a of aṅga becomes e before jhaL-initial suffix in bahuvacana" } },
-    { "kind": "sutra", "name": "7.3.104", "attrs": { "text": "osi ca", "translation": "Final a of aṅga becomes e before os (gen/loc dual)" } },
-    { "kind": "sutra", "name": "8.2.66", "attrs": { "text": "sasajuṣo ruḥ", "translation": "Word-final s (and ṣ of sajuṣ) is replaced by ru (= r, u is it-marker)" } },
-    { "kind": "sutra", "name": "8.3.15", "attrs": { "text": "kharavasānayorvisarjanīyaḥ", "translation": "r (from ru-substitution) becomes visarjanīya at avasāna (pause/word-end) or before khar consonant" } },
-    { "kind": "sutra", "name": "8.3.59", "attrs": { "text": "ādeśapratyayoḥ", "translation": "s becomes ṣ after i/u/ṛ/e/o when in an ādeśa or pratyaya" } }
+    {
+      "kind": "varna",
+      "name": "a",
+      "attrs": {
+        "devanagari": "अ",
+        "class": "vowel",
+        "short": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "i",
+      "attrs": {
+        "devanagari": "इ",
+        "class": "vowel",
+        "short": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "u",
+      "attrs": {
+        "devanagari": "उ",
+        "class": "vowel",
+        "short": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ṛ",
+      "attrs": {
+        "devanagari": "ऋ",
+        "class": "vowel",
+        "short": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ḷ",
+      "attrs": {
+        "devanagari": "ऌ",
+        "class": "vowel",
+        "short": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ā",
+      "attrs": {
+        "devanagari": "आ",
+        "class": "vowel",
+        "long": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ī",
+      "attrs": {
+        "devanagari": "ई",
+        "class": "vowel",
+        "long": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ū",
+      "attrs": {
+        "devanagari": "ऊ",
+        "class": "vowel",
+        "long": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "e",
+      "attrs": {
+        "devanagari": "ए",
+        "class": "vowel",
+        "diphthong": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "o",
+      "attrs": {
+        "devanagari": "ओ",
+        "class": "vowel",
+        "diphthong": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ai",
+      "attrs": {
+        "devanagari": "ऐ",
+        "class": "vowel",
+        "diphthong": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "au",
+      "attrs": {
+        "devanagari": "औ",
+        "class": "vowel",
+        "diphthong": true
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "y",
+      "attrs": {
+        "devanagari": "य",
+        "class": "semivowel"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "v",
+      "attrs": {
+        "devanagari": "व",
+        "class": "semivowel"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "r",
+      "attrs": {
+        "devanagari": "र",
+        "class": "semivowel"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "l",
+      "attrs": {
+        "devanagari": "ल",
+        "class": "semivowel"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "h",
+      "attrs": {
+        "devanagari": "ह",
+        "class": "consonant",
+        "place": "glottal"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "k",
+      "attrs": {
+        "devanagari": "क",
+        "class": "stop",
+        "place": "velar",
+        "voicing": "unvoiced"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "g",
+      "attrs": {
+        "devanagari": "ग",
+        "class": "stop",
+        "place": "velar",
+        "voicing": "voiced"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ṅ",
+      "attrs": {
+        "devanagari": "ङ",
+        "class": "nasal",
+        "place": "velar"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "t",
+      "attrs": {
+        "devanagari": "त",
+        "class": "stop",
+        "place": "dental",
+        "voicing": "unvoiced"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "d",
+      "attrs": {
+        "devanagari": "द",
+        "class": "stop",
+        "place": "dental",
+        "voicing": "voiced"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "n",
+      "attrs": {
+        "devanagari": "न",
+        "class": "nasal",
+        "place": "dental"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "p",
+      "attrs": {
+        "devanagari": "प",
+        "class": "stop",
+        "place": "labial",
+        "voicing": "unvoiced"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "b",
+      "attrs": {
+        "devanagari": "ब",
+        "class": "stop",
+        "place": "labial",
+        "voicing": "voiced"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "m",
+      "attrs": {
+        "devanagari": "म",
+        "class": "nasal",
+        "place": "labial"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "s",
+      "attrs": {
+        "devanagari": "स",
+        "class": "sibilant",
+        "place": "dental"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ś",
+      "attrs": {
+        "devanagari": "श",
+        "class": "sibilant",
+        "place": "palatal"
+      }
+    },
+    {
+      "kind": "varna",
+      "name": "ṣ",
+      "attrs": {
+        "devanagari": "ष",
+        "class": "sibilant",
+        "place": "retroflex"
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "ac",
+      "attrs": {
+        "meaning": "all vowels",
+        "members": [
+          "a",
+          "i",
+          "u",
+          "ṛ",
+          "ḷ",
+          "e",
+          "o",
+          "ai",
+          "au"
+        ]
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "hal",
+      "attrs": {
+        "meaning": "all consonants"
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "ik",
+      "attrs": {
+        "meaning": "simple vowels",
+        "members": [
+          "i",
+          "u",
+          "ṛ",
+          "ḷ"
+        ]
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "aṇ",
+      "attrs": {
+        "meaning": "a, i, u",
+        "members": [
+          "a",
+          "i",
+          "u"
+        ]
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "yaṇ",
+      "attrs": {
+        "meaning": "semivowels",
+        "members": [
+          "y",
+          "v",
+          "r",
+          "l"
+        ]
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "eṅ",
+      "attrs": {
+        "meaning": "e and o",
+        "members": [
+          "e",
+          "o"
+        ]
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "ec",
+      "attrs": {
+        "meaning": "e, o, ai, au",
+        "members": [
+          "e",
+          "o",
+          "ai",
+          "au"
+        ]
+      }
+    },
+    {
+      "kind": "pratyahara",
+      "name": "ak",
+      "attrs": {
+        "meaning": "simple vowels including a",
+        "members": [
+          "a",
+          "i",
+          "u",
+          "ṛ",
+          "ḷ"
+        ]
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "1.1.1",
+      "attrs": {
+        "text": "vṛddhir ādaic",
+        "translation": "The vowels ā, ai, au are called vṛddhi"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "1.1.2",
+      "attrs": {
+        "text": "adeṅ guṇaḥ",
+        "translation": "The vowels a, e, o are called guṇa"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.77",
+      "attrs": {
+        "text": "iko yaṇ aci",
+        "translation": "An ik vowel is replaced by the corresponding yaṇ semivowel when followed by a vowel"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.78",
+      "attrs": {
+        "text": "eco'yavāyāvaḥ",
+        "translation": "e and o are replaced by ay and av before a vowel"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.87",
+      "attrs": {
+        "text": "ād guṇaḥ",
+        "translation": "When a/ā is followed by a simple vowel, guṇa replaces both"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.88",
+      "attrs": {
+        "text": "vṛddhir eci",
+        "translation": "When a/ā is followed by e, o, ai, or au, vṛddhi replaces both"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.101",
+      "attrs": {
+        "text": "akaḥ savarṇe dīrghaḥ",
+        "translation": "A simple vowel followed by its savarṇa (homogeneous vowel) is replaced by its long form"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "4.1.2",
+      "attrs": {
+        "text": "svaujasamauṭchaṣṭā...",
+        "translation": "The sUP suffixes are ordained after nominal stems"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.103",
+      "attrs": {
+        "text": "tasmāc chasoḥ naḥ puṁsi",
+        "translation": "After a-stem, śas is replaced by n in masculine"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.107",
+      "attrs": {
+        "text": "ami pūrvaḥ",
+        "translation": "Before am pratyaya, the prior vowel prevails (absorbs the a of am)"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "6.1.69",
+      "attrs": {
+        "text": "eṅhrasvāt sambuddheh",
+        "translation": "The su of sambodhana is deleted (luk) after a short vowel"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.1.9",
+      "attrs": {
+        "text": "ato bhisa ais",
+        "translation": "After a-stem, bhis is replaced by ais"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.1.12",
+      "attrs": {
+        "text": "ṭānāsinasos tānāsināstasya...",
+        "translation": "After a-stem, ṭā→ina, ṅasi→t, ṅas→sya"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.1.13",
+      "attrs": {
+        "text": "ṅe yaḥ",
+        "translation": "After a-stem, ṅe is replaced by ya"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.1.54",
+      "attrs": {
+        "text": "hrasvanadasāpadeśasya nuṭ",
+        "translation": "nuṬ augment is prefixed to am (gen pl) after short vowel"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.3.101",
+      "attrs": {
+        "text": "ato dīrgho yañi",
+        "translation": "Final a of aṅga is lengthened before yaÑ-initial suffix"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.3.102",
+      "attrs": {
+        "text": "supi ca",
+        "translation": "Extends 7.3.101 to sUP context"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.3.103",
+      "attrs": {
+        "text": "bahuvacane jhalyeṭ",
+        "translation": "Final a of aṅga becomes e before jhaL-initial suffix in bahuvacana"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "7.3.104",
+      "attrs": {
+        "text": "osi ca",
+        "translation": "Final a of aṅga becomes e before os (gen/loc dual)"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "8.2.66",
+      "attrs": {
+        "text": "sasajuṣo ruḥ",
+        "translation": "Word-final s (and ṣ of sajuṣ) is replaced by ru (= r, u is it-marker)"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "8.3.15",
+      "attrs": {
+        "text": "kharavasānayorvisarjanīyaḥ",
+        "translation": "r (from ru-substitution) becomes visarjanīya at avasāna (pause/word-end) or before khar consonant"
+      }
+    },
+    {
+      "kind": "sutra",
+      "name": "8.3.59",
+      "attrs": {
+        "text": "ādeśapratyayoḥ",
+        "translation": "s becomes ṣ after i/u/ṛ/e/o when in an ādeśa or pratyaya"
+      }
+    }
   ],
   "claims": [
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "a", "result": "a", "sutra": "6.1.107", "sutra_position": "06.01.107", "rule_type": "apavada", "condition_pratyaya": "am" },
+      "params": {
+        "first": "a",
+        "second": "a",
+        "result": "a",
+        "sutra": "6.1.107",
+        "sutra_position": "06.01.107",
+        "rule_type": "apavada",
+        "condition_pratyaya": "am"
+      },
       "statement": "a + a(m) → a (ami pūrvaḥ — prior vowel prevails before am, Aṣṭ. 6.1.107)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "a", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "a",
+        "result": "ā",
+        "sutra": "6.1.101",
+        "sutra_position": "06.01.101",
+        "rule_type": "utsarga"
+      },
       "statement": "a + a → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ā", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "ā",
+        "result": "ā",
+        "sutra": "6.1.101",
+        "sutra_position": "06.01.101",
+        "rule_type": "utsarga"
+      },
       "statement": "a + ā → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "ā", "second": "a", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
+      "params": {
+        "first": "ā",
+        "second": "a",
+        "result": "ā",
+        "sutra": "6.1.101",
+        "sutra_position": "06.01.101",
+        "rule_type": "utsarga"
+      },
       "statement": "ā + a → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "ā", "second": "ā", "result": "ā", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
+      "params": {
+        "first": "ā",
+        "second": "ā",
+        "result": "ā",
+        "sutra": "6.1.101",
+        "sutra_position": "06.01.101",
+        "rule_type": "utsarga"
+      },
       "statement": "ā + ā → ā (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "i", "result": "ī", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
+      "params": {
+        "first": "i",
+        "second": "i",
+        "result": "ī",
+        "sutra": "6.1.101",
+        "sutra_position": "06.01.101",
+        "rule_type": "utsarga"
+      },
       "statement": "i + i → ī (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "u", "result": "ū", "sutra": "6.1.101", "sutra_position": "06.01.101", "rule_type": "utsarga" },
+      "params": {
+        "first": "u",
+        "second": "u",
+        "result": "ū",
+        "sutra": "6.1.101",
+        "sutra_position": "06.01.101",
+        "rule_type": "utsarga"
+      },
       "statement": "u + u → ū (savarṇa-dīrgha-sandhi, Aṣṭ. 6.1.101)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "i", "result": "e", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "i",
+        "result": "e",
+        "sutra": "6.1.87",
+        "sutra_position": "06.01.087",
+        "rule_type": "utsarga"
+      },
       "statement": "a + i → e (guṇa-sandhi, Aṣṭ. 6.1.87)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ī", "result": "e", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "ī",
+        "result": "e",
+        "sutra": "6.1.87",
+        "sutra_position": "06.01.087",
+        "rule_type": "utsarga"
+      },
       "statement": "a + ī → e (guṇa-sandhi, Aṣṭ. 6.1.87)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "u", "result": "o", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "u",
+        "result": "o",
+        "sutra": "6.1.87",
+        "sutra_position": "06.01.087",
+        "rule_type": "utsarga"
+      },
       "statement": "a + u → o (guṇa-sandhi, Aṣṭ. 6.1.87)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ū", "result": "o", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "ū",
+        "result": "o",
+        "sutra": "6.1.87",
+        "sutra_position": "06.01.087",
+        "rule_type": "utsarga"
+      },
       "statement": "a + ū → o (guṇa-sandhi, Aṣṭ. 6.1.87)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ṛ", "result": "ar", "sutra": "6.1.87", "sutra_position": "06.01.087", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "ṛ",
+        "result": "ar",
+        "sutra": "6.1.87",
+        "sutra_position": "06.01.087",
+        "rule_type": "utsarga"
+      },
       "statement": "a + ṛ → ar (guṇa-sandhi, Aṣṭ. 6.1.87)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "e", "result": "ai", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "e",
+        "result": "ai",
+        "sutra": "6.1.88",
+        "sutra_position": "06.01.088",
+        "rule_type": "utsarga"
+      },
       "statement": "a + e → ai (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "o", "result": "au", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "o",
+        "result": "au",
+        "sutra": "6.1.88",
+        "sutra_position": "06.01.088",
+        "rule_type": "utsarga"
+      },
       "statement": "a + o → au (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "ai", "result": "ai", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "ai",
+        "result": "ai",
+        "sutra": "6.1.88",
+        "sutra_position": "06.01.088",
+        "rule_type": "utsarga"
+      },
       "statement": "a + ai → ai (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "a", "second": "au", "result": "au", "sutra": "6.1.88", "sutra_position": "06.01.088", "rule_type": "utsarga" },
+      "params": {
+        "first": "a",
+        "second": "au",
+        "result": "au",
+        "sutra": "6.1.88",
+        "sutra_position": "06.01.088",
+        "rule_type": "utsarga"
+      },
       "statement": "a + au → au (vṛddhi-sandhi, Aṣṭ. 6.1.88)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "a", "result": "ya", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
+      "params": {
+        "first": "i",
+        "second": "a",
+        "result": "ya",
+        "sutra": "6.1.77",
+        "sutra_position": "06.01.077",
+        "rule_type": "utsarga"
+      },
       "statement": "i + a → ya (yaṇ-sandhi, Aṣṭ. 6.1.77)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "ā", "result": "yā", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
+      "params": {
+        "first": "i",
+        "second": "ā",
+        "result": "yā",
+        "sutra": "6.1.77",
+        "sutra_position": "06.01.077",
+        "rule_type": "utsarga"
+      },
       "statement": "i + ā → yā (yaṇ-sandhi, Aṣṭ. 6.1.77)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "i", "second": "u", "result": "yu", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
+      "params": {
+        "first": "i",
+        "second": "u",
+        "result": "yu",
+        "sutra": "6.1.77",
+        "sutra_position": "06.01.077",
+        "rule_type": "utsarga"
+      },
       "statement": "i + u → yu (yaṇ-sandhi, Aṣṭ. 6.1.77)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "a", "result": "va", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
+      "params": {
+        "first": "u",
+        "second": "a",
+        "result": "va",
+        "sutra": "6.1.77",
+        "sutra_position": "06.01.077",
+        "rule_type": "utsarga"
+      },
       "statement": "u + a → va (yaṇ-sandhi, Aṣṭ. 6.1.77)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "ā", "result": "vā", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
+      "params": {
+        "first": "u",
+        "second": "ā",
+        "result": "vā",
+        "sutra": "6.1.77",
+        "sutra_position": "06.01.077",
+        "rule_type": "utsarga"
+      },
       "statement": "u + ā → vā (yaṇ-sandhi, Aṣṭ. 6.1.77)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "u", "second": "i", "result": "vi", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
+      "params": {
+        "first": "u",
+        "second": "i",
+        "result": "vi",
+        "sutra": "6.1.77",
+        "sutra_position": "06.01.077",
+        "rule_type": "utsarga"
+      },
       "statement": "u + i → vi (yaṇ-sandhi, Aṣṭ. 6.1.77)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "ṛ", "second": "a", "result": "ra", "sutra": "6.1.77", "sutra_position": "06.01.077", "rule_type": "utsarga" },
+      "params": {
+        "first": "ṛ",
+        "second": "a",
+        "result": "ra",
+        "sutra": "6.1.77",
+        "sutra_position": "06.01.077",
+        "rule_type": "utsarga"
+      },
       "statement": "ṛ + a → ra (yaṇ-sandhi, Aṣṭ. 6.1.77)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
-
     {
       "template": "sandhi_rule",
-      "params": { "first": "e", "second": "a", "result": "aya", "sutra": "6.1.78", "sutra_position": "06.01.078", "rule_type": "utsarga" },
+      "params": {
+        "first": "e",
+        "second": "a",
+        "result": "aya",
+        "sutra": "6.1.78",
+        "sutra_position": "06.01.078",
+        "rule_type": "utsarga"
+      },
       "statement": "e + a → aya (ayādi-sandhi, Aṣṭ. 6.1.78)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "e", "second": "o", "result": "ayo", "sutra": "6.1.78", "sutra_position": "06.01.078", "rule_type": "utsarga" },
+      "params": {
+        "first": "e",
+        "second": "o",
+        "result": "ayo",
+        "sutra": "6.1.78",
+        "sutra_position": "06.01.078",
+        "rule_type": "utsarga"
+      },
       "statement": "e + o → ayo (ayādi-sandhi, Aṣṭ. 6.1.78)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "o", "second": "a", "result": "ava", "sutra": "6.1.78", "sutra_position": "06.01.078", "rule_type": "utsarga" },
+      "params": {
+        "first": "o",
+        "second": "a",
+        "result": "ava",
+        "sutra": "6.1.78",
+        "sutra_position": "06.01.078",
+        "rule_type": "utsarga"
+      },
       "statement": "o + a → ava (ayādi-sandhi, Aṣṭ. 6.1.78)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
-
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "a", "result": "o '", "sutra": "6.1.109", "sutra_position": "06.01.109", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "a",
+        "result": "o '",
+        "sutra": "6.1.109",
+        "sutra_position": "06.01.109",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + a → o ' (eṅaḥ padāntād ati, Aṣṭ. 6.1.109)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "i", "result": "a i", "sutra": "8.3.19", "sutra_position": "08.03.019", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "i",
+        "result": "a i",
+        "sutra": "8.3.19",
+        "sutra_position": "08.03.019",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + vowel (not a) → a + vowel (lopaḥ śākalyasya, Aṣṭ. 8.3.19)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "u", "result": "a u", "sutra": "8.3.19", "sutra_position": "08.03.019", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "u",
+        "result": "a u",
+        "sutra": "8.3.19",
+        "sutra_position": "08.03.019",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + vowel (not a) → a + vowel (lopaḥ śākalyasya, Aṣṭ. 8.3.19)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "g", "result": "og", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "g",
+        "result": "og",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "d", "result": "od", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "d",
+        "result": "od",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "b", "result": "ob", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "b",
+        "result": "ob",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "j", "result": "oj", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "j",
+        "result": "oj",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "n", "result": "on", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "n",
+        "result": "on",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "m", "result": "om", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "m",
+        "result": "om",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "y", "result": "oy", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "y",
+        "result": "oy",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "v", "result": "ov", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "v",
+        "result": "ov",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "r", "result": "or", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "r",
+        "result": "or",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "l", "result": "ol", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "l",
+        "result": "ol",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sandhi_rule",
-      "params": { "first": "aḥ", "second": "h", "result": "oh", "sutra": "8.3.17", "sutra_position": "08.03.017", "rule_type": "utsarga" },
+      "params": {
+        "first": "aḥ",
+        "second": "h",
+        "result": "oh",
+        "sutra": "8.3.17",
+        "sutra_position": "08.03.017",
+        "rule_type": "utsarga"
+      },
       "statement": "aḥ + voiced consonant → o (bho-bhago-agho-apadhā, Aṣṭ. 8.3.17)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
-
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "c",
+        "result": "cc",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + c → cc (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ch",
+        "result": "cch",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ch → cch (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "j",
+        "result": "jj",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + j → jj (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "jh",
+        "result": "jjh",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + jh → jjh (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "c",
+        "result": "cc",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + c → cc (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "ch",
+        "result": "cch",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + ch → cch (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "j",
+        "result": "jj",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + j → jj (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "jh",
+        "result": "jjh",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + jh → jjh (stoḥ ścunā ścuḥ — dental assimilates to palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "c",
+        "result": "ñc",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + c → ñc (stoḥ ścunā ścuḥ — dental nasal becomes palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "ch",
+        "result": "ñch",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + ch → ñch (stoḥ ścunā ścuḥ — dental nasal becomes palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "j",
+        "result": "ñj",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + j → ñj (stoḥ ścunā ścuḥ — dental nasal becomes palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "jh",
+        "result": "ñjh",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + jh → ñjh (stoḥ ścunā ścuḥ — dental nasal becomes palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ś",
+        "result": "cch",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ś → cch (stoḥ ścunā ścuḥ — dental + ś becomes palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "ś",
+        "result": "cch",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + ś → cch (stoḥ ścunā ścuḥ — dental + ś becomes palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "ś",
+        "result": "ñch",
+        "sutra": "8.4.40",
+        "sutra_position": "08.04.040",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + ś → ñch (stoḥ ścunā ścuḥ — dental nasal + ś becomes palatal, Aṣṭ. 8.4.40)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ṭ",
+        "result": "ṭṭ",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ṭ → ṭṭ (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ṭh",
+        "result": "ṭṭh",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ṭh → ṭṭh (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ḍ",
+        "result": "ḍḍ",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ḍ → ḍḍ (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ḍh",
+        "result": "ḍḍh",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ḍh → ḍḍh (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "ṭ",
+        "result": "ṭṭ",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + ṭ → ṭṭ (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "ṭh",
+        "result": "ṭṭh",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + ṭh → ṭṭh (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "ḍ",
+        "result": "ḍḍ",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + ḍ → ḍḍ (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "d",
+        "second": "ḍh",
+        "result": "ḍḍh",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "d + ḍh → ḍḍh (ṣṭunā ṣṭuḥ — dental assimilates to retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "ṭ",
+        "result": "ṇṭ",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + ṭ → ṇṭ (ṣṭunā ṣṭuḥ — dental nasal becomes retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "ṭh",
+        "result": "ṇṭh",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + ṭh → ṇṭh (ṣṭunā ṣṭuḥ — dental nasal becomes retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "ḍ",
+        "result": "ṇḍ",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + ḍ → ṇḍ (ṣṭunā ṣṭuḥ — dental nasal becomes retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "n",
+        "second": "ḍh",
+        "result": "ṇḍh",
+        "sutra": "8.4.41",
+        "sutra_position": "08.04.041",
+        "rule_type": "utsarga"
+      },
+      "statement": "n + ḍh → ṇḍh (ṣṭunā ṣṭuḥ — dental nasal becomes retroflex, Aṣṭ. 8.4.41)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "g",
+        "result": "dg",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + g → dg (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "gh",
+        "result": "dgh",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + gh → dgh (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "d",
+        "result": "dd",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + d → dd (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "dh",
+        "result": "ddh",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + dh → ddh (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "b",
+        "result": "db",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + b → db (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "bh",
+        "result": "dbh",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + bh → dbh (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "g",
+        "result": "gg",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + g → gg (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "gh",
+        "result": "ggh",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + gh → ggh (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "j",
+        "result": "gj",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + j → gj (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "d",
+        "result": "gd",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + d → gd (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "dh",
+        "result": "gdh",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + dh → gdh (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "b",
+        "result": "gb",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + b → gb (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "bh",
+        "result": "gbh",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + bh → gbh (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "g",
+        "result": "bg",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + g → bg (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "d",
+        "result": "bd",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + d → bd (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "b",
+        "result": "bb",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + b → bb (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "bh",
+        "result": "bbh",
+        "sutra": "8.4.53",
+        "sutra_position": "08.04.053",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + bh → bbh (jhalāṃ jaś jhali — voicing assimilation, Aṣṭ. 8.4.53)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "n",
+        "result": "nn",
+        "sutra": "8.4.45",
+        "sutra_position": "08.04.045",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + n → nn (yaro'nunāsike'nunāsiko vā — nasal assimilation, Aṣṭ. 8.4.45)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "m",
+        "result": "nm",
+        "sutra": "8.4.45",
+        "sutra_position": "08.04.045",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + m → nm (yaro'nunāsike'nunāsiko vā — nasal assimilation, Aṣṭ. 8.4.45)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "ṅ",
+        "result": "ṅṅ",
+        "sutra": "8.4.45",
+        "sutra_position": "08.04.045",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + ṅ → ṅṅ (yaro'nunāsike'nunāsiko vā — nasal assimilation, Aṣṭ. 8.4.45)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "n",
+        "result": "ṅn",
+        "sutra": "8.4.45",
+        "sutra_position": "08.04.045",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + n → ṅn (yaro'nunāsike'nunāsiko vā — nasal assimilation, Aṣṭ. 8.4.45)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "m",
+        "result": "ṅm",
+        "sutra": "8.4.45",
+        "sutra_position": "08.04.045",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + m → ṅm (yaro'nunāsike'nunāsiko vā — nasal assimilation, Aṣṭ. 8.4.45)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "n",
+        "result": "mn",
+        "sutra": "8.4.45",
+        "sutra_position": "08.04.045",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + n → mn (yaro'nunāsike'nunāsiko vā — nasal assimilation, Aṣṭ. 8.4.45)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "m",
+        "result": "mm",
+        "sutra": "8.4.45",
+        "sutra_position": "08.04.045",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + m → mm (yaro'nunāsike'nunāsiko vā — nasal assimilation, Aṣṭ. 8.4.45)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "k",
+        "result": "ṃk",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + k → ṃk (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "kh",
+        "result": "ṃkh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + kh → ṃkh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "g",
+        "result": "ṃg",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + g → ṃg (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "gh",
+        "result": "ṃgh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + gh → ṃgh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "c",
+        "result": "ṃc",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + c → ṃc (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ch",
+        "result": "ṃch",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ch → ṃch (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "j",
+        "result": "ṃj",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + j → ṃj (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "jh",
+        "result": "ṃjh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + jh → ṃjh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ṭ",
+        "result": "ṃṭ",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ṭ → ṃṭ (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ṭh",
+        "result": "ṃṭh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ṭh → ṃṭh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ḍ",
+        "result": "ṃḍ",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ḍ → ṃḍ (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ḍh",
+        "result": "ṃḍh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ḍh → ṃḍh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "t",
+        "result": "ṃt",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + t → ṃt (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "th",
+        "result": "ṃth",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + th → ṃth (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "d",
+        "result": "ṃd",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + d → ṃd (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "dh",
+        "result": "ṃdh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + dh → ṃdh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "p",
+        "result": "ṃp",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + p → ṃp (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ph",
+        "result": "ṃph",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ph → ṃph (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "b",
+        "result": "ṃb",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + b → ṃb (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "bh",
+        "result": "ṃbh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + bh → ṃbh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "y",
+        "result": "ṃy",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + y → ṃy (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "r",
+        "result": "ṃr",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + r → ṃr (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "l",
+        "result": "ṃl",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + l → ṃl (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "v",
+        "result": "ṃv",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + v → ṃv (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ś",
+        "result": "ṃś",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ś → ṃś (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "ṣ",
+        "result": "ṃṣ",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + ṣ → ṃṣ (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "s",
+        "result": "ṃs",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + s → ṃs (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "m",
+        "second": "h",
+        "result": "ṃh",
+        "sutra": "8.3.23",
+        "sutra_position": "08.03.023",
+        "rule_type": "utsarga"
+      },
+      "statement": "m + h → ṃh (mo'nusvāraḥ — final m becomes anusvāra, Aṣṭ. 8.3.23)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "a",
+        "result": "da",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + a → da (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ā",
+        "result": "dā",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ā → dā (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "i",
+        "result": "di",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + i → di (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ī",
+        "result": "dī",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ī → dī (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "u",
+        "result": "du",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + u → du (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ū",
+        "result": "dū",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ū → dū (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ṛ",
+        "result": "dṛ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ṛ → dṛ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ṝ",
+        "result": "dṝ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ṝ → dṝ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "e",
+        "result": "de",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + e → de (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "o",
+        "result": "do",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + o → do (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "ai",
+        "result": "dai",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + ai → dai (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "t",
+        "second": "au",
+        "result": "dau",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "t + au → dau (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "a",
+        "result": "ga",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + a → ga (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "ā",
+        "result": "gā",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + ā → gā (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "i",
+        "result": "gi",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + i → gi (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "ī",
+        "result": "gī",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + ī → gī (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "u",
+        "result": "gu",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + u → gu (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "ū",
+        "result": "gū",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + ū → gū (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "ṛ",
+        "result": "gṛ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + ṛ → gṛ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "ṝ",
+        "result": "gṝ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + ṝ → gṝ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "e",
+        "result": "ge",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + e → ge (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "o",
+        "result": "go",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + o → go (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "ai",
+        "result": "gai",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + ai → gai (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "k",
+        "second": "au",
+        "result": "gau",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "k + au → gau (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "a",
+        "result": "ḍa",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + a → ḍa (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "ā",
+        "result": "ḍā",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + ā → ḍā (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "i",
+        "result": "ḍi",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + i → ḍi (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "ī",
+        "result": "ḍī",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + ī → ḍī (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "u",
+        "result": "ḍu",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + u → ḍu (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "ū",
+        "result": "ḍū",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + ū → ḍū (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "ṛ",
+        "result": "ḍṛ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + ṛ → ḍṛ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "ṝ",
+        "result": "ḍṝ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + ṝ → ḍṝ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "e",
+        "result": "ḍe",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + e → ḍe (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "o",
+        "result": "ḍo",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + o → ḍo (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "ai",
+        "result": "ḍai",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + ai → ḍai (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "ṭ",
+        "second": "au",
+        "result": "ḍau",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "ṭ + au → ḍau (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "a",
+        "result": "ba",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + a → ba (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "ā",
+        "result": "bā",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + ā → bā (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "i",
+        "result": "bi",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + i → bi (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "ī",
+        "result": "bī",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + ī → bī (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "u",
+        "result": "bu",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + u → bu (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "ū",
+        "result": "bū",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + ū → bū (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "ṛ",
+        "result": "bṛ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + ṛ → bṛ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "ṝ",
+        "result": "bṝ",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + ṝ → bṝ (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "e",
+        "result": "be",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + e → be (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "o",
+        "result": "bo",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + o → bo (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "ai",
+        "result": "bai",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + ai → bai (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
+    {
+      "template": "sandhi_rule",
+      "params": {
+        "first": "p",
+        "second": "au",
+        "result": "bau",
+        "sutra": "8.2.39",
+        "sutra_position": "08.02.039",
+        "rule_type": "utsarga"
+      },
+      "statement": "p + au → bau (jhalāṃ jaśo'nte — word-final stop voicing, Aṣṭ. 8.2.39)",
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
+    },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "prathama", "vacana": "ekavacana", "pratyaya": "su", "suffix": "s", "markers": ["u"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "prathama",
+        "vacana": "ekavacana",
+        "pratyaya": "su",
+        "suffix": "s",
+        "markers": [
+          "u"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "prathama ekavacana: su → s (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "prathama", "vacana": "dvivacana", "pratyaya": "au", "suffix": "au", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "prathama",
+        "vacana": "dvivacana",
+        "pratyaya": "au",
+        "suffix": "au",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "prathama dvivacana: au (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "prathama", "vacana": "bahuvacana", "pratyaya": "jas", "suffix": "as", "markers": ["j"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "prathama",
+        "vacana": "bahuvacana",
+        "pratyaya": "jas",
+        "suffix": "as",
+        "markers": [
+          "j"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "prathama bahuvacana: jas → as (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "dvitiya", "vacana": "ekavacana", "pratyaya": "am", "suffix": "am", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "dvitiya",
+        "vacana": "ekavacana",
+        "pratyaya": "am",
+        "suffix": "am",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "dvitiya ekavacana: am (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "dvitiya", "vacana": "dvivacana", "pratyaya": "aut", "suffix": "au", "markers": ["t"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "dvitiya",
+        "vacana": "dvivacana",
+        "pratyaya": "aut",
+        "suffix": "au",
+        "markers": [
+          "t"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "dvitiya dvivacana: aut → au (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "dvitiya", "vacana": "bahuvacana", "pratyaya": "śas", "suffix": "as", "markers": ["ś"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "dvitiya",
+        "vacana": "bahuvacana",
+        "pratyaya": "śas",
+        "suffix": "as",
+        "markers": [
+          "ś"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "dvitiya bahuvacana: śas → as (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "tritiya", "vacana": "ekavacana", "pratyaya": "ṭā", "suffix": "ā", "markers": ["ṭ"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "tritiya",
+        "vacana": "ekavacana",
+        "pratyaya": "ṭā",
+        "suffix": "ā",
+        "markers": [
+          "ṭ"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "tritiya ekavacana: ṭā → ā (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "tritiya", "vacana": "dvivacana", "pratyaya": "bhyām", "suffix": "bhyām", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "tritiya",
+        "vacana": "dvivacana",
+        "pratyaya": "bhyām",
+        "suffix": "bhyām",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "tritiya dvivacana: bhyām (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "tritiya", "vacana": "bahuvacana", "pratyaya": "bhis", "suffix": "bhis", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "tritiya",
+        "vacana": "bahuvacana",
+        "pratyaya": "bhis",
+        "suffix": "bhis",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "tritiya bahuvacana: bhis (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "caturthi", "vacana": "ekavacana", "pratyaya": "ṅe", "suffix": "e", "markers": ["ṅ"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "caturthi",
+        "vacana": "ekavacana",
+        "pratyaya": "ṅe",
+        "suffix": "e",
+        "markers": [
+          "ṅ"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "caturthi ekavacana: ṅe → e (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "caturthi", "vacana": "dvivacana", "pratyaya": "bhyām", "suffix": "bhyām", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "caturthi",
+        "vacana": "dvivacana",
+        "pratyaya": "bhyām",
+        "suffix": "bhyām",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "caturthi dvivacana: bhyām (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "caturthi", "vacana": "bahuvacana", "pratyaya": "bhyas", "suffix": "bhyas", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "caturthi",
+        "vacana": "bahuvacana",
+        "pratyaya": "bhyas",
+        "suffix": "bhyas",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "caturthi bahuvacana: bhyas (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "pancami", "vacana": "ekavacana", "pratyaya": "ṅasi", "suffix": "as", "markers": ["ṅ", "i"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "pancami",
+        "vacana": "ekavacana",
+        "pratyaya": "ṅasi",
+        "suffix": "as",
+        "markers": [
+          "ṅ",
+          "i"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "pancami ekavacana: ṅasi → as (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "pancami", "vacana": "dvivacana", "pratyaya": "bhyām", "suffix": "bhyām", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "pancami",
+        "vacana": "dvivacana",
+        "pratyaya": "bhyām",
+        "suffix": "bhyām",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "pancami dvivacana: bhyām (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "pancami", "vacana": "bahuvacana", "pratyaya": "bhyas", "suffix": "bhyas", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "pancami",
+        "vacana": "bahuvacana",
+        "pratyaya": "bhyas",
+        "suffix": "bhyas",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "pancami bahuvacana: bhyas (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "sasthi", "vacana": "ekavacana", "pratyaya": "ṅas", "suffix": "as", "markers": ["ṅ"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "sasthi",
+        "vacana": "ekavacana",
+        "pratyaya": "ṅas",
+        "suffix": "as",
+        "markers": [
+          "ṅ"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "sasthi ekavacana: ṅas → as (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "sasthi", "vacana": "dvivacana", "pratyaya": "os", "suffix": "os", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "sasthi",
+        "vacana": "dvivacana",
+        "pratyaya": "os",
+        "suffix": "os",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "sasthi dvivacana: os (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "sasthi", "vacana": "bahuvacana", "pratyaya": "ām", "suffix": "ām", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "sasthi",
+        "vacana": "bahuvacana",
+        "pratyaya": "ām",
+        "suffix": "ām",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "sasthi bahuvacana: ām (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "saptami", "vacana": "ekavacana", "pratyaya": "ṅi", "suffix": "i", "markers": ["ṅ"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "saptami",
+        "vacana": "ekavacana",
+        "pratyaya": "ṅi",
+        "suffix": "i",
+        "markers": [
+          "ṅ"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "saptami ekavacana: ṅi → i (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "saptami", "vacana": "dvivacana", "pratyaya": "os", "suffix": "os", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "saptami",
+        "vacana": "dvivacana",
+        "pratyaya": "os",
+        "suffix": "os",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "saptami dvivacana: os (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "saptami", "vacana": "bahuvacana", "pratyaya": "sup", "suffix": "su", "markers": ["p"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "saptami",
+        "vacana": "bahuvacana",
+        "pratyaya": "sup",
+        "suffix": "su",
+        "markers": [
+          "p"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "saptami bahuvacana: sup → su (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "sambodhana", "vacana": "ekavacana", "pratyaya": "su", "suffix": "s", "markers": ["u"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "sambodhana",
+        "vacana": "ekavacana",
+        "pratyaya": "su",
+        "suffix": "s",
+        "markers": [
+          "u"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "sambodhana ekavacana: su → s (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "sambodhana", "vacana": "dvivacana", "pratyaya": "au", "suffix": "au", "markers": [], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "sambodhana",
+        "vacana": "dvivacana",
+        "pratyaya": "au",
+        "suffix": "au",
+        "markers": [],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "sambodhana dvivacana: au (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sup_suffix",
-      "params": { "stem_class": "a-stem-m", "vibhakti": "sambodhana", "vacana": "bahuvacana", "pratyaya": "jas", "suffix": "as", "markers": ["j"], "sutra": "4.1.2", "sutra_position": "04.01.002" },
+      "params": {
+        "stem_class": "a-stem-m",
+        "vibhakti": "sambodhana",
+        "vacana": "bahuvacana",
+        "pratyaya": "jas",
+        "suffix": "as",
+        "markers": [
+          "j"
+        ],
+        "sutra": "4.1.2",
+        "sutra_position": "04.01.002"
+      },
       "statement": "sambodhana bahuvacana: jas → as (Aṣṭ. 4.1.2)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
-
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "bhis", "condition_markers": [], "input_suffix": "bhis", "output_suffix": "ais", "sutra": "7.1.9", "sutra_position": "07.01.009", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "bhis",
+        "condition_markers": [],
+        "input_suffix": "bhis",
+        "output_suffix": "ais",
+        "sutra": "7.1.9",
+        "sutra_position": "07.01.009",
+        "rule_type": "nitya"
+      },
       "statement": "bhis → ais after a-stem (Aṣṭ. 7.1.9)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "ṭā", "condition_markers": [], "input_suffix": "ā", "output_suffix": "ina", "sutra": "7.1.12", "sutra_position": "07.01.012", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "ṭā",
+        "condition_markers": [],
+        "input_suffix": "ā",
+        "output_suffix": "ina",
+        "sutra": "7.1.12",
+        "sutra_position": "07.01.012",
+        "rule_type": "nitya"
+      },
       "statement": "ṭā → ina after a-stem (Aṣṭ. 7.1.12)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "ṅasi", "condition_markers": [], "input_suffix": "as", "output_suffix": "t", "sutra": "7.1.12", "sutra_position": "07.01.012", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "ṅasi",
+        "condition_markers": [],
+        "input_suffix": "as",
+        "output_suffix": "t",
+        "sutra": "7.1.12",
+        "sutra_position": "07.01.012",
+        "rule_type": "nitya"
+      },
       "statement": "ṅasi → t after a-stem (Aṣṭ. 7.1.12)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "ṅas", "condition_markers": [], "input_suffix": "as", "output_suffix": "sya", "sutra": "7.1.12", "sutra_position": "07.01.012", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "ṅas",
+        "condition_markers": [],
+        "input_suffix": "as",
+        "output_suffix": "sya",
+        "sutra": "7.1.12",
+        "sutra_position": "07.01.012",
+        "rule_type": "nitya"
+      },
       "statement": "ṅas → sya after a-stem (Aṣṭ. 7.1.12)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "ṅe", "condition_markers": [], "input_suffix": "e", "output_suffix": "ya", "sutra": "7.1.13", "sutra_position": "07.01.013", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "ṅe",
+        "condition_markers": [],
+        "input_suffix": "e",
+        "output_suffix": "ya",
+        "sutra": "7.1.13",
+        "sutra_position": "07.01.013",
+        "rule_type": "nitya"
+      },
       "statement": "ṅe → ya after a-stem (Aṣṭ. 7.1.13)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "ām", "condition_markers": [], "input_suffix": "ām", "output_suffix": "nām", "sutra": "7.1.54", "sutra_position": "07.01.054", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "ām",
+        "condition_markers": [],
+        "input_suffix": "ām",
+        "output_suffix": "nām",
+        "sutra": "7.1.54",
+        "sutra_position": "07.01.054",
+        "rule_type": "nitya"
+      },
       "statement": "ām → nām (nuṬ augment) after short vowel (Aṣṭ. 7.1.54)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "su", "condition_markers": [], "input_suffix": "s", "output_suffix": "", "sutra": "6.1.69", "sutra_position": "06.01.069", "rule_type": "nitya", "condition_vibhakti": "sambodhana" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "su",
+        "condition_markers": [],
+        "input_suffix": "s",
+        "output_suffix": "",
+        "sutra": "6.1.69",
+        "sutra_position": "06.01.069",
+        "rule_type": "nitya",
+        "condition_vibhakti": "sambodhana"
+      },
       "statement": "su → luk (deletion) in sambodhana after short vowel (Aṣṭ. 6.1.69)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyaya_rule",
-      "params": { "condition_stem_class": "a-stem-m", "condition_suffix": "śas", "condition_markers": [], "input_suffix": "as", "output_suffix": "n", "sutra": "6.1.103", "sutra_position": "06.01.103", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_class": "a-stem-m",
+        "condition_suffix": "śas",
+        "condition_markers": [],
+        "input_suffix": "as",
+        "output_suffix": "n",
+        "sutra": "6.1.103",
+        "sutra_position": "06.01.103",
+        "rule_type": "nitya"
+      },
       "statement": "śas → n for masculine after a-stem (Aṣṭ. 6.1.103)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
-
     {
       "template": "anga_rule",
-      "params": { "condition_stem_final": "a", "condition_markers": [], "condition_suffix_initial": "y", "condition_vacana": null, "operation": "lengthen", "operation_target": "stem_final", "operation_input": "a", "operation_output": "ā", "sutra": "7.3.101/102", "sutra_position": "07.03.101", "rule_type": "utsarga" },
+      "params": {
+        "condition_stem_final": "a",
+        "condition_markers": [],
+        "condition_suffix_initial": "y",
+        "condition_vacana": null,
+        "operation": "lengthen",
+        "operation_target": "stem_final",
+        "operation_input": "a",
+        "operation_output": "ā",
+        "sutra": "7.3.101/102",
+        "sutra_position": "07.03.101",
+        "rule_type": "utsarga"
+      },
       "statement": "a → ā before yaÑ-initial in sUP (Aṣṭ. 7.3.101/102)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "anga_rule",
-      "params": { "condition_stem_final": "a", "condition_markers": [], "condition_suffix_initial": "n", "condition_vacana": null, "operation": "lengthen", "operation_target": "stem_final", "operation_input": "a", "operation_output": "ā", "sutra": "7.3.101/102", "sutra_position": "07.03.101", "rule_type": "utsarga" },
+      "params": {
+        "condition_stem_final": "a",
+        "condition_markers": [],
+        "condition_suffix_initial": "n",
+        "condition_vacana": null,
+        "operation": "lengthen",
+        "operation_target": "stem_final",
+        "operation_input": "a",
+        "operation_output": "ā",
+        "sutra": "7.3.101/102",
+        "sutra_position": "07.03.101",
+        "rule_type": "utsarga"
+      },
       "statement": "a → ā before n-initial in sUP (Aṣṭ. 7.3.101/102)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "anga_rule",
-      "params": { "condition_stem_final": "a", "condition_markers": [], "condition_suffix_initial": "bh", "condition_vacana": null, "operation": "lengthen", "operation_target": "stem_final", "operation_input": "a", "operation_output": "ā", "sutra": "7.3.101/102", "sutra_position": "07.03.101", "rule_type": "utsarga" },
+      "params": {
+        "condition_stem_final": "a",
+        "condition_markers": [],
+        "condition_suffix_initial": "bh",
+        "condition_vacana": null,
+        "operation": "lengthen",
+        "operation_target": "stem_final",
+        "operation_input": "a",
+        "operation_output": "ā",
+        "sutra": "7.3.101/102",
+        "sutra_position": "07.03.101",
+        "rule_type": "utsarga"
+      },
       "statement": "a → ā before bh-initial in sUP (Aṣṭ. 7.3.101/102)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "anga_rule",
-      "params": { "condition_stem_final": "a", "condition_markers": [], "condition_suffix_initial": "t", "condition_vacana": null, "operation": "lengthen", "operation_target": "stem_final", "operation_input": "a", "operation_output": "ā", "sutra": "7.3.101/102", "sutra_position": "07.03.101", "rule_type": "utsarga" },
+      "params": {
+        "condition_stem_final": "a",
+        "condition_markers": [],
+        "condition_suffix_initial": "t",
+        "condition_vacana": null,
+        "operation": "lengthen",
+        "operation_target": "stem_final",
+        "operation_input": "a",
+        "operation_output": "ā",
+        "sutra": "7.3.101/102",
+        "sutra_position": "07.03.101",
+        "rule_type": "utsarga"
+      },
       "statement": "a → ā before t-initial in sUP (Aṣṭ. 7.3.101/102)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "anga_rule",
-      "params": { "condition_stem_final": "a", "condition_markers": [], "condition_suffix_initial": "bh", "condition_vacana": "bahuvacana", "operation": "substitute", "operation_target": "stem_final", "operation_input": "a", "operation_output": "e", "sutra": "7.3.103", "sutra_position": "07.03.103", "rule_type": "apavada" },
+      "params": {
+        "condition_stem_final": "a",
+        "condition_markers": [],
+        "condition_suffix_initial": "bh",
+        "condition_vacana": "bahuvacana",
+        "operation": "substitute",
+        "operation_target": "stem_final",
+        "operation_input": "a",
+        "operation_output": "e",
+        "sutra": "7.3.103",
+        "sutra_position": "07.03.103",
+        "rule_type": "apavada"
+      },
       "statement": "a → e before jhaL-initial in bahuvacana (Aṣṭ. 7.3.103)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "anga_rule",
-      "params": { "condition_stem_final": "a", "condition_markers": [], "condition_suffix_initial": "s", "condition_vacana": "bahuvacana", "operation": "substitute", "operation_target": "stem_final", "operation_input": "a", "operation_output": "e", "sutra": "7.3.103", "sutra_position": "07.03.103", "rule_type": "apavada" },
+      "params": {
+        "condition_stem_final": "a",
+        "condition_markers": [],
+        "condition_suffix_initial": "s",
+        "condition_vacana": "bahuvacana",
+        "operation": "substitute",
+        "operation_target": "stem_final",
+        "operation_input": "a",
+        "operation_output": "e",
+        "sutra": "7.3.103",
+        "sutra_position": "07.03.103",
+        "rule_type": "apavada"
+      },
       "statement": "a → e before s-initial (su) in bahuvacana (Aṣṭ. 7.3.103)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "anga_rule",
-      "params": { "condition_stem_final": "a", "condition_markers": [], "condition_suffix_initial": "o", "condition_vacana": null, "operation": "substitute", "operation_target": "stem_final", "operation_input": "a", "operation_output": "e", "sutra": "7.3.104", "sutra_position": "07.03.104", "rule_type": "nitya" },
+      "params": {
+        "condition_stem_final": "a",
+        "condition_markers": [],
+        "condition_suffix_initial": "o",
+        "condition_vacana": null,
+        "operation": "substitute",
+        "operation_target": "stem_final",
+        "operation_input": "a",
+        "operation_output": "e",
+        "sutra": "7.3.104",
+        "sutra_position": "07.03.104",
+        "rule_type": "nitya"
+      },
       "statement": "a → e before os (gen/loc dual) (Aṣṭ. 7.3.104)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
-
     {
       "template": "tripadi_rule",
-      "params": { "context": "word_final", "condition_preceding": null, "condition_following": null, "input": "s", "output": "r", "position": "word_final", "sutra": "8.2.66", "sutra_position": "08.02.066", "rule_type": "nitya" },
+      "params": {
+        "context": "word_final",
+        "condition_preceding": null,
+        "condition_following": null,
+        "input": "s",
+        "output": "r",
+        "position": "word_final",
+        "sutra": "8.2.66",
+        "sutra_position": "08.02.066",
+        "rule_type": "nitya"
+      },
       "statement": "s → ru (= r) word-finally (sasajuṣo ruḥ, Aṣṭ. 8.2.66)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "tripadi_rule",
-      "params": { "context": "word_final", "condition_preceding": null, "condition_following": null, "input": "r", "output": "ḥ", "position": "word_final", "sutra": "8.3.15", "sutra_position": "08.03.015", "rule_type": "nitya" },
+      "params": {
+        "context": "word_final",
+        "condition_preceding": null,
+        "condition_following": null,
+        "input": "r",
+        "output": "ḥ",
+        "position": "word_final",
+        "sutra": "8.3.15",
+        "sutra_position": "08.03.015",
+        "rule_type": "nitya"
+      },
       "statement": "r → ḥ at avasāna (kharavasānayorvisarjanīyaḥ, Aṣṭ. 8.3.15)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "tripadi_rule",
-      "params": { "context": "after_iuk", "condition_preceding": "iuk", "condition_following": null, "input": "s", "output": "ṣ", "position": "internal", "sutra": "8.3.59", "sutra_position": "08.03.059", "rule_type": "nitya" },
+      "params": {
+        "context": "after_iuk",
+        "condition_preceding": "iuk",
+        "condition_following": null,
+        "input": "s",
+        "output": "ṣ",
+        "position": "internal",
+        "sutra": "8.3.59",
+        "sutra_position": "08.03.059",
+        "rule_type": "nitya"
+      },
       "statement": "s → ṣ after i/u/ṛ/e/o in pratyaya (Aṣṭ. 8.3.59)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
-
     {
       "template": "pratyahara_def",
-      "params": { "pratyahara": "ac", "members": ["a","i","u","ṛ","ḷ","e","o","ai","au"], "shiva_sutra": "1-4" },
+      "params": {
+        "pratyahara": "ac",
+        "members": [
+          "a",
+          "i",
+          "u",
+          "ṛ",
+          "ḷ",
+          "e",
+          "o",
+          "ai",
+          "au"
+        ],
+        "shiva_sutra": "1-4"
+      },
       "statement": "ac = all vowels {a, i, u, ṛ, ḷ, e, o, ai, au}",
-      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "shiva-sutras",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyahara_def",
-      "params": { "pratyahara": "ik", "members": ["i","u","ṛ","ḷ"], "shiva_sutra": "1" },
+      "params": {
+        "pratyahara": "ik",
+        "members": [
+          "i",
+          "u",
+          "ṛ",
+          "ḷ"
+        ],
+        "shiva_sutra": "1"
+      },
       "statement": "ik = simple vowels excluding a {i, u, ṛ, ḷ}",
-      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "shiva-sutras",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyahara_def",
-      "params": { "pratyahara": "yaṇ", "members": ["y","v","r","l"], "shiva_sutra": "5" },
+      "params": {
+        "pratyahara": "yaṇ",
+        "members": [
+          "y",
+          "v",
+          "r",
+          "l"
+        ],
+        "shiva_sutra": "5"
+      },
       "statement": "yaṇ = semivowels {y, v, r, l}",
-      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "shiva-sutras",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyahara_def",
-      "params": { "pratyahara": "aṇ", "members": ["a","i","u"], "shiva_sutra": "1" },
+      "params": {
+        "pratyahara": "aṇ",
+        "members": [
+          "a",
+          "i",
+          "u"
+        ],
+        "shiva_sutra": "1"
+      },
       "statement": "aṇ = the three short simple vowels {a, i, u}",
-      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "shiva-sutras",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "pratyahara_def",
-      "params": { "pratyahara": "eṅ", "members": ["e","o"], "shiva_sutra": "3" },
+      "params": {
+        "pratyahara": "eṅ",
+        "members": [
+          "e",
+          "o"
+        ],
+        "shiva_sutra": "3"
+      },
       "statement": "eṅ = guṇa diphthongs {e, o}",
-      "assertions": [{ "tradition": "pāṇini", "source": "shiva-sutras", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "shiva-sutras",
+          "pramana": "shabda"
+        }
+      ]
     },
-
     {
       "template": "sound_classification",
-      "params": { "sound": "a", "class": "vowel", "properties": ["short", "simple", "guṇa"] },
+      "params": {
+        "sound": "a",
+        "class": "vowel",
+        "properties": [
+          "short",
+          "simple",
+          "guṇa"
+        ]
+      },
       "statement": "a is a short simple vowel and is itself a guṇa vowel",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sound_classification",
-      "params": { "sound": "e", "class": "vowel", "properties": ["guṇa", "diphthong"] },
+      "params": {
+        "sound": "e",
+        "class": "vowel",
+        "properties": [
+          "guṇa",
+          "diphthong"
+        ]
+      },
       "statement": "e is a guṇa-grade diphthong vowel (guṇa of i/ī)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sound_classification",
-      "params": { "sound": "o", "class": "vowel", "properties": ["guṇa", "diphthong"] },
+      "params": {
+        "sound": "o",
+        "class": "vowel",
+        "properties": [
+          "guṇa",
+          "diphthong"
+        ]
+      },
       "statement": "o is a guṇa-grade diphthong vowel (guṇa of u/ū)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sound_classification",
-      "params": { "sound": "ai", "class": "vowel", "properties": ["vṛddhi", "diphthong"] },
+      "params": {
+        "sound": "ai",
+        "class": "vowel",
+        "properties": [
+          "vṛddhi",
+          "diphthong"
+        ]
+      },
       "statement": "ai is a vṛddhi-grade diphthong vowel (vṛddhi of i/ī)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     },
     {
       "template": "sound_classification",
-      "params": { "sound": "au", "class": "vowel", "properties": ["vṛddhi", "diphthong"] },
+      "params": {
+        "sound": "au",
+        "class": "vowel",
+        "properties": [
+          "vṛddhi",
+          "diphthong"
+        ]
+      },
       "statement": "au is a vṛddhi-grade diphthong vowel (vṛddhi of u/ū)",
-      "assertions": [{ "tradition": "pāṇini", "source": "ashtadhyayi", "pramana": "shabda" }]
+      "assertions": [
+        {
+          "tradition": "pāṇini",
+          "source": "ashtadhyayi",
+          "pramana": "shabda"
+        }
+      ]
     }
   ],
   "relations": []
