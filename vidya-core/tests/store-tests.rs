@@ -1,6 +1,6 @@
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use std::path::PathBuf;
-use vidya_core::KnowledgeStore;
+use vidya_core::{KnowledgeStore, VidyaError};
 
 #[test]
 fn new_memory_store_loads_base_ontology() {
@@ -225,4 +225,71 @@ fn load_jyotish_seed() {
     } else {
         panic!("expected SELECT results");
     }
+}
+
+fn load_jyotish(store: &KnowledgeStore) {
+    let seed_path = project_root().join("seeds/jyotish.ttl");
+    store.load_domain_from_file("jyotish", &seed_path).unwrap();
+}
+
+#[test]
+fn describe_surya_returns_properties_and_provenance() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.describe("jyotish", "surya").unwrap();
+
+    assert_eq!(result.label.as_deref(), Some("Sūrya"));
+    assert!(result.types.iter().any(|t| t.contains("Graha")));
+
+    let elements: Vec<_> = result
+        .properties
+        .iter()
+        .filter(|p| p.predicate.contains("element"))
+        .collect();
+    assert_eq!(elements.len(), 1);
+    assert_eq!(elements[0].value, "fire");
+
+    assert!(!result.annotated_triples.is_empty());
+    let exaltation = result
+        .annotated_triples
+        .iter()
+        .find(|at| at.predicate.contains("exaltedIn"))
+        .expect("should have exaltedIn annotation");
+    assert!(exaltation.object.contains("mesha"));
+    assert!(exaltation.provenance.is_some());
+    let prov = exaltation.provenance.as_ref().unwrap();
+    assert!(prov.pramana.contains("shabda"));
+}
+
+#[test]
+fn search_grahas_fire_element() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store
+        .search("jyotish", "Graha", &[("element".into(), "fire".into())])
+        .unwrap();
+
+    let mut names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
+    names.sort();
+    assert_eq!(names, vec!["mangala", "surya"]);
+}
+
+#[test]
+fn describe_nonexistent_returns_not_found() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.describe("jyotish", "nonexistent");
+    assert!(matches!(result, Err(VidyaError::NotFound(_))));
+}
+
+#[test]
+fn search_all_grahas() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.search("jyotish", "Graha", &[]).unwrap();
+    assert_eq!(result.entities.len(), 9);
 }

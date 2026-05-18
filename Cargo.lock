@@ -1954,6 +1954,8 @@ name = "vidya-core"
 version = "0.2.0"
 dependencies = [
  "oxigraph",
+ "serde",
+ "serde_json",
  "tempfile",
  "thiserror",
  "tracing",

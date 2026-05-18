@@ -132,4 +132,21 @@ impl KnowledgeStore {
         let turtle = std::fs::read_to_string(path.as_ref())?;
         self.load_domain(name, &turtle)
     }
+
+    pub fn describe(
+        &self,
+        domain: &str,
+        subject: &str,
+    ) -> Result<crate::query::DescribeResult> {
+        crate::query::describe(self, domain, subject)
+    }
+
+    pub fn search(
+        &self,
+        domain: &str,
+        kind: &str,
+        filters: &[(String, String)],
+    ) -> Result<crate::query::SearchResult> {
+        crate::query::search(self, domain, kind, filters)
+    }
 }
