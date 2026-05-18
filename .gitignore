@@ -3,3 +3,4 @@ target/
 .sutra/
 # AgentOps session artifacts
 .agents/
+index.db
