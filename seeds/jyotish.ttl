@@ -1,0 +1,1198 @@
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix vidya:   <http://vidya.ninthhouse.studio/ontology/> .
+@prefix jyotish: <http://vidya.ninthhouse.studio/domain/jyotish/> .
+
+# ═══════════════════════════════════════════════════════════════════
+# 1. Domain Classes and Properties
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:Graha       a rdfs:Class ; rdfs:label "graha"@sa .
+jyotish:Rashi       a rdfs:Class ; rdfs:label "rashi"@sa .
+jyotish:Bhava       a rdfs:Class ; rdfs:label "bhava"@sa .
+jyotish:Nakshatra   a rdfs:Class ; rdfs:label "nakshatra"@sa .
+jyotish:DignityType a rdfs:Class ; rdfs:label "dignitya"@sa .
+
+# Entity attribute properties
+jyotish:western         a rdf:Property ; rdfs:label "western name" .
+jyotish:nature          a rdf:Property ; rdfs:label "nature" .
+jyotish:gender          a rdf:Property ; rdfs:label "gender" .
+jyotish:element         a rdf:Property ; rdfs:label "element" .
+jyotish:tattva          a rdf:Property ; rdfs:label "tattva" .
+jyotish:alias           a rdf:Property ; rdfs:label "alias" .
+jyotish:signNumber      a rdf:Property ; rdfs:label "sign number" ; rdfs:range xsd:integer .
+jyotish:quality         a rdf:Property ; rdfs:label "quality" .
+jyotish:houseNumber     a rdf:Property ; rdfs:label "house number" ; rdfs:range xsd:integer .
+jyotish:sanskritName    a rdf:Property ; rdfs:label "Sanskrit name" .
+jyotish:signification   a rdf:Property ; rdfs:label "signification" .
+jyotish:shadow          a rdf:Property ; rdfs:label "shadow planet" ; rdfs:range xsd:boolean .
+
+# Relation properties
+jyotish:rules           a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Rashi .
+jyotish:exaltedIn       a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Rashi .
+jyotish:debilitatedIn   a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Rashi .
+jyotish:moolatrikonaIn  a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Rashi .
+jyotish:naturalFriend   a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Graha .
+jyotish:naturalEnemy    a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Graha .
+jyotish:naturalNeutral  a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Graha .
+jyotish:aspectsHouse    a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range xsd:integer .
+jyotish:karaka          a rdf:Property ; rdfs:domain jyotish:Graha .
+
+# Provenance helper properties
+jyotish:exaltationDegree    a rdf:Property ; rdfs:range xsd:integer .
+jyotish:debilitationDegree  a rdf:Property ; rdfs:range xsd:integer .
+jyotish:natureQualification a rdf:Property .
+
+# ═══════════════════════════════════════════════════════════════════
+# 2. Graha Entities
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:surya  a jyotish:Graha ;
+    rdfs:label      "Sūrya" ;
+    jyotish:western "Sun" ;
+    jyotish:nature  "malefic" ;
+    jyotish:gender  "masculine" ;
+    jyotish:element "fire" ;
+    jyotish:tattva  "ātman" ;
+    jyotish:alias   "Sun" ;
+    jyotish:alias   "Ravi" ;
+    jyotish:alias   "Arka" .
+
+jyotish:chandra  a jyotish:Graha ;
+    rdfs:label      "Chandra" ;
+    jyotish:western "Moon" ;
+    jyotish:nature  "benefic" ;
+    jyotish:gender  "feminine" ;
+    jyotish:element "water" ;
+    jyotish:tattva  "manas" ;
+    jyotish:alias   "Moon" ;
+    jyotish:alias   "Soma" .
+
+jyotish:mangala  a jyotish:Graha ;
+    rdfs:label      "Maṅgala" ;
+    jyotish:western "Mars" ;
+    jyotish:nature  "malefic" ;
+    jyotish:gender  "masculine" ;
+    jyotish:element "fire" ;
+    jyotish:tattva  "courage" ;
+    jyotish:alias   "Mars" ;
+    jyotish:alias   "Kuja" ;
+    jyotish:alias   "Bhūmi-putra" .
+
+jyotish:budha  a jyotish:Graha ;
+    rdfs:label      "Budha" ;
+    jyotish:western "Mercury" ;
+    jyotish:nature  "neutral" ;
+    jyotish:gender  "neuter" ;
+    jyotish:element "earth" ;
+    jyotish:tattva  "speech" ;
+    jyotish:alias   "Mercury" .
+
+jyotish:guru  a jyotish:Graha ;
+    rdfs:label      "Guru" ;
+    jyotish:western "Jupiter" ;
+    jyotish:nature  "benefic" ;
+    jyotish:gender  "masculine" ;
+    jyotish:element "ether" ;
+    jyotish:tattva  "knowledge" ;
+    jyotish:alias   "Jupiter" ;
+    jyotish:alias   "Bṛhaspati" .
+
+jyotish:shukra  a jyotish:Graha ;
+    rdfs:label      "Śukra" ;
+    jyotish:western "Venus" ;
+    jyotish:nature  "benefic" ;
+    jyotish:gender  "feminine" ;
+    jyotish:element "water" ;
+    jyotish:tattva  "desire" ;
+    jyotish:alias   "Venus" .
+
+jyotish:shani  a jyotish:Graha ;
+    rdfs:label      "Śani" ;
+    jyotish:western "Saturn" ;
+    jyotish:nature  "malefic" ;
+    jyotish:gender  "neuter" ;
+    jyotish:element "air" ;
+    jyotish:tattva  "sorrow" ;
+    jyotish:alias   "Saturn" ;
+    jyotish:alias   "Manda" .
+
+jyotish:rahu  a jyotish:Graha ;
+    rdfs:label      "Rāhu" ;
+    jyotish:western "North Node" ;
+    jyotish:nature  "malefic" ;
+    jyotish:gender  "feminine" ;
+    jyotish:shadow  true ;
+    jyotish:alias   "North Node" ;
+    jyotish:alias   "Dragon's Head" .
+
+jyotish:ketu  a jyotish:Graha ;
+    rdfs:label      "Ketu" ;
+    jyotish:western "South Node" ;
+    jyotish:nature  "malefic" ;
+    jyotish:gender  "neuter" ;
+    jyotish:shadow  true ;
+    jyotish:alias   "South Node" ;
+    jyotish:alias   "Dragon's Tail" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 3. Rashi Entities
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:mesha  a jyotish:Rashi ;
+    rdfs:label          "Meṣa" ;
+    jyotish:western     "Aries" ;
+    jyotish:signNumber  1 ;
+    jyotish:element     "fire" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "masculine" .
+
+jyotish:vrishabha  a jyotish:Rashi ;
+    rdfs:label          "Vṛṣabha" ;
+    jyotish:western     "Taurus" ;
+    jyotish:signNumber  2 ;
+    jyotish:element     "earth" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "feminine" .
+
+jyotish:mithuna  a jyotish:Rashi ;
+    rdfs:label          "Mithuna" ;
+    jyotish:western     "Gemini" ;
+    jyotish:signNumber  3 ;
+    jyotish:element     "air" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "masculine" .
+
+jyotish:karka  a jyotish:Rashi ;
+    rdfs:label          "Karka" ;
+    jyotish:western     "Cancer" ;
+    jyotish:signNumber  4 ;
+    jyotish:element     "water" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "feminine" .
+
+jyotish:simha  a jyotish:Rashi ;
+    rdfs:label          "Siṃha" ;
+    jyotish:western     "Leo" ;
+    jyotish:signNumber  5 ;
+    jyotish:element     "fire" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "masculine" .
+
+jyotish:kanya  a jyotish:Rashi ;
+    rdfs:label          "Kanyā" ;
+    jyotish:western     "Virgo" ;
+    jyotish:signNumber  6 ;
+    jyotish:element     "earth" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "feminine" .
+
+jyotish:tula  a jyotish:Rashi ;
+    rdfs:label          "Tulā" ;
+    jyotish:western     "Libra" ;
+    jyotish:signNumber  7 ;
+    jyotish:element     "air" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "masculine" .
+
+jyotish:vrischika  a jyotish:Rashi ;
+    rdfs:label          "Vṛścika" ;
+    jyotish:western     "Scorpio" ;
+    jyotish:signNumber  8 ;
+    jyotish:element     "water" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "feminine" .
+
+jyotish:dhanus  a jyotish:Rashi ;
+    rdfs:label          "Dhanus" ;
+    jyotish:western     "Sagittarius" ;
+    jyotish:signNumber  9 ;
+    jyotish:element     "fire" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "masculine" .
+
+jyotish:makara  a jyotish:Rashi ;
+    rdfs:label          "Makara" ;
+    jyotish:western     "Capricorn" ;
+    jyotish:signNumber  10 ;
+    jyotish:element     "earth" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "feminine" .
+
+jyotish:kumbha  a jyotish:Rashi ;
+    rdfs:label          "Kumbha" ;
+    jyotish:western     "Aquarius" ;
+    jyotish:signNumber  11 ;
+    jyotish:element     "air" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "masculine" .
+
+jyotish:mina  a jyotish:Rashi ;
+    rdfs:label          "Mīna" ;
+    jyotish:western     "Pisces" ;
+    jyotish:signNumber  12 ;
+    jyotish:element     "water" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "feminine" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 4. Bhava Entities
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:bhava-1  a jyotish:Bhava ;
+    rdfs:label           "1st House" ;
+    jyotish:houseNumber  1 ;
+    jyotish:sanskritName "Tanu Bhāva" ;
+    jyotish:signification "self" ;
+    jyotish:signification "body" ;
+    jyotish:signification "appearance" ;
+    jyotish:signification "personality" ;
+    jyotish:signification "health" ;
+    jyotish:signification "vitality" .
+
+jyotish:bhava-2  a jyotish:Bhava ;
+    rdfs:label           "2nd House" ;
+    jyotish:houseNumber  2 ;
+    jyotish:sanskritName "Dhana Bhāva" ;
+    jyotish:signification "wealth" ;
+    jyotish:signification "family" ;
+    jyotish:signification "speech" ;
+    jyotish:signification "food" ;
+    jyotish:signification "right eye" ;
+    jyotish:signification "early education" .
+
+jyotish:bhava-3  a jyotish:Bhava ;
+    rdfs:label           "3rd House" ;
+    jyotish:houseNumber  3 ;
+    jyotish:sanskritName "Sahaja Bhāva" ;
+    jyotish:signification "siblings" ;
+    jyotish:signification "courage" ;
+    jyotish:signification "communication" ;
+    jyotish:signification "short travels" ;
+    jyotish:signification "efforts" ;
+    jyotish:signification "hands" .
+
+jyotish:bhava-4  a jyotish:Bhava ;
+    rdfs:label           "4th House" ;
+    jyotish:houseNumber  4 ;
+    jyotish:sanskritName "Sukha Bhāva" ;
+    jyotish:signification "mother" ;
+    jyotish:signification "happiness" ;
+    jyotish:signification "property" ;
+    jyotish:signification "vehicles" ;
+    jyotish:signification "education" ;
+    jyotish:signification "heart" .
+
+jyotish:bhava-5  a jyotish:Bhava ;
+    rdfs:label           "5th House" ;
+    jyotish:houseNumber  5 ;
+    jyotish:sanskritName "Putra Bhāva" ;
+    jyotish:signification "children" ;
+    jyotish:signification "intelligence" ;
+    jyotish:signification "creativity" ;
+    jyotish:signification "romance" ;
+    jyotish:signification "past merit" ;
+    jyotish:signification "mantras" .
+
+jyotish:bhava-6  a jyotish:Bhava ;
+    rdfs:label           "6th House" ;
+    jyotish:houseNumber  6 ;
+    jyotish:sanskritName "Ari Bhāva" ;
+    jyotish:signification "enemies" ;
+    jyotish:signification "disease" ;
+    jyotish:signification "debt" ;
+    jyotish:signification "service" ;
+    jyotish:signification "obstacles" ;
+    jyotish:signification "maternal uncle" .
+
+jyotish:bhava-7  a jyotish:Bhava ;
+    rdfs:label           "7th House" ;
+    jyotish:houseNumber  7 ;
+    jyotish:sanskritName "Yuvati Bhāva" ;
+    jyotish:signification "spouse" ;
+    jyotish:signification "partnership" ;
+    jyotish:signification "trade" ;
+    jyotish:signification "foreign travel" ;
+    jyotish:signification "desire" ;
+    jyotish:signification "death" .
+
+jyotish:bhava-8  a jyotish:Bhava ;
+    rdfs:label           "8th House" ;
+    jyotish:houseNumber  8 ;
+    jyotish:sanskritName "Randhra Bhāva" ;
+    jyotish:signification "longevity" ;
+    jyotish:signification "transformation" ;
+    jyotish:signification "occult" ;
+    jyotish:signification "inheritance" ;
+    jyotish:signification "chronic illness" ;
+    jyotish:signification "obstacles" .
+
+jyotish:bhava-9  a jyotish:Bhava ;
+    rdfs:label           "9th House" ;
+    jyotish:houseNumber  9 ;
+    jyotish:sanskritName "Dharma Bhāva" ;
+    jyotish:signification "father" ;
+    jyotish:signification "dharma" ;
+    jyotish:signification "fortune" ;
+    jyotish:signification "guru" ;
+    jyotish:signification "higher learning" ;
+    jyotish:signification "long journeys" ;
+    jyotish:signification "philosophy" .
+
+jyotish:bhava-10  a jyotish:Bhava ;
+    rdfs:label           "10th House" ;
+    jyotish:houseNumber  10 ;
+    jyotish:sanskritName "Karma Bhāva" ;
+    jyotish:signification "career" ;
+    jyotish:signification "status" ;
+    jyotish:signification "authority" ;
+    jyotish:signification "fame" ;
+    jyotish:signification "government" ;
+    jyotish:signification "father's influence" .
+
+jyotish:bhava-11  a jyotish:Bhava ;
+    rdfs:label           "11th House" ;
+    jyotish:houseNumber  11 ;
+    jyotish:sanskritName "Lābha Bhāva" ;
+    jyotish:signification "gains" ;
+    jyotish:signification "income" ;
+    jyotish:signification "elder siblings" ;
+    jyotish:signification "friends" ;
+    jyotish:signification "hopes" ;
+    jyotish:signification "fulfillment" .
+
+jyotish:bhava-12  a jyotish:Bhava ;
+    rdfs:label           "12th House" ;
+    jyotish:houseNumber  12 ;
+    jyotish:sanskritName "Vyaya Bhāva" ;
+    jyotish:signification "loss" ;
+    jyotish:signification "expenditure" ;
+    jyotish:signification "liberation" ;
+    jyotish:signification "foreign lands" ;
+    jyotish:signification "isolation" ;
+    jyotish:signification "sleep" ;
+    jyotish:signification "left eye" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 5. Dignity Type Entities
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:exaltation  a jyotish:DignityType ;
+    rdfs:label           "Exaltation" ;
+    jyotish:sanskritName "Uccha" ;
+    rdfs:comment         "Planet at maximum strength and positive expression" .
+
+jyotish:debilitation  a jyotish:DignityType ;
+    rdfs:label           "Debilitation" ;
+    jyotish:sanskritName "Nīcha" ;
+    rdfs:comment         "Planet at minimum strength and challenged expression" .
+
+jyotish:own-sign  a jyotish:DignityType ;
+    rdfs:label           "Own Sign" ;
+    jyotish:sanskritName "Svakṣetra" ;
+    rdfs:comment         "Planet in a sign it rules, comfortable and strong" .
+
+jyotish:moolatrikona  a jyotish:DignityType ;
+    rdfs:label           "Mūlatrikoṇa" ;
+    jyotish:sanskritName "Mūlatrikoṇa" ;
+    rdfs:comment         "Planet in its office sign, strong in a specific degree range" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 6. Traditions and Sources
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:tradition-parasara  a vidya:Tradition ;
+    rdfs:label "parāśara" .
+
+jyotish:tradition-jaimini  a vidya:Tradition ;
+    rdfs:label "jaimini" .
+
+jyotish:tradition-bphs  a vidya:Tradition ;
+    rdfs:label              "bphs" ;
+    vidya:parentTradition   jyotish:tradition-parasara .
+
+jyotish:source-bphs  a vidya:Source ;
+    rdfs:label        "Bṛhat Parāśara Horā Śāstra" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.95"^^xsd:float ;
+    rdfs:comment      "Bṛhat Parāśara Horā Śāstra" .
+
+jyotish:source-phala-dipika  a vidya:Source ;
+    rdfs:label        "Phala Dīpikā" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.9"^^xsd:float ;
+    rdfs:comment      "Phala Dīpikā (Mantreśvara)" .
+
+jyotish:source-jataka-parijata  a vidya:Source ;
+    rdfs:label        "Jātaka Pārijāta" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.9"^^xsd:float ;
+    rdfs:comment      "Jātaka Pārijāta (Vaidyanātha)" .
+
+jyotish:source-saravali  a vidya:Source ;
+    rdfs:label        "Sārāvalī" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.9"^^xsd:float ;
+    rdfs:comment      "Sārāvalī (Kalyāṇavarman)" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 7. Relations as Simple Triples
+# (All relations with provenance claims are expressed as RDF-star
+#  annotations in Section 8 below; no bare duplicates here.)
+# ═══════════════════════════════════════════════════════════════════
+
+# — no additional bare triples needed; all covered by Section 8 —
+
+# ═══════════════════════════════════════════════════════════════════
+# 8. RDF-star Provenance Annotations
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Dignity: Sūrya ──
+
+<< jyotish:surya jyotish:exaltedIn jyotish:mesha >>
+    jyotish:exaltationDegree 10 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:debilitatedIn jyotish:tula >>
+    jyotish:debilitationDegree 10 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:rules jyotish:simha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:moolatrikonaIn jyotish:simha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Dignity: Chandra ──
+
+<< jyotish:chandra jyotish:exaltedIn jyotish:vrishabha >>
+    jyotish:exaltationDegree 3 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:chandra jyotish:debilitatedIn jyotish:vrischika >>
+    jyotish:debilitationDegree 3 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:chandra jyotish:rules jyotish:karka >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:chandra jyotish:moolatrikonaIn jyotish:vrishabha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Dignity: Maṅgala ──
+
+<< jyotish:mangala jyotish:exaltedIn jyotish:makara >>
+    jyotish:exaltationDegree 28 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:debilitatedIn jyotish:karka >>
+    jyotish:debilitationDegree 28 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:rules jyotish:mesha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:rules jyotish:vrischika >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:moolatrikonaIn jyotish:mesha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Dignity: Budha ──
+
+<< jyotish:budha jyotish:exaltedIn jyotish:kanya >>
+    jyotish:exaltationDegree 15 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:budha jyotish:debilitatedIn jyotish:mina >>
+    jyotish:debilitationDegree 15 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:budha jyotish:rules jyotish:mithuna >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:budha jyotish:rules jyotish:kanya >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:budha jyotish:moolatrikonaIn jyotish:kanya >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Dignity: Guru ──
+
+<< jyotish:guru jyotish:exaltedIn jyotish:karka >>
+    jyotish:exaltationDegree 5 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:debilitatedIn jyotish:makara >>
+    jyotish:debilitationDegree 5 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:rules jyotish:dhanus >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:rules jyotish:mina >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:moolatrikonaIn jyotish:dhanus >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Dignity: Śukra ──
+
+<< jyotish:shukra jyotish:exaltedIn jyotish:mina >>
+    jyotish:exaltationDegree 27 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shukra jyotish:debilitatedIn jyotish:kanya >>
+    jyotish:debilitationDegree 27 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shukra jyotish:rules jyotish:vrishabha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shukra jyotish:rules jyotish:tula >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shukra jyotish:moolatrikonaIn jyotish:tula >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Dignity: Śani ──
+
+<< jyotish:shani jyotish:exaltedIn jyotish:tula >>
+    jyotish:exaltationDegree 20 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:debilitatedIn jyotish:mesha >>
+    jyotish:debilitationDegree 20 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:rules jyotish:makara >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:rules jyotish:kumbha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:moolatrikonaIn jyotish:kumbha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Dignity: Rāhu (contested, confidence 0.7) ──
+
+<< jyotish:rahu jyotish:exaltedIn jyotish:mithuna >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.7"^^xsd:float
+    ] .
+
+<< jyotish:rahu jyotish:debilitatedIn jyotish:dhanus >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.7"^^xsd:float
+    ] .
+
+# ── Dignity: Ketu (contested, confidence 0.7) ──
+
+<< jyotish:ketu jyotish:exaltedIn jyotish:dhanus >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.7"^^xsd:float
+    ] .
+
+<< jyotish:ketu jyotish:debilitatedIn jyotish:mithuna >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.7"^^xsd:float
+    ] .
+
+# ── Planetary Nature ──
+
+<< jyotish:surya jyotish:nature "malefic" >>
+    jyotish:natureQualification "krūra (cruel); natural malefic but auspicious as ātmakāraka" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:chandra jyotish:nature "benefic" >>
+    jyotish:natureQualification "śubha when waxing (śukla pakṣa); krūra when waning (kṛṣṇa pakṣa) and near new moon" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:nature "malefic" >>
+    jyotish:natureQualification "krūra; fiery, aggressive, accident-prone" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:budha jyotish:nature "neutral" >>
+    jyotish:natureQualification "takes the nature of planets it associates with; benefic alone, malefic with malefics" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:nature "benefic" >>
+    jyotish:natureQualification "the greatest natural benefic (mahā śubha graha)" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shukra jyotish:nature "benefic" >>
+    jyotish:natureQualification "śubha; teacher of the asuras; strong material benefic" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:nature "malefic" >>
+    jyotish:natureQualification "the greatest natural malefic (mahā krūra); slow, restrictive, karmic" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:rahu jyotish:nature "malefic" >>
+    jyotish:natureQualification "shadow planet (chāyā graha); amplifies and distorts; acts like Śani" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:ketu jyotish:nature "malefic" >>
+    jyotish:natureQualification "shadow planet (chāyā graha); dissolves and spiritualizes; acts like Maṅgala" ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Aspect Rules ──
+
+# Universal 7th-house aspect (all grahas)
+<< jyotish:Graha jyotish:aspectsHouse 7 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# Maṅgala special aspects
+<< jyotish:mangala jyotish:aspectsHouse 4 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:aspectsHouse 7 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:aspectsHouse 8 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# Guru special aspects
+<< jyotish:guru jyotish:aspectsHouse 5 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:aspectsHouse 7 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:aspectsHouse 9 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# Śani special aspects
+<< jyotish:shani jyotish:aspectsHouse 3 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:aspectsHouse 7 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:aspectsHouse 10 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-parasara ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Karaka Significations ──
+# Provenance on first signification only per graha per instructions.
+
+<< jyotish:surya jyotish:karaka "soul" >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+jyotish:surya jyotish:karaka "father", "authority", "government", "vitality", "ego", "bones", "right eye" .
+
+<< jyotish:chandra jyotish:karaka "mind" >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+jyotish:chandra jyotish:karaka "mother", "emotions", "fluids", "public", "left eye", "sleep", "fertility" .
+
+<< jyotish:mangala jyotish:karaka "courage" >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+jyotish:mangala jyotish:karaka "siblings", "land", "blood", "energy", "surgery", "weapons", "accidents" .
+
+<< jyotish:budha jyotish:karaka "intellect" >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+jyotish:budha jyotish:karaka "speech", "commerce", "writing", "mathematics", "skin", "nervous system", "friends" .
+
+<< jyotish:guru jyotish:karaka "wisdom" >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+jyotish:guru jyotish:karaka "children", "dharma", "wealth", "guru", "expansion", "liver", "fat", "husband" .
+
+<< jyotish:shukra jyotish:karaka "love" >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+jyotish:shukra jyotish:karaka "marriage", "beauty", "art", "luxury", "vehicles", "reproductive system", "wife" .
+
+<< jyotish:shani jyotish:karaka "longevity" >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+jyotish:shani jyotish:karaka "sorrow", "discipline", "servants", "delay", "chronic disease", "karma", "renunciation" .
+
+# ── Planetary Friendships: Sūrya ──
+
+<< jyotish:surya jyotish:naturalFriend jyotish:chandra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:naturalFriend jyotish:mangala >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:naturalFriend jyotish:guru >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:naturalEnemy jyotish:shukra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:naturalEnemy jyotish:shani >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:naturalNeutral jyotish:budha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Planetary Friendships: Chandra ──
+
+<< jyotish:chandra jyotish:naturalFriend jyotish:surya >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:chandra jyotish:naturalFriend jyotish:budha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Planetary Friendships: Maṅgala ──
+
+<< jyotish:mangala jyotish:naturalFriend jyotish:surya >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:naturalFriend jyotish:chandra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:naturalFriend jyotish:guru >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:mangala jyotish:naturalEnemy jyotish:budha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Planetary Friendships: Guru ──
+
+<< jyotish:guru jyotish:naturalFriend jyotish:surya >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:naturalFriend jyotish:chandra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:naturalFriend jyotish:mangala >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:naturalEnemy jyotish:shukra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:naturalEnemy jyotish:budha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+# ── Planetary Friendships: Śani ──
+
+<< jyotish:shani jyotish:naturalFriend jyotish:budha >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:naturalFriend jyotish:shukra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:naturalEnemy jyotish:surya >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:naturalEnemy jyotish:chandra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:shani jyotish:naturalEnemy jyotish:mangala >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .

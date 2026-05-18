@@ -18,6 +18,9 @@ pub enum VidyaError {
     #[error("not found: {0}")]
     NotFound(String),
 
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+
     #[error("{0}")]
     Internal(String),
 }

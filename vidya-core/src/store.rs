@@ -1,4 +1,5 @@
-use oxigraph::io::RdfFormat;
+use oxigraph::io::{RdfFormat, RdfParser};
+use oxigraph::model::NamedNodeRef;
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
 use std::path::Path;
@@ -109,5 +110,26 @@ impl KnowledgeStore {
                 _ => None,
             })
             .collect()
+    }
+
+    pub fn load_domain(&self, name: &str, turtle: &str) -> Result<()> {
+        let graph_iri = ontology::domain_graph_iri(name);
+        let graph = NamedNodeRef::new(&graph_iri)
+            .map_err(|e| VidyaError::InvalidArgument(e.to_string()))?;
+        let parser = RdfParser::from_format(RdfFormat::Turtle)
+            .with_default_graph(graph)
+            .without_named_graphs();
+        self.store.load_from_reader(parser, turtle.as_bytes())?;
+        tracing::info!(
+            domain = name,
+            triples = self.store.len().unwrap_or(0),
+            "loaded domain"
+        );
+        Ok(())
+    }
+
+    pub fn load_domain_from_file(&self, name: &str, path: impl AsRef<Path>) -> Result<()> {
+        let turtle = std::fs::read_to_string(path.as_ref())?;
+        self.load_domain(name, &turtle)
     }
 }

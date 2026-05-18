@@ -36,6 +36,25 @@ pub struct HealthOutput {
     pub version: &'static str,
 }
 
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct LoadArgs {
+    /// Domain name (e.g. "jyotish")
+    pub domain: String,
+    /// Inline Turtle data (mutually exclusive with path)
+    #[serde(default)]
+    pub turtle: Option<String>,
+    /// File path to a .ttl file (mutually exclusive with turtle)
+    #[serde(default)]
+    pub path: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LoadOutput {
+    pub domain: String,
+    pub triple_count: usize,
+    pub graph_count: usize,
+}
+
 #[tool_router(router = tool_router)]
 impl VidyaServer {
     #[tool(
@@ -59,6 +78,44 @@ impl VidyaServer {
         serde_json::to_string_pretty(&out)
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))
     }
+
+    #[tool(
+        description = "Load domain data from Turtle (RDF). Provide domain name plus either inline turtle string or a file path. Triples load into a named graph for the domain."
+    )]
+    pub async fn vidya_load(
+        &self,
+        Parameters(args): Parameters<LoadArgs>,
+    ) -> Result<String, ErrorData> {
+        match (args.turtle, args.path) {
+            (Some(turtle), None) => {
+                self.store
+                    .load_domain(&args.domain, &turtle)
+                    .map_err(to_error_data)?;
+            }
+            (None, Some(path)) => {
+                self.store
+                    .load_domain_from_file(&args.domain, &path)
+                    .map_err(to_error_data)?;
+            }
+            _ => {
+                return Err(ErrorData::invalid_params(
+                    "provide exactly one of 'turtle' or 'path'",
+                    None,
+                ));
+            }
+        }
+
+        let triple_count = self.store.triple_count().map_err(to_error_data)?;
+        let graph_count = self.store.graph_count();
+
+        let out = LoadOutput {
+            domain: args.domain,
+            triple_count,
+            graph_count,
+        };
+        serde_json::to_string_pretty(&out)
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+    }
 }
 
 #[tool_handler(router = self.tool_router)]
@@ -67,7 +124,7 @@ impl ServerHandler for VidyaServer {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build()).with_instructions(
             "vidya — structured knowledge graph backed by Oxigraph. \
              RDF triplestore with named graphs per domain, RDF-star provenance, \
-             and SPARQL internally. Tools: vidya_health.",
+             and SPARQL internally. Tools: vidya_health, vidya_load.",
         )
     }
 }
