@@ -1,0 +1,175 @@
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix vidya:   <http://vidya.ninthhouse.studio/ontology/> .
+@prefix jyotish: <http://vidya.ninthhouse.studio/domain/jyotish/> .
+
+# ── Ontology layer ──
+
+jyotish:Graha  a rdfs:Class ; rdfs:label "graha"@sa .
+jyotish:Rashi  a rdfs:Class ; rdfs:label "rashi"@sa .
+jyotish:Bhava  a rdfs:Class ; rdfs:label "bhava"@sa .
+
+jyotish:rules         a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Rashi .
+jyotish:exaltedIn     a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Rashi .
+jyotish:debilitatedIn a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Rashi .
+jyotish:naturalFriend a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Graha .
+jyotish:naturalEnemy  a rdf:Property ; rdfs:domain jyotish:Graha ; rdfs:range jyotish:Graha .
+
+# ── Entities: Grahas ──
+
+jyotish:surya  a jyotish:Graha ;
+    rdfs:label        "Sūrya" ;
+    jyotish:western   "Sun" ;
+    jyotish:nature    "malefic" ;
+    jyotish:gender    "masculine" ;
+    jyotish:element   "fire" ;
+    jyotish:tattva    "ātman" .
+
+jyotish:chandra  a jyotish:Graha ;
+    rdfs:label        "Chandra" ;
+    jyotish:western   "Moon" ;
+    jyotish:nature    "benefic" ;
+    jyotish:gender    "feminine" ;
+    jyotish:element   "water" ;
+    jyotish:tattva    "manas" .
+
+jyotish:mangala  a jyotish:Graha ;
+    rdfs:label        "Maṅgala" ;
+    jyotish:western   "Mars" ;
+    jyotish:nature    "malefic" ;
+    jyotish:gender    "masculine" ;
+    jyotish:element   "fire" ;
+    jyotish:tattva    "courage" .
+
+jyotish:guru  a jyotish:Graha ;
+    rdfs:label        "Guru" ;
+    jyotish:western   "Jupiter" ;
+    jyotish:nature    "benefic" ;
+    jyotish:gender    "masculine" ;
+    jyotish:element   "ether" ;
+    jyotish:tattva    "knowledge" .
+
+jyotish:shukra  a jyotish:Graha ;
+    rdfs:label        "Śukra" ;
+    jyotish:western   "Venus" ;
+    jyotish:nature    "benefic" ;
+    jyotish:gender    "feminine" ;
+    jyotish:element   "water" ;
+    jyotish:tattva    "desire" .
+
+jyotish:shani  a jyotish:Graha ;
+    rdfs:label        "Śani" ;
+    jyotish:western   "Saturn" ;
+    jyotish:nature    "malefic" ;
+    jyotish:gender    "neuter" ;
+    jyotish:element   "air" ;
+    jyotish:tattva    "sorrow" .
+
+# ── Entities: Rashis (subset) ──
+
+jyotish:mesha  a jyotish:Rashi ;
+    rdfs:label        "Meṣa" ;
+    jyotish:western   "Aries" ;
+    jyotish:signNumber 1 ;
+    jyotish:element   "fire" ;
+    jyotish:quality   "movable" .
+
+jyotish:vrishabha  a jyotish:Rashi ;
+    rdfs:label        "Vṛṣabha" ;
+    jyotish:western   "Taurus" ;
+    jyotish:signNumber 2 ;
+    jyotish:element   "earth" ;
+    jyotish:quality   "fixed" .
+
+jyotish:karka  a jyotish:Rashi ;
+    rdfs:label        "Karka" ;
+    jyotish:western   "Cancer" ;
+    jyotish:signNumber 4 ;
+    jyotish:element   "water" ;
+    jyotish:quality   "movable" .
+
+jyotish:simha  a jyotish:Rashi ;
+    rdfs:label        "Siṃha" ;
+    jyotish:western   "Leo" ;
+    jyotish:signNumber 5 ;
+    jyotish:element   "fire" ;
+    jyotish:quality   "fixed" .
+
+jyotish:tula  a jyotish:Rashi ;
+    rdfs:label        "Tulā" ;
+    jyotish:western   "Libra" ;
+    jyotish:signNumber 7 ;
+    jyotish:element   "air" ;
+    jyotish:quality   "movable" .
+
+jyotish:makara  a jyotish:Rashi ;
+    rdfs:label        "Makara" ;
+    jyotish:western   "Capricorn" ;
+    jyotish:signNumber 10 ;
+    jyotish:element   "earth" ;
+    jyotish:quality   "movable" .
+
+# ── Relations ──
+
+jyotish:surya    jyotish:rules         jyotish:simha .
+jyotish:chandra  jyotish:rules         jyotish:karka .
+jyotish:mangala  jyotish:rules         jyotish:mesha .
+jyotish:guru     jyotish:rules         jyotish:karka .  # Guru exalted here too
+
+jyotish:surya    jyotish:exaltedIn     jyotish:mesha .
+jyotish:chandra  jyotish:exaltedIn     jyotish:vrishabha .
+jyotish:mangala  jyotish:exaltedIn     jyotish:makara .
+jyotish:guru     jyotish:exaltedIn     jyotish:karka .
+
+jyotish:surya    jyotish:debilitatedIn jyotish:tula .
+jyotish:chandra  jyotish:debilitatedIn jyotish:mesha .  # (actually Vṛścika, simplified for spike)
+
+# Friendships
+jyotish:surya  jyotish:naturalFriend  jyotish:chandra, jyotish:mangala, jyotish:guru .
+jyotish:surya  jyotish:naturalEnemy   jyotish:shukra, jyotish:shani .
+jyotish:guru   jyotish:naturalFriend  jyotish:surya, jyotish:chandra, jyotish:mangala .
+jyotish:guru   jyotish:naturalEnemy   jyotish:shukra .
+
+# ── Epistemology: Sources & Traditions ──
+
+jyotish:source-bphs  a vidya:Source ;
+    rdfs:label         "Bṛhat Parāśara Horā Śāstra" ;
+    vidya:sourceKind   "text" ;
+    vidya:reliability  "0.95"^^xsd:float .
+
+jyotish:tradition-parasara  a vidya:Tradition ;
+    rdfs:label "parāśara" .
+
+jyotish:tradition-bphs  a vidya:Tradition ;
+    rdfs:label "bphs" ;
+    vidya:parentTradition jyotish:tradition-parasara .
+
+# ── Epistemology: Provenance via RDF-star ──
+# "Sūrya is exalted in Meṣa" — asserted by BPHS with pramana shabda
+
+<< jyotish:surya jyotish:exaltedIn jyotish:mesha >>
+    vidya:exaltationDegree "10"^^xsd:integer ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    "shabda" ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:guru jyotish:exaltedIn jyotish:karka >>
+    vidya:exaltationDegree "5"^^xsd:integer ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    "shabda" ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
+
+<< jyotish:surya jyotish:naturalFriend jyotish:chandra >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    "shabda" ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
