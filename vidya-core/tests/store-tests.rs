@@ -526,3 +526,133 @@ fn compose_tradition_and_pramana_filters() {
     let result = store.search("jyotish", "Graha", &[], &filter_mismatch).unwrap();
     assert!(result.entities.is_empty());
 }
+
+// ---------------------------------------------------------------------------
+// Assert tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn assert_triple_literal_round_trips_via_describe() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    store
+        .assert_triple(
+            "jyotish",
+            "surya",
+            "customNote",
+            "test value",
+            true,
+            "tradition-bphs",
+            "source-bphs",
+            "vidya:shabda",
+            0.9,
+        )
+        .unwrap();
+
+    let result = store
+        .describe("jyotish", "surya", &ProvenanceFilter::default())
+        .unwrap();
+
+    let note = result
+        .annotated_triples
+        .iter()
+        .find(|at| at.predicate.contains("customNote") && at.object == "test value")
+        .expect("should have customNote annotated triple");
+
+    let prov = note.provenance.as_ref().expect("should have provenance");
+    assert!(prov.tradition.contains("tradition-bphs"));
+    assert!(prov.source.contains("source-bphs"));
+    assert!(prov.pramana.contains("shabda"));
+    assert!(prov.confidence.contains("0.9"));
+}
+
+#[test]
+fn assert_triple_entity_object_round_trips_via_provenance() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    store
+        .assert_triple(
+            "jyotish",
+            "surya",
+            "aspectedBy",
+            "guru",
+            false,
+            "tradition-bphs",
+            "source-bphs",
+            "vidya:shabda",
+            1.0,
+        )
+        .unwrap();
+
+    let result = store
+        .provenance("jyotish", "surya", "aspectedBy", "guru", &ProvenanceFilter::default())
+        .unwrap();
+
+    assert_eq!(result.assertions.len(), 1);
+    assert!(result.assertions[0].tradition.contains("tradition-bphs"));
+}
+
+#[test]
+fn assert_triple_rejects_empty_tradition() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.assert_triple(
+        "jyotish", "surya", "karaka", "soul", true,
+        "", "source-bphs", "vidya:shabda", 1.0,
+    );
+    assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
+}
+
+#[test]
+fn assert_triple_rejects_empty_source() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.assert_triple(
+        "jyotish", "surya", "karaka", "soul", true,
+        "tradition-bphs", "", "vidya:shabda", 1.0,
+    );
+    assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
+}
+
+#[test]
+fn assert_triple_rejects_empty_pramana() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.assert_triple(
+        "jyotish", "surya", "karaka", "soul", true,
+        "tradition-bphs", "source-bphs", "", 1.0,
+    );
+    assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
+}
+
+#[test]
+fn assert_triple_default_confidence() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    store
+        .assert_triple(
+            "jyotish",
+            "surya",
+            "karaka",
+            "atman",
+            true,
+            "tradition-bphs",
+            "source-bphs",
+            "vidya:shabda",
+            1.0,
+        )
+        .unwrap();
+
+    let result = store
+        .provenance("jyotish", "surya", "karaka", "atman", &ProvenanceFilter::default())
+        .unwrap();
+
+    assert_eq!(result.assertions.len(), 1);
+    assert!(result.assertions[0].confidence.contains("1"));
+}

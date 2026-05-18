@@ -57,6 +57,39 @@ pub struct LoadOutput {
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct AssertArgs {
+    /// Domain name (e.g. "jyotish")
+    pub domain: String,
+    /// Subject short name (e.g. "surya")
+    pub subject: String,
+    /// Predicate short name (e.g. "exaltedIn")
+    pub predicate: String,
+    /// Object short name (entity) or literal value
+    pub object: String,
+    /// If true, object is a literal string; if false/omitted, object is resolved as entity reference
+    #[serde(default)]
+    pub literal: Option<bool>,
+    /// Tradition short name (e.g. "tradition-bphs") — required
+    pub tradition: String,
+    /// Source short name (e.g. "source-bphs") — required
+    pub source: String,
+    /// Pramana short name or vidya-prefixed (e.g. "vidya:shabda") — required
+    pub pramana: String,
+    /// Confidence value 0.0-1.0 (defaults to 1.0)
+    #[serde(default)]
+    pub confidence: Option<f64>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AssertOutput {
+    pub domain: String,
+    pub subject: String,
+    pub predicate: String,
+    pub object: String,
+    pub triple_count: usize,
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMode {
     /// All properties, relationships, and provenance for a subject
@@ -210,6 +243,43 @@ impl VidyaServer {
     }
 
     #[tool(
+        description = "Assert a single triple with required provenance. Subject, predicate, and object are short names resolved to IRIs by domain prefix (use 'vidya:' prefix for base ontology terms). Object defaults to entity reference; set literal=true for string values. Provenance (tradition, source, pramana) is required; confidence defaults to 1.0."
+    )]
+    pub async fn vidya_assert(
+        &self,
+        Parameters(args): Parameters<AssertArgs>,
+    ) -> Result<String, ErrorData> {
+        let is_literal = args.literal.unwrap_or(false);
+        let confidence = args.confidence.unwrap_or(1.0);
+
+        self.store
+            .assert_triple(
+                &args.domain,
+                &args.subject,
+                &args.predicate,
+                &args.object,
+                is_literal,
+                &args.tradition,
+                &args.source,
+                &args.pramana,
+                confidence,
+            )
+            .map_err(to_error_data)?;
+
+        let triple_count = self.store.triple_count().map_err(to_error_data)?;
+
+        let out = AssertOutput {
+            domain: args.domain,
+            subject: args.subject,
+            predicate: args.predicate,
+            object: args.object,
+            triple_count,
+        };
+        serde_json::to_string_pretty(&out)
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+    }
+
+    #[tool(
         description = "Load domain data from Turtle (RDF). Provide domain name plus either inline turtle string or a file path. Triples load into a named graph for the domain."
     )]
     pub async fn vidya_load(
@@ -254,7 +324,7 @@ impl ServerHandler for VidyaServer {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build()).with_instructions(
             "vidya — structured knowledge graph backed by Oxigraph. \
              RDF triplestore with named graphs per domain, RDF-star provenance, \
-             and SPARQL internally. Tools: vidya_health, vidya_load, vidya_query.",
+             and SPARQL internally. Tools: vidya_health, vidya_load, vidya_query, vidya_assert.",
         )
     }
 }

@@ -173,4 +173,63 @@ impl KnowledgeStore {
     ) -> Result<crate::query::ProvenanceResult> {
         crate::query::provenance(self, domain, subject, predicate, object, filter)
     }
+
+    pub fn assert_triple(
+        &self,
+        domain: &str,
+        subject: &str,
+        predicate: &str,
+        object: &str,
+        is_literal: bool,
+        tradition: &str,
+        source: &str,
+        pramana: &str,
+        confidence: f64,
+    ) -> Result<()> {
+        if tradition.is_empty() || source.is_empty() || pramana.is_empty() {
+            return Err(VidyaError::InvalidArgument(
+                "tradition, source, and pramana are required".into(),
+            ));
+        }
+
+        let subj_iri = ontology::resolve_iri(subject, domain);
+        let pred_iri = ontology::resolve_iri(predicate, domain);
+        let trad_iri = ontology::resolve_iri(tradition, domain);
+        let src_iri = ontology::resolve_iri(source, domain);
+        let pram_iri = ontology::resolve_iri(pramana, domain);
+
+        for iri in [&subj_iri, &pred_iri, &trad_iri, &src_iri, &pram_iri] {
+            NamedNodeRef::new(iri)
+                .map_err(|_| VidyaError::InvalidArgument(format!("invalid IRI: {iri}")))?;
+        }
+
+        let obj_term = if is_literal {
+            let escaped = object
+                .replace('\\', "\\\\")
+                .replace('"', "\\\"")
+                .replace('\n', "\\n");
+            format!("\"{escaped}\"")
+        } else {
+            let obj_iri = ontology::resolve_iri(object, domain);
+            NamedNodeRef::new(&obj_iri)
+                .map_err(|_| VidyaError::InvalidArgument(format!("invalid IRI: {obj_iri}")))?;
+            format!("<{obj_iri}>")
+        };
+
+        let vidya_base = ontology::VIDYA_BASE;
+        let turtle = format!(
+            "@prefix vidya: <{vidya_base}> .\n\
+             @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n\
+             \n\
+             << <{subj_iri}> <{pred_iri}> {obj_term} >>\n\
+                 vidya:assertedBy [\n\
+                     vidya:tradition  <{trad_iri}> ;\n\
+                     vidya:source     <{src_iri}> ;\n\
+                     vidya:pramana    <{pram_iri}> ;\n\
+                     vidya:confidence \"{confidence}\"^^xsd:float\n\
+                 ] .\n"
+        );
+
+        self.load_domain(domain, &turtle)
+    }
 }
