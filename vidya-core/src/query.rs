@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use oxigraph::model::Term;
+use oxigraph::model::{NamedNodeRef, Term};
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use serde::Serialize;
 
@@ -31,6 +31,7 @@ pub struct PropertyValue {
 pub struct AnnotatedTriple {
     pub predicate: String,
     pub object: String,
+    pub annotations: Vec<PropertyValue>,
     pub provenance: Option<Provenance>,
 }
 
@@ -191,6 +192,17 @@ fn escape_sparql_string(s: &str) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// IRI validation
+// ---------------------------------------------------------------------------
+
+fn validate_iri(iri: &str) -> Result<()> {
+    NamedNodeRef::new(iri).map_err(|_| {
+        VidyaError::InvalidArgument(format!("invalid IRI: {iri}"))
+    })?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // Query execution helper
 // ---------------------------------------------------------------------------
 
@@ -242,6 +254,8 @@ fn cell_str(row: &[Option<Term>], idx: usize, domain: &str) -> Option<String> {
 pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str) -> Result<DescribeResult> {
     let subject_iri = ontology::resolve_iri(subject, domain);
     let graph_iri = ontology::domain_graph_iri(domain);
+    validate_iri(&subject_iri)?;
+    validate_iri(&graph_iri)?;
 
     // Query 1: all regular triples about the subject
     let mut b = SparqlBuilder::new();
@@ -282,39 +296,80 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str) -> Result<D
         }
     }
 
-    // Query 2: RDF-star provenance annotations
+    // Query 2: all annotations on quoted triples where subject is the subject
     let mut b2 = SparqlBuilder::new();
     b2.add_prefix("vidya", ontology::VIDYA_BASE);
     b2.add_select("?p");
     b2.add_select("?o");
-    b2.add_select("?trad");
-    b2.add_select("?src");
-    b2.add_select("?pramana");
-    b2.add_select("?confidence");
+    b2.add_select("?annot_p");
+    b2.add_select("?annot_o");
     b2.add_body(&format!("GRAPH <{graph_iri}> {{"));
-    b2.add_body(&format!("  << <{subject_iri}> ?p ?o >> vidya:assertedBy ?assertion ."));
-    b2.add_body("  ?assertion vidya:tradition ?trad ;");
-    b2.add_body("             vidya:source ?src ;");
-    b2.add_body("             vidya:pramana ?pramana ;");
-    b2.add_body("             vidya:confidence ?confidence .");
+    b2.add_body(&format!("  << <{subject_iri}> ?p ?o >> ?annot_p ?annot_o ."));
     b2.add_body("}");
     let q2 = b2.build();
 
-    let (vars2, rows2) = execute_select(store, &q2)?;
+    // Query 3: provenance details (assertedBy with tradition/source/pramana/confidence)
+    let mut b3 = SparqlBuilder::new();
+    b3.add_prefix("vidya", ontology::VIDYA_BASE);
+    b3.add_select("?p");
+    b3.add_select("?o");
+    b3.add_select("?trad");
+    b3.add_select("?src");
+    b3.add_select("?pramana");
+    b3.add_select("?confidence");
+    b3.add_body(&format!("GRAPH <{graph_iri}> {{"));
+    b3.add_body(&format!("  << <{subject_iri}> ?p ?o >> vidya:assertedBy ?assertion ."));
+    b3.add_body("  ?assertion vidya:tradition ?trad ;");
+    b3.add_body("             vidya:source ?src ;");
+    b3.add_body("             vidya:pramana ?pramana ;");
+    b3.add_body("             vidya:confidence ?confidence .");
+    b3.add_body("}");
+    let q3 = b3.build();
 
-    // Group provenance by (predicate, object)
+    let (vars2, rows2) = execute_select(store, &q2)?;
+    let (vars3, rows3) = execute_select(store, &q3)?;
+
+    // Build annotation map: (pred, obj) → Vec<PropertyValue>
+    // (excludes assertedBy since that's handled separately as provenance)
     let ip2 = get_col(&vars2, "p").unwrap();
     let io2 = get_col(&vars2, "o").unwrap();
-    let itrad = get_col(&vars2, "trad").unwrap();
-    let isrc = get_col(&vars2, "src").unwrap();
-    let ipram = get_col(&vars2, "pramana").unwrap();
-    let iconf = get_col(&vars2, "confidence").unwrap();
+    let iap = get_col(&vars2, "annot_p").unwrap();
+    let iao = get_col(&vars2, "annot_o").unwrap();
 
-    let mut prov_map: BTreeMap<(String, String), Provenance> = BTreeMap::new();
+    let mut annot_map: BTreeMap<(String, String), Vec<PropertyValue>> = BTreeMap::new();
 
     for row in &rows2 {
         let pred = cell_str(row, ip2, domain).unwrap_or_default();
         let obj = cell_str(row, io2, domain).unwrap_or_default();
+        let annot_pred = cell_str(row, iap, domain).unwrap_or_default();
+        let annot_obj = cell_str(row, iao, domain).unwrap_or_default();
+
+        if annot_pred == "vidya:assertedBy" {
+            continue;
+        }
+
+        annot_map
+            .entry((pred, obj))
+            .or_default()
+            .push(PropertyValue {
+                predicate: annot_pred,
+                value: annot_obj,
+            });
+    }
+
+    // Build provenance map: (pred, obj) → Provenance
+    let ip3 = get_col(&vars3, "p").unwrap();
+    let io3 = get_col(&vars3, "o").unwrap();
+    let itrad = get_col(&vars3, "trad").unwrap();
+    let isrc = get_col(&vars3, "src").unwrap();
+    let ipram = get_col(&vars3, "pramana").unwrap();
+    let iconf = get_col(&vars3, "confidence").unwrap();
+
+    let mut prov_map: BTreeMap<(String, String), Provenance> = BTreeMap::new();
+
+    for row in &rows3 {
+        let pred = cell_str(row, ip3, domain).unwrap_or_default();
+        let obj = cell_str(row, io3, domain).unwrap_or_default();
         let trad = cell_str(row, itrad, domain).unwrap_or_default();
         let src = cell_str(row, isrc, domain).unwrap_or_default();
         let pramana = cell_str(row, ipram, domain).unwrap_or_default();
@@ -331,12 +386,26 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str) -> Result<D
         );
     }
 
-    let annotated_triples: Vec<AnnotatedTriple> = prov_map
+    // Merge annotations + provenance into annotated triples
+    let mut all_keys: Vec<(String, String)> = annot_map.keys().cloned().collect();
+    for key in prov_map.keys() {
+        if !all_keys.contains(key) {
+            all_keys.push(key.clone());
+        }
+    }
+    all_keys.sort();
+
+    let annotated_triples: Vec<AnnotatedTriple> = all_keys
         .into_iter()
-        .map(|((pred, obj), prov)| AnnotatedTriple {
-            predicate: pred,
-            object: obj,
-            provenance: Some(prov),
+        .map(|(pred, obj)| {
+            let annotations = annot_map.remove(&(pred.clone(), obj.clone())).unwrap_or_default();
+            let provenance = prov_map.remove(&(pred.clone(), obj.clone()));
+            AnnotatedTriple {
+                predicate: pred,
+                object: obj,
+                annotations,
+                provenance,
+            }
         })
         .collect();
 
@@ -361,6 +430,13 @@ pub fn search(
 ) -> Result<SearchResult> {
     let graph_iri = ontology::domain_graph_iri(domain);
     let kind_iri = ontology::resolve_iri(kind, domain);
+    validate_iri(&graph_iri)?;
+    validate_iri(&kind_iri)?;
+
+    for (attr, _) in filters {
+        let attr_iri = ontology::resolve_iri(attr, domain);
+        validate_iri(&attr_iri)?;
+    }
 
     let mut b = SparqlBuilder::new();
     b.add_prefix("rdfs", RDFS);

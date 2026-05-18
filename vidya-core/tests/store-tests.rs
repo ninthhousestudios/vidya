@@ -260,6 +260,13 @@ fn describe_surya_returns_properties_and_provenance() {
     assert!(exaltation.provenance.is_some());
     let prov = exaltation.provenance.as_ref().unwrap();
     assert!(prov.pramana.contains("shabda"));
+
+    // Non-assertedBy annotations (e.g. exaltationDegree) should also be present
+    let has_degree = exaltation
+        .annotations
+        .iter()
+        .any(|a| a.predicate.contains("exaltationDegree"));
+    assert!(has_degree, "exaltedIn should have exaltationDegree annotation");
 }
 
 #[test]
@@ -292,4 +299,26 @@ fn search_all_grahas() {
 
     let result = store.search("jyotish", "Graha", &[]).unwrap();
     assert_eq!(result.entities.len(), 9);
+}
+
+#[test]
+fn describe_rejects_invalid_iri_chars() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.describe("jyotish", "surya> <http://evil");
+    assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
+}
+
+#[test]
+fn search_rejects_invalid_filter_attr() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.search(
+        "jyotish",
+        "Graha",
+        &[("element> <http://evil".into(), "fire".into())],
+    );
+    assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
 }
