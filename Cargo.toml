@@ -1,6 +1,6 @@
 [package]
 name = "vidya"
-version = "0.1.0"
+version = "0.1.1"
 default-run = "vidya"
 edition = "2024"
 description = "Structured knowledge graph with reasoning — domain knowledge as cited, queryable, derivable structure."
@@ -24,9 +24,6 @@ path = "src/bin/vidya-migrate.rs"
 name = "vidya-seed"
 path = "src/bin/vidya-seed.rs"
 
-[[bin]]
-name = "vidya-test-derive"
-path = "src/bin/vidya-test-derive.rs"
 
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "io-std", "io-util"] }
