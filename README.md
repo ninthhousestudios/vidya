@@ -15,120 +15,129 @@ agent infrastructure built in Rust.
 
 ## The problem vidya solves
 
-Pure RAG (retrieve chunks, feed to LLM) breaks down in domains where:
+LLMs are unreliable in domains where:
 
 - **Traditions disagree.** Vedic and Western astrology share vocabulary
-  but diverge on substance. Embedding similarity retrieves chunks that
-  *sound* similar; the LLM blends them into plausible-sounding output
-  that is technically wrong. The worst kind of wrong — you need domain
-  expertise to catch it.
-- **Knowledge is rule-based, not textual.** "Saturn is exalted in Libra"
-  is a structured fact, not a passage. RAG asks the LLM to reconstruct a
-  rule system from retrieved prose on every query.
+  but diverge on substance. An LLM blends them into plausible-sounding
+  output that is technically wrong — the worst kind of wrong, because you
+  need domain expertise to catch it.
+- **Knowledge is structured, not textual.** "Saturn is exalted in Libra"
+  is a fact with provenance, not a passage to retrieve. RAG asks the LLM
+  to reconstruct a rule system from prose on every query.
 - **Relationships are dense.** Rulerships, aspects, dignities, mutual
-  receptions — this is a graph. RAG flattens it to text and hopes the LLM
-  can reconstruct the structure on demand.
+  receptions — this is a graph. Flattening it to text and hoping the LLM
+  reconstructs the structure is fragile.
 
-Vidya addresses this by storing domain knowledge as structured claims with
-typed relationships, explicit tradition scoping, and provenance links back
-to source material in kosha (document comprehension) or canonical texts.
+Vidya stores domain knowledge as an RDF graph with typed relationships,
+explicit tradition scoping, and provenance on every assertion.
 
-## Design
+## Architecture
 
-### Entities, claims, and relations
+### Oxigraph + RDF-star
 
-The core model:
+Vidya is backed by [Oxigraph](https://github.com/oxigraph/oxigraph), an
+embedded RDF triple store. Each domain lives in its own named graph.
+SPARQL is used internally; agents interact through structured query
+parameters, not raw SPARQL.
 
-- **Entities** — things in a domain (Saturn, Libra, the 10th house).
-- **Claims** — statements about entities ("Saturn is exalted in Libra"),
-  each scoped to a tradition and backed by at least one source citation.
-- **Relations** — typed edges between entities and claims
-  (rules, exalts, aspects, contradicts, refines, derives from).
+Provenance uses RDF-star annotations — every significant triple can
+carry metadata about who asserted it, from which tradition, citing which
+source, with what confidence:
 
-Claims are immutable once accepted. Corrections are new claims that
-supersede via derivation. Displaced claims become `historical` rather
-than being mutated or deleted.
-
-### Traditions as a first-class concept
-
-Every claim is scoped to a tradition (Vedic, classical Western,
-Hellenistic, KP, etc.). This prevents the blending problem: when an
-agent asks "what are Saturn's dignities?", vidya can return
-tradition-specific answers rather than a confused merge.
-
-### Provenance
-
-Every claim requires at least one source — a kosha chunk ID (linking to
-the exact passage in a book), a tradition reference, or a practitioner
-self-citation. The agent can follow provenance to quote the original
-material.
-
-### Schema sketch
-
-```
-domains(id, slug, title)
-entities(id, domain_id, name, kind, metadata)
-claims(id, domain_id, statement, confidence, status)
-sources(id, kind, ref)
-traditions(id, domain_id, name)
-relations(id, src_type, src_id, dst_type, dst_id, kind, metadata)
+```turtle
+<< jyotish:surya jyotish:exaltedIn jyotish:mesha >>
+    jyotish:exaltationDegree 10 ;
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-bphs ;
+        vidya:source     jyotish:source-bphs ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "1.0"^^xsd:float
+    ] .
 ```
 
-Postgres with foreign keys. No RDF/SPARQL — the tooling tax doesn't pay
-back without OWL reasoning needs.
+### Base ontology
 
-### Claim lifecycle
+The base ontology (`ontology/vidya.ttl`) defines cross-domain concepts:
+
+- **Tradition** — a lineage or school (e.g. Parashara, Jaimini)
+- **Source** — a specific text with a reliability score
+- **Pramana** — means of knowledge, modeled as six first-class resources
+  from Indian epistemology: pratyaksha (perception), anumana (inference),
+  shabda (authoritative testimony), upamana (analogy), arthapatti
+  (presumption), anupalabdhi (non-apprehension)
+
+Domain-specific classes and properties are declared in each domain's
+seed file.
+
+### Crate structure
+
+- **vidya-core** — library crate: `KnowledgeStore`, query engine,
+  ontology loading. Embeddable by other Rust projects.
+- **vidya** — binary crate: MCP server over Streamable HTTP with
+  auth-token gating.
+
+## MCP tools
+
+| Tool | Purpose |
+|------|---------|
+| `vidya_health` | Status, triple count, loaded domains |
+| `vidya_load` | Load a domain from inline Turtle or a `.ttl` file path |
+| `vidya_query` | Query in four modes: **describe** (entity profile), **search** (find by kind + filters), **traverse** (walk relationships), **provenance** (epistemological metadata for a triple) |
+| `vidya_assert` | Assert a single triple with required provenance |
+
+Cross-cutting filters on `tradition` and `pramana` apply to all query
+modes.
+
+## Domains
+
+### Jyotish (Vedic astrology) — active
+
+The jyotish seed (`seeds/jyotish.ttl`, ~1,029 triples) covers:
+
+- 9 grahas with attributes, aliases, karakas
+- 12 rashis, 12 bhavas, 4 dignity types
+- Planetary dignities, friendships, aspects
+- 3 traditions, 4 sources
+- RDF-star provenance on all relational claims, including contested
+  assertions (e.g. Rahu/Ketu dignities at confidence 0.7)
+
+### Ayurveda — planned
+
+Dravyaguna (pharmacology) from Bhavaprakasha Nighantu as the next
+domain. Substances with rasa, guna, veerya, vipaka, karma properties
+sourced from Charaka, Sushruta, and Bhavaprakasha — especially where
+they diverge.
+
+## What fits in vidya (and what doesn't)
+
+Vidya earns its keep for domains where the same question has legitimately
+different answers depending on who you ask, and tracking that matters.
+Provenance, multi-tradition perspectives, confidence-weighted assertions.
+
+It is not a good fit for:
+- Procedural rules (computational transformations, grammar engines)
+- General-purpose notes or personal knowledge (that's chitta)
+- Data that changes frequently (the seed model is batch-oriented)
+
+## Deployment
+
+Runs as a systemd user service:
 
 ```
-proposed  →  active  →  historical
-                ↑            ↑
-            (review)    (superseded by new claim)
+~/.cargo/bin/vidya serve --http --auth-token-file ~/.vidya/auth-token
 ```
 
-Three extraction sources, all gated by human review:
-
-- **Foundational claims** — hand-curated from canonical texts with
-  citation. Tedious but bounded.
-- **LLM-assisted extraction** — LLM proposes claims from kosha chunks;
-  practitioner reviews and accepts. Faster, lower precision, gated.
-- **Practitioner knowledge** — claims from accumulated expertise not in
-  any one book. Source is self-citation.
-
-## Why astrology first
-
-Most domains (medicine, law) have unbounded canons — extraction never
-ends. Astrology has a finite foundational rule set: all dignities, all
-aspects, all houses, all dashas, all yogas, planetary characteristics.
-Thousands of claims, not millions. You can plausibly *finish* the
-foundational extraction, then depth comes from interpretation (LLM + RAG
-over kosha) on top of structured facts.
+- Default port: 3300
+- Store path: `~/.vidya/store/` (Oxigraph persistent storage)
+- Auth: bearer token from `~/.vidya/auth-token`
+- Transport: Streamable HTTP (MCP 2025-03-26)
 
 ## Relationship to other manas subsystems
 
-- **kosha** provides the source material — book chunks, document
-  embeddings. Vidya claims cite kosha chunk IDs for provenance.
-- **chitta** holds the person model. A `josh_holds` relation can
-  cross-link a vidya claim to a chitta memory, capturing the
-  practitioner's personal stance on a contested point.
-- **smriti** handles file-level perception. Kosha handles content-level
-  perception. Vidya sits above both as the structured knowledge layer.
-
-## Status
-
-Vidya is in early design. The schema, extraction pipeline, and MCP tool
-surface are defined in
-[`docs/knowledge-stack.md`](https://github.com/ninthhousestudios/manas/blob/main/docs/knowledge-stack.md)
-but no code has been written yet. The plan is to start with a single
-small domain (~100 hand-curated claims) to prove the model before
-scaling extraction.
-
-## Planned deployment
-
-Same pattern as chitta and smriti:
-
-- **vidya-engine** — Rust crate, no I/O surface
-- **vidya-server** — thin MCP wrapper over HTTP
-- Astrological domains loaded for aion (professional astrology tool)
-- Software/methodology domains loaded for manas dev workflows
-- Both deployments cite kosha for provenance
+- **chitta** holds the person model (preferences, values, patterns).
+  Vidya holds domain knowledge — what is known, not who knows it.
+- **smriti** indexes files. Vidya structures knowledge above the file
+  level.
+- **sutra** provides code intelligence. Vidya provides domain
+  intelligence.
 
