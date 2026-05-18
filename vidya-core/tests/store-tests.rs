@@ -323,3 +323,206 @@ fn search_rejects_invalid_filter_attr() {
     );
     assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
 }
+
+// ---------------------------------------------------------------------------
+// Traverse tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn traverse_natural_friend_depth_1() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store
+        .traverse("jyotish", "surya", "naturalFriend", 1, &ProvenanceFilter::default())
+        .unwrap();
+
+    assert_eq!(result.origin, "surya");
+    assert_eq!(result.predicate, "naturalFriend");
+
+    let mut names: Vec<&str> = result.entities.iter().map(|e| e.iri.as_str()).collect();
+    names.sort();
+    assert_eq!(names, vec!["chandra", "guru", "mangala"]);
+    assert!(result.entities.iter().all(|e| e.depth == 1));
+}
+
+#[test]
+fn traverse_natural_friend_depth_2() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store
+        .traverse("jyotish", "surya", "naturalFriend", 2, &ProvenanceFilter::default())
+        .unwrap();
+
+    let depth1: Vec<&str> = result
+        .entities
+        .iter()
+        .filter(|e| e.depth == 1)
+        .map(|e| e.iri.as_str())
+        .collect();
+    assert_eq!(depth1.len(), 3);
+
+    let mut depth2: Vec<&str> = result
+        .entities
+        .iter()
+        .filter(|e| e.depth == 2)
+        .map(|e| e.iri.as_str())
+        .collect();
+    depth2.sort();
+    assert!(depth2.contains(&"budha"), "chandra's friend budha should appear at depth 2, got {depth2:?}");
+}
+
+#[test]
+fn traverse_max_depth_exceeded() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store.traverse("jyotish", "surya", "naturalFriend", 11, &ProvenanceFilter::default());
+    assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
+}
+
+// ---------------------------------------------------------------------------
+// Provenance tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn provenance_surya_exalted_in_mesha() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store
+        .provenance("jyotish", "surya", "exaltedIn", "mesha", &ProvenanceFilter::default())
+        .unwrap();
+
+    assert_eq!(result.subject, "surya");
+    assert_eq!(result.predicate, "exaltedIn");
+    assert_eq!(result.assertions.len(), 1);
+
+    let a = &result.assertions[0];
+    assert!(a.tradition.contains("tradition-bphs"));
+    assert!(a.pramana.contains("shabda"));
+    assert_eq!(a.confidence, "1");
+}
+
+#[test]
+fn provenance_nonexistent_triple() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store
+        .provenance("jyotish", "surya", "exaltedIn", "karka", &ProvenanceFilter::default())
+        .unwrap();
+
+    assert!(result.assertions.is_empty());
+}
+
+#[test]
+fn provenance_with_literal_object() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store
+        .provenance("jyotish", "surya", "nature", "malefic", &ProvenanceFilter::default())
+        .unwrap();
+
+    assert_eq!(result.assertions.len(), 1);
+    assert!(result.assertions[0].tradition.contains("tradition-bphs"));
+}
+
+// ---------------------------------------------------------------------------
+// Cross-cutting filter tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn search_filtered_by_tradition_parasara() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let filter = ProvenanceFilter {
+        tradition: Some(vidya_core::ontology::resolve_iri("tradition-parasara", "jyotish")),
+        pramana: None,
+    };
+    let result = store.search("jyotish", "Graha", &[], &filter).unwrap();
+
+    let mut names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
+    names.sort();
+    assert_eq!(names, vec!["guru", "mangala", "shani"]);
+}
+
+#[test]
+fn describe_filtered_by_pramana_shabda() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let filter = ProvenanceFilter {
+        tradition: None,
+        pramana: Some(vidya_core::ontology::resolve_iri("vidya:shabda", "jyotish")),
+    };
+    let result = store.describe("jyotish", "surya", &filter).unwrap();
+
+    assert!(!result.annotated_triples.is_empty());
+    assert!(result.annotated_triples.iter().all(|at| at.provenance.is_some()));
+}
+
+#[test]
+fn traverse_with_tradition_filter() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let filter = ProvenanceFilter {
+        tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        pramana: None,
+    };
+    let result = store
+        .traverse("jyotish", "surya", "naturalFriend", 1, &filter)
+        .unwrap();
+
+    let mut names: Vec<&str> = result.entities.iter().map(|e| e.iri.as_str()).collect();
+    names.sort();
+    assert_eq!(names, vec!["chandra", "guru", "mangala"]);
+}
+
+#[test]
+fn provenance_with_tradition_filter() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let filter_bphs = ProvenanceFilter {
+        tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        pramana: None,
+    };
+    let result = store
+        .provenance("jyotish", "surya", "exaltedIn", "mesha", &filter_bphs)
+        .unwrap();
+    assert_eq!(result.assertions.len(), 1);
+
+    let filter_jaimini = ProvenanceFilter {
+        tradition: Some(vidya_core::ontology::resolve_iri("tradition-jaimini", "jyotish")),
+        pramana: None,
+    };
+    let result = store
+        .provenance("jyotish", "surya", "exaltedIn", "mesha", &filter_jaimini)
+        .unwrap();
+    assert!(result.assertions.is_empty());
+}
+
+#[test]
+fn compose_tradition_and_pramana_filters() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let filter_match = ProvenanceFilter {
+        tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        pramana: Some(vidya_core::ontology::resolve_iri("vidya:shabda", "jyotish")),
+    };
+    let result = store.search("jyotish", "Graha", &[], &filter_match).unwrap();
+    assert_eq!(result.entities.len(), 9);
+
+    let filter_mismatch = ProvenanceFilter {
+        tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        pramana: Some(vidya_core::ontology::resolve_iri("vidya:pratyaksha", "jyotish")),
+    };
+    let result = store.search("jyotish", "Graha", &[], &filter_mismatch).unwrap();
+    assert!(result.entities.is_empty());
+}

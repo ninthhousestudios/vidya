@@ -310,13 +310,13 @@ fn apply_provenance_filter(
     }
 }
 
-fn resolve_object_term(object: &str, domain: &str) -> Result<String> {
-    let candidate = ontology::resolve_iri(object, domain);
-    if validate_iri(&candidate).is_ok() {
-        Ok(format!("<{candidate}>"))
-    } else {
-        Ok(format!("\"{}\"", escape_sparql_string(object)))
-    }
+fn object_as_iri(object: &str, domain: &str) -> String {
+    let iri = ontology::resolve_iri(object, domain);
+    format!("<{iri}>")
+}
+
+fn object_as_literal(object: &str) -> String {
+    format!("\"{}\"", escape_sparql_string(object))
 }
 
 // ---------------------------------------------------------------------------
@@ -337,7 +337,8 @@ pub fn provenance(
     validate_iri(&subject_iri)?;
     validate_iri(&pred_iri)?;
     validate_iri(&graph_iri)?;
-    let obj_term = resolve_object_term(object, domain)?;
+    let obj_iri = object_as_iri(object, domain);
+    let obj_lit = object_as_literal(object);
 
     let mut b = SparqlBuilder::new();
     b.add_prefix("vidya", ontology::VIDYA_BASE);
@@ -347,8 +348,9 @@ pub fn provenance(
     b.add_select("?confidence");
     b.add_body(&format!("GRAPH <{graph_iri}> {{"));
     b.add_body(&format!(
-        "  << <{subject_iri}> <{pred_iri}> {obj_term} >> vidya:assertedBy ?assertion ."
+        "  << <{subject_iri}> <{pred_iri}> ?_obj >> vidya:assertedBy ?assertion ."
     ));
+    b.add_filter(&format!("FILTER(?_obj = {obj_iri} || ?_obj = {obj_lit})"));
     b.add_body("  ?assertion vidya:tradition ?trad ;");
     b.add_body("             vidya:source ?src ;");
     b.add_body("             vidya:pramana ?pramana ;");
@@ -439,12 +441,21 @@ pub fn traverse(
         let mut b = SparqlBuilder::new();
         b.add_prefix("vidya", ontology::VIDYA_BASE);
         b.add_prefix("rdfs", RDFS);
+        b.set_distinct();
         b.add_select("?obj");
         b.add_select("?label");
         b.add_body(&format!("GRAPH <{graph_iri}> {{"));
         b.add_body(&format!("  VALUES ?start {{ {values} }}"));
-        b.add_body(&format!("  ?start <{pred_iri}> ?obj ."));
-        apply_provenance_filter(&mut b, "?start", &format!("<{pred_iri}>"), "?obj", filter);
+        if filter.tradition.is_some() || filter.pramana.is_some() {
+            b.add_body(&format!("  << ?start <{pred_iri}> ?obj >> ?_any_p ?_any_o ."));
+            apply_provenance_filter(&mut b, "?start", &format!("<{pred_iri}>"), "?obj", filter);
+        } else {
+            b.add_body("  {");
+            b.add_body(&format!("    ?start <{pred_iri}> ?obj ."));
+            b.add_body("  } UNION {");
+            b.add_body(&format!("    << ?start <{pred_iri}> ?obj >> ?_any_p ?_any_o ."));
+            b.add_body("  }");
+        }
         b.add_body("  OPTIONAL { ?obj rdfs:label ?label . }");
         b.add_body("}");
         let query = b.build();
@@ -695,7 +706,6 @@ pub fn search(
     }
 
     if prov_filter.tradition.is_some() || prov_filter.pramana.is_some() {
-        b.add_body("  ?entity ?_pf_p ?_pf_o .");
         apply_provenance_filter(&mut b, "?entity", "?_pf_p", "?_pf_o", prov_filter);
         b.set_distinct();
     }
