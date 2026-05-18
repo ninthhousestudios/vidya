@@ -66,7 +66,7 @@ pub struct AssertArgs {
     pub predicate: String,
     /// Object short name (entity) or literal value
     pub object: String,
-    /// If true, object is a literal string; if false/omitted, object is resolved as entity reference
+    /// If true (default), object is a literal string; set false to resolve as entity reference
     #[serde(default)]
     pub literal: Option<bool>,
     /// Tradition short name (e.g. "tradition-bphs") — required
@@ -243,13 +243,13 @@ impl VidyaServer {
     }
 
     #[tool(
-        description = "Assert a single triple with required provenance. Subject, predicate, and object are short names resolved to IRIs by domain prefix (use 'vidya:' prefix for base ontology terms). Object defaults to entity reference; set literal=true for string values. Provenance (tradition, source, pramana) is required; confidence defaults to 1.0."
+        description = "Assert a single triple with required provenance. Subject, predicate, and object are short names resolved to IRIs by domain prefix (use 'vidya:' prefix for base ontology terms). Object defaults to literal string; set literal=false for entity references (named nodes). Provenance (tradition, source, pramana) is required; confidence defaults to 1.0."
     )]
     pub async fn vidya_assert(
         &self,
         Parameters(args): Parameters<AssertArgs>,
     ) -> Result<String, ErrorData> {
-        let is_literal = args.literal.unwrap_or(false);
+        let is_literal = args.literal.unwrap_or(true);
         let confidence = args.confidence.unwrap_or(1.0);
 
         self.store

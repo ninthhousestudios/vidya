@@ -310,11 +310,6 @@ fn apply_provenance_filter(
     }
 }
 
-fn object_as_iri(object: &str, domain: &str) -> String {
-    let iri = ontology::resolve_iri(object, domain);
-    format!("<{iri}>")
-}
-
 fn object_as_literal(object: &str) -> String {
     format!("\"{}\"", escape_sparql_string(object))
 }
@@ -337,7 +332,8 @@ pub fn provenance(
     validate_iri(&subject_iri)?;
     validate_iri(&pred_iri)?;
     validate_iri(&graph_iri)?;
-    let obj_iri = object_as_iri(object, domain);
+    let obj_iri_raw = ontology::resolve_iri(object, domain);
+    let obj_iri_valid = validate_iri(&obj_iri_raw).is_ok();
     let obj_lit = object_as_literal(object);
 
     let mut b = SparqlBuilder::new();
@@ -350,7 +346,11 @@ pub fn provenance(
     b.add_body(&format!(
         "  << <{subject_iri}> <{pred_iri}> ?_obj >> vidya:assertedBy ?assertion ."
     ));
-    b.add_filter(&format!("FILTER(?_obj = {obj_iri} || ?_obj = {obj_lit})"));
+    if obj_iri_valid {
+        b.add_filter(&format!("FILTER(?_obj = <{obj_iri_raw}> || ?_obj = {obj_lit})"));
+    } else {
+        b.add_filter(&format!("FILTER(?_obj = {obj_lit})"));
+    }
     b.add_body("  ?assertion vidya:tradition ?trad ;");
     b.add_body("             vidya:source ?src ;");
     b.add_body("             vidya:pramana ?pramana ;");
@@ -637,16 +637,24 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &Pr
         );
     }
 
-    // Merge annotations + provenance into annotated triples
-    let mut all_keys: Vec<(String, String)> = annot_map.keys().cloned().collect();
-    for key in prov_map.keys() {
-        if !all_keys.contains(key) {
-            all_keys.push(key.clone());
-        }
-    }
-    all_keys.sort();
+    let has_filter = filter.tradition.is_some() || filter.pramana.is_some();
 
-    let annotated_triples: Vec<AnnotatedTriple> = all_keys
+    let keys: Vec<(String, String)> = if has_filter {
+        let mut k: Vec<(String, String)> = prov_map.keys().cloned().collect();
+        k.sort();
+        k
+    } else {
+        let mut k: Vec<(String, String)> = annot_map.keys().cloned().collect();
+        for key in prov_map.keys() {
+            if !k.contains(key) {
+                k.push(key.clone());
+            }
+        }
+        k.sort();
+        k
+    };
+
+    let annotated_triples: Vec<AnnotatedTriple> = keys
         .into_iter()
         .map(|(pred, obj)| {
             let annotations = annot_map.remove(&(pred.clone(), obj.clone())).unwrap_or_default();
@@ -659,6 +667,10 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &Pr
             }
         })
         .collect();
+
+    if has_filter {
+        properties.clear();
+    }
 
     Ok(DescribeResult {
         iri: shorten_iri(&subject_iri, domain),
@@ -706,6 +718,12 @@ pub fn search(
     }
 
     if prov_filter.tradition.is_some() || prov_filter.pramana.is_some() {
+        if let Some(ref trad) = prov_filter.tradition {
+            validate_iri(trad)?;
+        }
+        if let Some(ref pram) = prov_filter.pramana {
+            validate_iri(pram)?;
+        }
         apply_provenance_filter(&mut b, "?entity", "?_pf_p", "?_pf_o", prov_filter);
         b.set_distinct();
     }

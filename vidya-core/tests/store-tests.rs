@@ -656,3 +656,43 @@ fn assert_triple_default_confidence() {
     assert_eq!(result.assertions.len(), 1);
     assert!(result.assertions[0].confidence.contains("1"));
 }
+
+#[test]
+fn provenance_handles_invalid_object_iri_gracefully() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let result = store
+        .provenance("jyotish", "surya", "exaltedIn", "mesha> <http://evil", &ProvenanceFilter::default())
+        .unwrap();
+    assert!(result.assertions.is_empty());
+}
+
+#[test]
+fn search_rejects_invalid_provenance_filter_iri() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let filter = ProvenanceFilter {
+        tradition: Some("http://example.org/bad>iri".into()),
+        pramana: None,
+    };
+    let result = store.search("jyotish", "Graha", &[], &filter);
+    assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
+}
+
+#[test]
+fn describe_with_mismatching_filter_excludes_unmatched_facts() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let filter = ProvenanceFilter {
+        tradition: Some(vidya_core::ontology::resolve_iri("tradition-jaimini", "jyotish")),
+        pramana: None,
+    };
+    let result = store.describe("jyotish", "surya", &filter).unwrap();
+
+    assert!(result.label.is_some(), "identity info should still be present");
+    assert!(result.properties.is_empty(), "filtered describe should exclude unmatched properties");
+    assert!(result.annotated_triples.is_empty(), "filtered describe should exclude unmatched annotated triples");
+}
