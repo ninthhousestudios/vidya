@@ -137,8 +137,9 @@ impl KnowledgeStore {
         &self,
         domain: &str,
         subject: &str,
+        filter: &crate::query::ProvenanceFilter,
     ) -> Result<crate::query::DescribeResult> {
-        crate::query::describe(self, domain, subject)
+        crate::query::describe(self, domain, subject, filter)
     }
 
     pub fn search(
@@ -146,7 +147,30 @@ impl KnowledgeStore {
         domain: &str,
         kind: &str,
         filters: &[(String, String)],
+        prov_filter: &crate::query::ProvenanceFilter,
     ) -> Result<crate::query::SearchResult> {
-        crate::query::search(self, domain, kind, filters)
+        crate::query::search(self, domain, kind, filters, prov_filter)
+    }
+
+    pub fn traverse(
+        &self,
+        domain: &str,
+        subject: &str,
+        predicate: &str,
+        depth: u32,
+        filter: &crate::query::ProvenanceFilter,
+    ) -> Result<crate::query::TraverseResult> {
+        crate::query::traverse(self, domain, subject, predicate, depth, filter)
+    }
+
+    pub fn provenance(
+        &self,
+        domain: &str,
+        subject: &str,
+        predicate: &str,
+        object: &str,
+        filter: &crate::query::ProvenanceFilter,
+    ) -> Result<crate::query::ProvenanceResult> {
+        crate::query::provenance(self, domain, subject, predicate, object, filter)
     }
 }

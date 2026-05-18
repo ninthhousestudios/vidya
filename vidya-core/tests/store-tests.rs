@@ -1,6 +1,6 @@
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use std::path::PathBuf;
-use vidya_core::{KnowledgeStore, VidyaError};
+use vidya_core::{KnowledgeStore, ProvenanceFilter, VidyaError};
 
 #[test]
 fn new_memory_store_loads_base_ontology() {
@@ -237,7 +237,7 @@ fn describe_surya_returns_properties_and_provenance() {
     let store = KnowledgeStore::new_memory().unwrap();
     load_jyotish(&store);
 
-    let result = store.describe("jyotish", "surya").unwrap();
+    let result = store.describe("jyotish", "surya", &ProvenanceFilter::default()).unwrap();
 
     assert_eq!(result.label.as_deref(), Some("Sūrya"));
     assert!(result.types.iter().any(|t| t.contains("Graha")));
@@ -275,7 +275,7 @@ fn search_grahas_fire_element() {
     load_jyotish(&store);
 
     let result = store
-        .search("jyotish", "Graha", &[("element".into(), "fire".into())])
+        .search("jyotish", "Graha", &[("element".into(), "fire".into())], &ProvenanceFilter::default())
         .unwrap();
 
     let mut names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
@@ -288,7 +288,7 @@ fn describe_nonexistent_returns_not_found() {
     let store = KnowledgeStore::new_memory().unwrap();
     load_jyotish(&store);
 
-    let result = store.describe("jyotish", "nonexistent");
+    let result = store.describe("jyotish", "nonexistent", &ProvenanceFilter::default());
     assert!(matches!(result, Err(VidyaError::NotFound(_))));
 }
 
@@ -297,7 +297,7 @@ fn search_all_grahas() {
     let store = KnowledgeStore::new_memory().unwrap();
     load_jyotish(&store);
 
-    let result = store.search("jyotish", "Graha", &[]).unwrap();
+    let result = store.search("jyotish", "Graha", &[], &ProvenanceFilter::default()).unwrap();
     assert_eq!(result.entities.len(), 9);
 }
 
@@ -306,7 +306,7 @@ fn describe_rejects_invalid_iri_chars() {
     let store = KnowledgeStore::new_memory().unwrap();
     load_jyotish(&store);
 
-    let result = store.describe("jyotish", "surya> <http://evil");
+    let result = store.describe("jyotish", "surya> <http://evil", &ProvenanceFilter::default());
     assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
 }
 
@@ -319,6 +319,7 @@ fn search_rejects_invalid_filter_attr() {
         "jyotish",
         "Graha",
         &[("element> <http://evil".into(), "fire".into())],
+        &ProvenanceFilter::default(),
     );
     assert!(matches!(result, Err(VidyaError::InvalidArgument(_))));
 }

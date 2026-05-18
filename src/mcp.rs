@@ -63,6 +63,10 @@ pub enum QueryMode {
     Describe,
     /// Find entities by kind with optional attribute filters
     Search,
+    /// Walk relationships from a subject to depth N
+    Traverse,
+    /// Epistemological metadata for a specific triple
+    Provenance,
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -71,7 +75,7 @@ pub struct QueryArgs {
     pub mode: QueryMode,
     /// Domain name (e.g. "jyotish")
     pub domain: String,
-    /// [describe] Subject short name or prefixed name (e.g. "surya", "vidya:Pramana")
+    /// [describe, traverse, provenance] Subject short name or prefixed name (e.g. "surya")
     #[serde(default)]
     pub subject: Option<String>,
     /// [search] Kind short name (e.g. "Graha", "Rashi")
@@ -80,6 +84,21 @@ pub struct QueryArgs {
     /// [search] Attribute filters as key-value pairs (e.g. {"element": "fire"})
     #[serde(default)]
     pub filters: Option<HashMap<String, String>>,
+    /// [traverse, provenance] Predicate short name (e.g. "naturalFriend", "exaltedIn")
+    #[serde(default)]
+    pub predicate: Option<String>,
+    /// [traverse] Max traversal depth (defaults to 1, max 10)
+    #[serde(default)]
+    pub depth: Option<u32>,
+    /// [provenance] Object short name or literal (e.g. "mesha", "malefic")
+    #[serde(default)]
+    pub object: Option<String>,
+    /// Cross-cutting: filter by tradition (e.g. "tradition-bphs")
+    #[serde(default)]
+    pub tradition: Option<String>,
+    /// Cross-cutting: filter by pramana (e.g. "vidya:shabda")
+    #[serde(default)]
+    pub pramana: Option<String>,
 }
 
 #[tool_router(router = tool_router)]
@@ -107,12 +126,23 @@ impl VidyaServer {
     }
 
     #[tool(
-        description = "Query the knowledge graph. Modes: 'describe' returns all properties, relationships, and provenance for a subject (requires 'subject'); 'search' finds entities by kind with optional attribute filters (requires 'kind', optional 'filters')."
+        description = "Query the knowledge graph. Modes: 'describe' (subject) returns all properties and provenance; 'search' (kind, filters) finds entities; 'traverse' (subject, predicate, depth) walks relationships; 'provenance' (subject, predicate, object) returns epistemological metadata. Optional cross-cutting filters: 'tradition' and 'pramana' scope any mode to matching assertions."
     )]
     pub async fn vidya_query(
         &self,
         Parameters(args): Parameters<QueryArgs>,
     ) -> Result<String, ErrorData> {
+        let prov_filter = vidya_core::ProvenanceFilter {
+            tradition: args
+                .tradition
+                .as_deref()
+                .map(|t| vidya_core::ontology::resolve_iri(t, &args.domain)),
+            pramana: args
+                .pramana
+                .as_deref()
+                .map(|p| vidya_core::ontology::resolve_iri(p, &args.domain)),
+        };
+
         match args.mode {
             QueryMode::Describe => {
                 let subject = args.subject.ok_or_else(|| {
@@ -120,7 +150,7 @@ impl VidyaServer {
                 })?;
                 let result = self
                     .store
-                    .describe(&args.domain, &subject)
+                    .describe(&args.domain, &subject, &prov_filter)
                     .map_err(to_error_data)?;
                 serde_json::to_string_pretty(&result)
                     .map_err(|e| ErrorData::internal_error(e.to_string(), None))
@@ -133,7 +163,45 @@ impl VidyaServer {
                     args.filters.unwrap_or_default().into_iter().collect();
                 let result = self
                     .store
-                    .search(&args.domain, &kind, &filters)
+                    .search(&args.domain, &kind, &filters, &prov_filter)
+                    .map_err(to_error_data)?;
+                serde_json::to_string_pretty(&result)
+                    .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+            }
+            QueryMode::Traverse => {
+                let subject = args.subject.ok_or_else(|| {
+                    ErrorData::invalid_params("'subject' is required for traverse mode", None)
+                })?;
+                let predicate = args.predicate.ok_or_else(|| {
+                    ErrorData::invalid_params("'predicate' is required for traverse mode", None)
+                })?;
+                let depth = args.depth.unwrap_or(1);
+                let result = self
+                    .store
+                    .traverse(&args.domain, &subject, &predicate, depth, &prov_filter)
+                    .map_err(to_error_data)?;
+                serde_json::to_string_pretty(&result)
+                    .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+            }
+            QueryMode::Provenance => {
+                let subject = args.subject.ok_or_else(|| {
+                    ErrorData::invalid_params("'subject' is required for provenance mode", None)
+                })?;
+                let predicate = args.predicate.ok_or_else(|| {
+                    ErrorData::invalid_params("'predicate' is required for provenance mode", None)
+                })?;
+                let object = args.object.ok_or_else(|| {
+                    ErrorData::invalid_params("'object' is required for provenance mode", None)
+                })?;
+                let result = self
+                    .store
+                    .provenance(
+                        &args.domain,
+                        &subject,
+                        &predicate,
+                        &object,
+                        &prov_filter,
+                    )
                     .map_err(to_error_data)?;
                 serde_json::to_string_pretty(&result)
                     .map_err(|e| ErrorData::internal_error(e.to_string(), None))

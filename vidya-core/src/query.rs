@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use oxigraph::model::{NamedNodeRef, Term};
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
@@ -55,8 +55,39 @@ pub struct SearchHit {
     pub label: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct TraverseResult {
+    pub origin: String,
+    pub predicate: String,
+    pub max_depth: u32,
+    pub entities: Vec<TraverseHit>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TraverseHit {
+    pub iri: String,
+    pub label: Option<String>,
+    pub depth: u32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ProvenanceResult {
+    pub subject: String,
+    pub predicate: String,
+    pub object: String,
+    pub assertions: Vec<Provenance>,
+}
+
+#[derive(Debug, Default)]
+pub struct ProvenanceFilter {
+    pub tradition: Option<String>,
+    pub pramana: Option<String>,
+}
+
+const MAX_TRAVERSE_DEPTH: u32 = 10;
+
 // ---------------------------------------------------------------------------
-// SPARQL builder (composable for vidya/21 filter injection)
+// SPARQL builder
 // ---------------------------------------------------------------------------
 
 pub(crate) struct SparqlBuilder {
@@ -66,6 +97,7 @@ pub(crate) struct SparqlBuilder {
     optional_clauses: Vec<String>,
     filter_clauses: Vec<String>,
     order_by: Option<String>,
+    distinct: bool,
 }
 
 #[allow(dead_code)]
@@ -78,6 +110,7 @@ impl SparqlBuilder {
             optional_clauses: Vec::new(),
             filter_clauses: Vec::new(),
             order_by: None,
+            distinct: false,
         }
     }
 
@@ -105,12 +138,17 @@ impl SparqlBuilder {
         self.order_by = Some(expr.to_string());
     }
 
+    pub fn set_distinct(&mut self) {
+        self.distinct = true;
+    }
+
     pub fn build(&self) -> String {
         let mut out = String::new();
         for (prefix, iri) in &self.prefixes {
             out.push_str(&format!("PREFIX {prefix}: <{iri}>\n"));
         }
-        out.push_str(&format!("SELECT {}\n", self.select_vars.join(" ")));
+        let kw = if self.distinct { "SELECT DISTINCT" } else { "SELECT" };
+        out.push_str(&format!("{kw} {}\n", self.select_vars.join(" ")));
         out.push_str("WHERE {\n");
         for clause in &self.body_clauses {
             out.push_str("  ");
@@ -248,10 +286,204 @@ fn cell_str(row: &[Option<Term>], idx: usize, domain: &str) -> Option<String> {
 }
 
 // ---------------------------------------------------------------------------
+// Provenance filter injection
+// ---------------------------------------------------------------------------
+
+fn apply_provenance_filter(
+    builder: &mut SparqlBuilder,
+    subject_expr: &str,
+    pred_expr: &str,
+    obj_expr: &str,
+    filter: &ProvenanceFilter,
+) {
+    if filter.tradition.is_none() && filter.pramana.is_none() {
+        return;
+    }
+    builder.add_body(&format!(
+        "<< {subject_expr} {pred_expr} {obj_expr} >> vidya:assertedBy ?_pf_assertion ."
+    ));
+    if let Some(ref trad) = filter.tradition {
+        builder.add_body(&format!("?_pf_assertion vidya:tradition <{trad}> ."));
+    }
+    if let Some(ref pram) = filter.pramana {
+        builder.add_body(&format!("?_pf_assertion vidya:pramana <{pram}> ."));
+    }
+}
+
+fn resolve_object_term(object: &str, domain: &str) -> Result<String> {
+    let candidate = ontology::resolve_iri(object, domain);
+    if validate_iri(&candidate).is_ok() {
+        Ok(format!("<{candidate}>"))
+    } else {
+        Ok(format!("\"{}\"", escape_sparql_string(object)))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Provenance
+// ---------------------------------------------------------------------------
+
+pub fn provenance(
+    store: &KnowledgeStore,
+    domain: &str,
+    subject: &str,
+    predicate: &str,
+    object: &str,
+    filter: &ProvenanceFilter,
+) -> Result<ProvenanceResult> {
+    let subject_iri = ontology::resolve_iri(subject, domain);
+    let pred_iri = ontology::resolve_iri(predicate, domain);
+    let graph_iri = ontology::domain_graph_iri(domain);
+    validate_iri(&subject_iri)?;
+    validate_iri(&pred_iri)?;
+    validate_iri(&graph_iri)?;
+    let obj_term = resolve_object_term(object, domain)?;
+
+    let mut b = SparqlBuilder::new();
+    b.add_prefix("vidya", ontology::VIDYA_BASE);
+    b.add_select("?trad");
+    b.add_select("?src");
+    b.add_select("?pramana");
+    b.add_select("?confidence");
+    b.add_body(&format!("GRAPH <{graph_iri}> {{"));
+    b.add_body(&format!(
+        "  << <{subject_iri}> <{pred_iri}> {obj_term} >> vidya:assertedBy ?assertion ."
+    ));
+    b.add_body("  ?assertion vidya:tradition ?trad ;");
+    b.add_body("             vidya:source ?src ;");
+    b.add_body("             vidya:pramana ?pramana ;");
+    b.add_body("             vidya:confidence ?confidence .");
+    if let Some(ref trad) = filter.tradition {
+        validate_iri(trad)?;
+        b.add_filter(&format!("FILTER(?trad = <{trad}>)"));
+    }
+    if let Some(ref pram) = filter.pramana {
+        validate_iri(pram)?;
+        b.add_filter(&format!("FILTER(?pramana = <{pram}>)"));
+    }
+    b.add_body("}");
+    let query = b.build();
+
+    let (vars, rows) = execute_select(store, &query)?;
+    let itrad = get_col(&vars, "trad").unwrap();
+    let isrc = get_col(&vars, "src").unwrap();
+    let ipram = get_col(&vars, "pramana").unwrap();
+    let iconf = get_col(&vars, "confidence").unwrap();
+
+    let assertions: Vec<Provenance> = rows
+        .iter()
+        .map(|row| Provenance {
+            tradition: cell_str(row, itrad, domain).unwrap_or_default(),
+            source: cell_str(row, isrc, domain).unwrap_or_default(),
+            pramana: cell_str(row, ipram, domain).unwrap_or_default(),
+            confidence: cell_str(row, iconf, domain).unwrap_or_default(),
+        })
+        .collect();
+
+    Ok(ProvenanceResult {
+        subject: shorten_iri(&subject_iri, domain),
+        predicate: shorten_iri(&pred_iri, domain),
+        object: object.to_string(),
+        assertions,
+    })
+}
+
+// ---------------------------------------------------------------------------
+// Traverse
+// ---------------------------------------------------------------------------
+
+pub fn traverse(
+    store: &KnowledgeStore,
+    domain: &str,
+    subject: &str,
+    predicate: &str,
+    depth: u32,
+    filter: &ProvenanceFilter,
+) -> Result<TraverseResult> {
+    if depth > MAX_TRAVERSE_DEPTH {
+        return Err(VidyaError::InvalidArgument(format!(
+            "depth {depth} exceeds maximum {MAX_TRAVERSE_DEPTH}"
+        )));
+    }
+
+    let subject_iri = ontology::resolve_iri(subject, domain);
+    let pred_iri = ontology::resolve_iri(predicate, domain);
+    let graph_iri = ontology::domain_graph_iri(domain);
+    validate_iri(&subject_iri)?;
+    validate_iri(&pred_iri)?;
+    validate_iri(&graph_iri)?;
+
+    if let Some(ref trad) = filter.tradition {
+        validate_iri(trad)?;
+    }
+    if let Some(ref pram) = filter.pramana {
+        validate_iri(pram)?;
+    }
+
+    let mut visited: HashSet<String> = HashSet::new();
+    visited.insert(subject_iri.clone());
+    let mut frontier: Vec<String> = vec![subject_iri.clone()];
+    let mut entities: Vec<TraverseHit> = Vec::new();
+
+    for d in 1..=depth {
+        if frontier.is_empty() {
+            break;
+        }
+
+        let values: String = frontier
+            .iter()
+            .map(|iri| format!("<{iri}>"))
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        let mut b = SparqlBuilder::new();
+        b.add_prefix("vidya", ontology::VIDYA_BASE);
+        b.add_prefix("rdfs", RDFS);
+        b.add_select("?obj");
+        b.add_select("?label");
+        b.add_body(&format!("GRAPH <{graph_iri}> {{"));
+        b.add_body(&format!("  VALUES ?start {{ {values} }}"));
+        b.add_body(&format!("  ?start <{pred_iri}> ?obj ."));
+        apply_provenance_filter(&mut b, "?start", &format!("<{pred_iri}>"), "?obj", filter);
+        b.add_body("  OPTIONAL { ?obj rdfs:label ?label . }");
+        b.add_body("}");
+        let query = b.build();
+
+        let (vars, rows) = execute_select(store, &query)?;
+        let io = get_col(&vars, "obj").unwrap();
+        let il = get_col(&vars, "label").unwrap();
+
+        let mut next_frontier = Vec::new();
+        for row in &rows {
+            if let Some(Term::NamedNode(nn)) = row.get(io).and_then(|t| t.as_ref()) {
+                let iri = nn.as_str().to_string();
+                if visited.insert(iri.clone()) {
+                    let label = cell_str(row, il, domain);
+                    entities.push(TraverseHit {
+                        iri: shorten_iri(&iri, domain),
+                        label,
+                        depth: d,
+                    });
+                    next_frontier.push(iri);
+                }
+            }
+        }
+        frontier = next_frontier;
+    }
+
+    Ok(TraverseResult {
+        origin: shorten_iri(&subject_iri, domain),
+        predicate: shorten_iri(&pred_iri, domain),
+        max_depth: depth,
+        entities,
+    })
+}
+
+// ---------------------------------------------------------------------------
 // Describe
 // ---------------------------------------------------------------------------
 
-pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str) -> Result<DescribeResult> {
+pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &ProvenanceFilter) -> Result<DescribeResult> {
     let subject_iri = ontology::resolve_iri(subject, domain);
     let graph_iri = ontology::domain_graph_iri(domain);
     validate_iri(&subject_iri)?;
@@ -323,6 +555,14 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str) -> Result<D
     b3.add_body("             vidya:source ?src ;");
     b3.add_body("             vidya:pramana ?pramana ;");
     b3.add_body("             vidya:confidence ?confidence .");
+    if let Some(ref trad) = filter.tradition {
+        validate_iri(trad)?;
+        b3.add_filter(&format!("FILTER(?trad = <{trad}>)"));
+    }
+    if let Some(ref pram) = filter.pramana {
+        validate_iri(pram)?;
+        b3.add_filter(&format!("FILTER(?pramana = <{pram}>)"));
+    }
     b3.add_body("}");
     let q3 = b3.build();
 
@@ -427,6 +667,7 @@ pub fn search(
     domain: &str,
     kind: &str,
     filters: &[(String, String)],
+    prov_filter: &ProvenanceFilter,
 ) -> Result<SearchResult> {
     let graph_iri = ontology::domain_graph_iri(domain);
     let kind_iri = ontology::resolve_iri(kind, domain);
@@ -440,6 +681,7 @@ pub fn search(
 
     let mut b = SparqlBuilder::new();
     b.add_prefix("rdfs", RDFS);
+    b.add_prefix("vidya", ontology::VIDYA_BASE);
     b.add_select("?entity");
     b.add_select("?label");
     b.add_body(&format!("GRAPH <{graph_iri}> {{"));
@@ -450,6 +692,12 @@ pub fn search(
         let attr_iri = ontology::resolve_iri(attr, domain);
         let escaped = escape_sparql_string(val);
         b.add_body(&format!("  ?entity <{attr_iri}> \"{escaped}\" ."));
+    }
+
+    if prov_filter.tradition.is_some() || prov_filter.pramana.is_some() {
+        b.add_body("  ?entity ?_pf_p ?_pf_o .");
+        apply_provenance_filter(&mut b, "?entity", "?_pf_p", "?_pf_o", prov_filter);
+        b.set_distinct();
     }
 
     b.add_body("}");
