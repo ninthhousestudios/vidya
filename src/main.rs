@@ -5,10 +5,10 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use rmcp::{ServiceExt, transport::stdio};
 use tracing_subscriber::EnvFilter;
+use vidya_core::KnowledgeStore;
 
 use vidya::{
     config::{Config, vidya_home},
-    db,
     mcp::VidyaServer,
 };
 
@@ -78,23 +78,28 @@ async fn main() -> Result<()> {
 
             tracing::info!(version = env!("CARGO_PKG_VERSION"), "starting vidya");
 
-            let pool = db::connect(&cfg).await.context("connecting to database")?;
-            db::run_migrations(&pool)
-                .await
-                .context("running migrations")?;
+            std::fs::create_dir_all(&cfg.store_path).with_context(|| {
+                format!("creating store directory {}", cfg.store_path.display())
+            })?;
+
+            let store = Arc::new(
+                KnowledgeStore::open(&cfg.store_path)
+                    .map_err(|e| anyhow::anyhow!("{e}"))
+                    .context("opening knowledge store")?,
+            );
 
             if http {
-                serve_http(http_addr, http_port, auth_token_file, cfg, pool).await
+                serve_http(http_addr, http_port, auth_token_file, cfg, store).await
             } else {
-                serve_stdio(pool).await
+                serve_stdio(store).await
             }
         }
         Commands::InstallServices { enable } => cmd_install_services(enable),
     }
 }
 
-async fn serve_stdio(pool: sqlx::PgPool) -> Result<()> {
-    let server = VidyaServer::new(pool);
+async fn serve_stdio(store: Arc<KnowledgeStore>) -> Result<()> {
+    let server = VidyaServer::new(store);
     let (stdin, stdout) = stdio();
 
     let service = server
@@ -119,7 +124,7 @@ async fn serve_http(
     http_port: Option<u16>,
     auth_token_file: Option<PathBuf>,
     cfg: Config,
-    pool: sqlx::PgPool,
+    store: Arc<KnowledgeStore>,
 ) -> Result<()> {
     use axum::routing::any_service;
     use rmcp::transport::streamable_http_server::{
@@ -154,9 +159,9 @@ async fn serve_http(
     session_manager.session_config.keep_alive = None;
     let session_manager = Arc::new(session_manager);
 
-    let pool_clone = pool.clone();
+    let store_clone = store.clone();
     let mcp_service = StreamableHttpService::new(
-        move || Ok(VidyaServer::new(pool_clone.clone())),
+        move || Ok(VidyaServer::new(store_clone.clone())),
         session_manager,
         config,
     );
@@ -186,16 +191,13 @@ async fn serve_http(
         .layer(normalize_accept)
         .layer(ValidateRequestHeaderLayer::bearer(&bearer_token));
 
-    let health_pool = pool.clone();
+    let health_store = store.clone();
     #[allow(deprecated)]
     let app = axum::Router::new()
         .route(
             "/health",
             axum::routing::get(move || async move {
-                let ok = sqlx::query_scalar::<_, i32>("SELECT 1")
-                    .fetch_one(&health_pool)
-                    .await
-                    .is_ok();
+                let ok = health_store.triple_count().is_ok();
                 axum::Json(serde_json::json!({
                     "status": if ok { "ok" } else { "degraded" }
                 }))
@@ -259,10 +261,8 @@ fn service_unit_content(vidya_bin: &str) -> String {
     format!(
         r#"[Unit]
 Description=vidya MCP server (HTTP)
-After=postgresql.service
 
 [Service]
-ExecStartPre=/bin/sh -c 'until /usr/bin/pg_isready -q; do sleep 1; done'
 ExecStart={vidya_bin} serve --http --auth-token-file %h/.vidya/auth-token
 Restart=on-failure
 RestartSec=3

@@ -1,7 +1,9 @@
+[workspace]
+members = ["vidya-core"]
+
 [package]
 name = "vidya"
-version = "0.1.1"
-default-run = "vidya"
+version = "0.2.0"
 edition = "2024"
 description = "Structured knowledge graph with reasoning — domain knowledge as cited, queryable, derivable structure."
 license = "AGPL-3.0"
@@ -16,36 +18,22 @@ path = "src/lib.rs"
 name = "vidya"
 path = "src/main.rs"
 
-[[bin]]
-name = "vidya-migrate"
-path = "src/bin/vidya-migrate.rs"
-
-[[bin]]
-name = "vidya-seed"
-path = "src/bin/vidya-seed.rs"
-
-
 [dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync", "io-std", "io-util"] }
+vidya-core = { path = "vidya-core" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 rmcp = { version = "1", features = ["server", "transport-io", "macros", "schemars", "transport-streamable-http-server"] }
-schemars = { version = "1", features = ["chrono04"] }
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate"] }
-uuid = { version = "1", features = ["v7", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
+schemars = { version = "1" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 dotenvy = "0.15"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-thiserror = "2"
-anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 axum = "0.8"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["auth"] }
 tokio-util = { version = "0.7", features = ["rt"] }
-sha2 = "0.11.0"
-jsonschema = "0.46"
+anyhow = "1"
 
 [dev-dependencies]
-serial_test = "3"
+oxigraph = { version = "0.5", features = ["rocksdb", "rdf-12"] }

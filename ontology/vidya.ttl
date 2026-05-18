@@ -1,0 +1,35 @@
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix vidya: <http://vidya.ninthhouse.studio/ontology/> .
+
+# ── Classes ──
+vidya:Tradition  a rdfs:Class ; rdfs:label "tradition" .
+vidya:Source     a rdfs:Class ; rdfs:label "source" .
+vidya:Assertion  a rdfs:Class ; rdfs:label "assertion" .
+vidya:Pramana    a rdfs:Class ; rdfs:label "pramana" .
+
+# ── Pramana instances ──
+vidya:pratyaksha   a vidya:Pramana ; rdfs:label "pratyakṣa"@sa   ; rdfs:comment "perception" .
+vidya:anumana      a vidya:Pramana ; rdfs:label "anumāna"@sa     ; rdfs:comment "inference" .
+vidya:shabda       a vidya:Pramana ; rdfs:label "śabda"@sa       ; rdfs:comment "authoritative testimony" .
+vidya:upamana      a vidya:Pramana ; rdfs:label "upamāna"@sa     ; rdfs:comment "analogy" .
+vidya:arthapatti   a vidya:Pramana ; rdfs:label "arthāpatti"@sa  ; rdfs:comment "presumption" .
+vidya:anupalabdhi  a vidya:Pramana ; rdfs:label "anupalabdhi"@sa ; rdfs:comment "non-apprehension" .
+
+# ── Properties: Tradition ──
+vidya:parentTradition  a rdf:Property ; rdfs:domain vidya:Tradition ; rdfs:range vidya:Tradition .
+
+# ── Properties: Source ──
+vidya:sourceKind   a rdf:Property ; rdfs:domain vidya:Source ; rdfs:range xsd:string .
+vidya:reliability  a rdf:Property ; rdfs:domain vidya:Source ; rdfs:range xsd:float .
+
+# ── Properties: Assertion (provenance on RDF-star annotated triples) ──
+vidya:assertedBy  a rdf:Property ; rdfs:range vidya:Assertion .
+vidya:tradition   a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range vidya:Tradition .
+vidya:source      a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range vidya:Source .
+vidya:pramana     a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range vidya:Pramana .
+vidya:confidence  a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range xsd:float .
+
+# ── Version marker (must be last — partial loads will miss it) ──
+vidya:BaseOntology  vidya:version "0.2.0" .

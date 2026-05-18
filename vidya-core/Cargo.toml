@@ -1,0 +1,15 @@
+[package]
+name = "vidya-core"
+version = "0.2.0"
+edition = "2024"
+description = "Core library for vidya knowledge graph — Oxigraph-backed triplestore with ontology and provenance."
+license = "AGPL-3.0"
+publish = false
+
+[dependencies]
+oxigraph = { version = "0.5", features = ["rocksdb", "rdf-12"] }
+thiserror = "2"
+tracing = "0.1"
+
+[dev-dependencies]
+tempfile = "3"
