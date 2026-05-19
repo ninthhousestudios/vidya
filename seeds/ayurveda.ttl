@@ -252,7 +252,7 @@ ayurveda:pippali  a ayurveda:Dravya ;
     ayurveda:botanicalName  "Piper longum" ;
     ayurveda:hasRasa        ayurveda:katu ;
     ayurveda:hasGuna        ayurveda:laghu, ayurveda:snigdha, ayurveda:tikshna ;
-    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVeerya      ayurveda:ushna, ayurveda:sheeta ;
     ayurveda:hasVipaka      ayurveda:madhura ;
     ayurveda:hasKarma       ayurveda:deepana, ayurveda:pachana, ayurveda:rasayana ;
     ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:kapha ;

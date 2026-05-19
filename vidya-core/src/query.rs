@@ -716,9 +716,13 @@ pub fn search(
         let escaped = escape_sparql_string(val);
         let val_iri = ontology::resolve_iri(val, domain);
         b.add_body(&format!("  ?entity <{attr_iri}> ?_fv{i} ."));
-        b.add_filter(&format!(
-            "FILTER(?_fv{i} = <{val_iri}> || ?_fv{i} = \"{escaped}\")"
-        ));
+        if validate_iri(&val_iri).is_ok() {
+            b.add_filter(&format!(
+                "FILTER(?_fv{i} = <{val_iri}> || ?_fv{i} = \"{escaped}\")"
+            ));
+        } else {
+            b.add_filter(&format!("FILTER(?_fv{i} = \"{escaped}\")"));
+        }
     }
 
     if prov_filter.tradition.is_some() || prov_filter.pramana.is_some() {

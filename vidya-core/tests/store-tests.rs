@@ -851,3 +851,39 @@ fn provenance_veerya_disagreement() {
     let ushna_sources: Vec<&str> = ushna.unwrap().provenance.iter().map(|p| p.source.as_str()).collect();
     assert!(ushna_sources.iter().any(|s| s.contains("sushruta")), "ushna veerya should include Sushruta");
 }
+
+#[test]
+fn search_literal_filter_with_spaces() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let result = store
+        .search(
+            "ayurveda",
+            "Dravya",
+            &[("commonName".into(), "black pepper".into())],
+            &ProvenanceFilter::default(),
+        )
+        .unwrap();
+
+    assert_eq!(result.entities.len(), 1);
+    assert!(result.entities[0].label.contains("maricha"));
+}
+
+#[test]
+fn search_contested_veerya_finds_pippali() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let sheeta_result = store
+        .search(
+            "ayurveda",
+            "Dravya",
+            &[("hasVeerya".into(), "sheeta".into())],
+            &ProvenanceFilter::default(),
+        )
+        .unwrap();
+
+    let names: Vec<&str> = sheeta_result.entities.iter().map(|e| e.label.as_str()).collect();
+    assert!(names.contains(&"pippali"), "pippali should appear in sheeta veerya search (Charaka classification)");
+}
