@@ -257,8 +257,8 @@ fn describe_surya_returns_properties_and_provenance() {
         .find(|at| at.predicate.contains("exaltedIn"))
         .expect("should have exaltedIn annotation");
     assert!(exaltation.object.contains("mesha"));
-    assert!(exaltation.provenance.is_some());
-    let prov = exaltation.provenance.as_ref().unwrap();
+    assert!(!exaltation.provenance.is_empty());
+    let prov = &exaltation.provenance[0];
     assert!(prov.pramana.contains("shabda"));
 
     // Non-assertedBy annotations (e.g. exaltationDegree) should also be present
@@ -462,7 +462,7 @@ fn describe_filtered_by_pramana_shabda() {
     let result = store.describe("jyotish", "surya", &filter).unwrap();
 
     assert!(!result.annotated_triples.is_empty());
-    assert!(result.annotated_triples.iter().all(|at| at.provenance.is_some()));
+    assert!(result.annotated_triples.iter().all(|at| !at.provenance.is_empty()));
 }
 
 #[test]
@@ -560,7 +560,8 @@ fn assert_triple_literal_round_trips_via_describe() {
         .find(|at| at.predicate.contains("customNote") && at.object == "test value")
         .expect("should have customNote annotated triple");
 
-    let prov = note.provenance.as_ref().expect("should have provenance");
+    assert!(!note.provenance.is_empty(), "should have provenance");
+    let prov = &note.provenance[0];
     assert!(prov.tradition.contains("tradition-bphs"));
     assert!(prov.source.contains("source-bphs"));
     assert!(prov.pramana.contains("shabda"));

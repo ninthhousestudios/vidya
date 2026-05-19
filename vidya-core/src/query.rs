@@ -32,7 +32,7 @@ pub struct AnnotatedTriple {
     pub predicate: String,
     pub object: String,
     pub annotations: Vec<PropertyValue>,
-    pub provenance: Option<Provenance>,
+    pub provenance: Vec<Provenance>,
 }
 
 #[derive(Debug, Serialize)]
@@ -616,7 +616,7 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &Pr
     let ipram = get_col(&vars3, "pramana").unwrap();
     let iconf = get_col(&vars3, "confidence").unwrap();
 
-    let mut prov_map: BTreeMap<(String, String), Provenance> = BTreeMap::new();
+    let mut prov_map: BTreeMap<(String, String), Vec<Provenance>> = BTreeMap::new();
 
     for row in &rows3 {
         let pred = cell_str(row, ip3, domain).unwrap_or_default();
@@ -626,15 +626,15 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &Pr
         let pramana = cell_str(row, ipram, domain).unwrap_or_default();
         let confidence = cell_str(row, iconf, domain).unwrap_or_default();
 
-        prov_map.insert(
-            (pred, obj),
-            Provenance {
+        prov_map
+            .entry((pred, obj))
+            .or_default()
+            .push(Provenance {
                 tradition: trad,
                 source: src,
                 pramana,
                 confidence,
-            },
-        );
+            });
     }
 
     let has_filter = filter.tradition.is_some() || filter.pramana.is_some();
@@ -658,7 +658,7 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &Pr
         .into_iter()
         .map(|(pred, obj)| {
             let annotations = annot_map.remove(&(pred.clone(), obj.clone())).unwrap_or_default();
-            let provenance = prov_map.remove(&(pred.clone(), obj.clone()));
+            let provenance = prov_map.remove(&(pred.clone(), obj.clone())).unwrap_or_default();
             AnnotatedTriple {
                 predicate: pred,
                 object: obj,
@@ -711,10 +711,14 @@ pub fn search(
     b.add_body(&format!("  ?entity a <{kind_iri}> ."));
     b.add_body("  ?entity rdfs:label ?label .");
 
-    for (attr, val) in filters {
+    for (i, (attr, val)) in filters.iter().enumerate() {
         let attr_iri = ontology::resolve_iri(attr, domain);
         let escaped = escape_sparql_string(val);
-        b.add_body(&format!("  ?entity <{attr_iri}> \"{escaped}\" ."));
+        let val_iri = ontology::resolve_iri(val, domain);
+        b.add_body(&format!("  ?entity <{attr_iri}> ?_fv{i} ."));
+        b.add_filter(&format!(
+            "FILTER(?_fv{i} = <{val_iri}> || ?_fv{i} = \"{escaped}\")"
+        ));
     }
 
     if prov_filter.tradition.is_some() || prov_filter.pramana.is_some() {
