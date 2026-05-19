@@ -1,0 +1,955 @@
+# Illustrative ayurveda seed from LLM training data.
+# Not authoritative -- verify against source texts before production use.
+# Covers ~15 dravyas from dravyaguna shastra for demo purposes.
+
+@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix vidya:    <http://vidya.ninthhouse.studio/ontology/> .
+@prefix ayurveda: <http://vidya.ninthhouse.studio/domain/ayurveda/> .
+
+# ═══════════════════════════════════════════════════════════════════
+# 1. Domain Classes and Properties
+# ═══════════════════════════════════════════════════════════════════
+
+ayurveda:Dravya  a rdfs:Class ; rdfs:label "dravya" .
+ayurveda:Rasa    a rdfs:Class ; rdfs:label "rasa" .
+ayurveda:Guna    a rdfs:Class ; rdfs:label "guna" .
+ayurveda:Dosha   a rdfs:Class ; rdfs:label "dosha" .
+ayurveda:Karma   a rdfs:Class ; rdfs:label "karma" .
+
+ayurveda:hasRasa          a rdf:Property ; rdfs:domain ayurveda:Dravya ; rdfs:range ayurveda:Rasa .
+ayurveda:hasGuna          a rdf:Property ; rdfs:domain ayurveda:Dravya ; rdfs:range ayurveda:Guna .
+ayurveda:hasVeerya        a rdf:Property ; rdfs:domain ayurveda:Dravya ; rdfs:range ayurveda:Guna .
+ayurveda:hasVipaka        a rdf:Property ; rdfs:domain ayurveda:Dravya ; rdfs:range ayurveda:Rasa .
+ayurveda:hasKarma         a rdf:Property ; rdfs:domain ayurveda:Dravya ; rdfs:range ayurveda:Karma .
+ayurveda:pacifiesDosha    a rdf:Property ; rdfs:domain ayurveda:Dravya ; rdfs:range ayurveda:Dosha .
+ayurveda:aggravatesDosha  a rdf:Property ; rdfs:domain ayurveda:Dravya ; rdfs:range ayurveda:Dosha .
+ayurveda:oppositeGuna     a rdf:Property ; rdfs:domain ayurveda:Guna  ; rdfs:range ayurveda:Guna .
+ayurveda:botanicalName    a rdf:Property ; rdfs:domain ayurveda:Dravya .
+ayurveda:commonName       a rdf:Property ; rdfs:domain ayurveda:Dravya .
+
+# Theory-level properties (rasa/guna → dosha)
+ayurveda:aggravatesDosha  a rdf:Property .
+ayurveda:pacifiesDosha    a rdf:Property .
+
+# ═══════════════════════════════════════════════════════════════════
+# 2. Rasa (6 tastes)
+# ═══════════════════════════════════════════════════════════════════
+
+ayurveda:madhura   a ayurveda:Rasa ; rdfs:label "madhura" ;  ayurveda:commonName "sweet" .
+ayurveda:amla      a ayurveda:Rasa ; rdfs:label "amla" ;     ayurveda:commonName "sour" .
+ayurveda:lavana    a ayurveda:Rasa ; rdfs:label "lavana" ;   ayurveda:commonName "salty" .
+ayurveda:katu      a ayurveda:Rasa ; rdfs:label "katu" ;     ayurveda:commonName "pungent" .
+ayurveda:tikta     a ayurveda:Rasa ; rdfs:label "tikta" ;    ayurveda:commonName "bitter" .
+ayurveda:kashaya   a ayurveda:Rasa ; rdfs:label "kashaya" ;  ayurveda:commonName "astringent" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 3. Guna (20 qualities in 10 opposing pairs)
+# ═══════════════════════════════════════════════════════════════════
+
+ayurveda:guru      a ayurveda:Guna ; rdfs:label "guru" ;     ayurveda:commonName "heavy" .
+ayurveda:laghu     a ayurveda:Guna ; rdfs:label "laghu" ;    ayurveda:commonName "light" .
+ayurveda:guru      ayurveda:oppositeGuna ayurveda:laghu .
+ayurveda:laghu     ayurveda:oppositeGuna ayurveda:guru .
+
+ayurveda:sheeta    a ayurveda:Guna ; rdfs:label "sheeta" ;   ayurveda:commonName "cold" .
+ayurveda:ushna     a ayurveda:Guna ; rdfs:label "ushna" ;    ayurveda:commonName "hot" .
+ayurveda:sheeta    ayurveda:oppositeGuna ayurveda:ushna .
+ayurveda:ushna     ayurveda:oppositeGuna ayurveda:sheeta .
+
+ayurveda:snigdha   a ayurveda:Guna ; rdfs:label "snigdha" ;  ayurveda:commonName "unctuous" .
+ayurveda:ruksha    a ayurveda:Guna ; rdfs:label "ruksha" ;   ayurveda:commonName "dry" .
+ayurveda:snigdha   ayurveda:oppositeGuna ayurveda:ruksha .
+ayurveda:ruksha    ayurveda:oppositeGuna ayurveda:snigdha .
+
+ayurveda:manda     a ayurveda:Guna ; rdfs:label "manda" ;    ayurveda:commonName "slow" .
+ayurveda:tikshna   a ayurveda:Guna ; rdfs:label "tikshna" ;  ayurveda:commonName "sharp" .
+ayurveda:manda     ayurveda:oppositeGuna ayurveda:tikshna .
+ayurveda:tikshna   ayurveda:oppositeGuna ayurveda:manda .
+
+ayurveda:sthira    a ayurveda:Guna ; rdfs:label "sthira" ;   ayurveda:commonName "stable" .
+ayurveda:sara      a ayurveda:Guna ; rdfs:label "sara" ;     ayurveda:commonName "mobile" .
+ayurveda:sthira    ayurveda:oppositeGuna ayurveda:sara .
+ayurveda:sara      ayurveda:oppositeGuna ayurveda:sthira .
+
+ayurveda:mridu     a ayurveda:Guna ; rdfs:label "mridu" ;    ayurveda:commonName "soft" .
+ayurveda:kathina   a ayurveda:Guna ; rdfs:label "kathina" ;  ayurveda:commonName "hard" .
+ayurveda:mridu     ayurveda:oppositeGuna ayurveda:kathina .
+ayurveda:kathina   ayurveda:oppositeGuna ayurveda:mridu .
+
+ayurveda:vishada   a ayurveda:Guna ; rdfs:label "vishada" ;  ayurveda:commonName "clear" .
+ayurveda:picchila  a ayurveda:Guna ; rdfs:label "picchila" ; ayurveda:commonName "slimy" .
+ayurveda:vishada   ayurveda:oppositeGuna ayurveda:picchila .
+ayurveda:picchila  ayurveda:oppositeGuna ayurveda:vishada .
+
+ayurveda:shlakshna a ayurveda:Guna ; rdfs:label "shlakshna" ; ayurveda:commonName "smooth" .
+ayurveda:khara     a ayurveda:Guna ; rdfs:label "khara" ;     ayurveda:commonName "rough" .
+ayurveda:shlakshna ayurveda:oppositeGuna ayurveda:khara .
+ayurveda:khara     ayurveda:oppositeGuna ayurveda:shlakshna .
+
+ayurveda:sukshma   a ayurveda:Guna ; rdfs:label "sukshma" ;  ayurveda:commonName "subtle" .
+ayurveda:sthula    a ayurveda:Guna ; rdfs:label "sthula" ;   ayurveda:commonName "gross" .
+ayurveda:sukshma   ayurveda:oppositeGuna ayurveda:sthula .
+ayurveda:sthula    ayurveda:oppositeGuna ayurveda:sukshma .
+
+ayurveda:sandra    a ayurveda:Guna ; rdfs:label "sandra" ;   ayurveda:commonName "dense" .
+ayurveda:drava     a ayurveda:Guna ; rdfs:label "drava" ;    ayurveda:commonName "liquid" .
+ayurveda:sandra    ayurveda:oppositeGuna ayurveda:drava .
+ayurveda:drava     ayurveda:oppositeGuna ayurveda:sandra .
+
+# ═══════════════════════════════════════════════════════════════════
+# 4. Dosha (3)
+# ═══════════════════════════════════════════════════════════════════
+
+ayurveda:vata    a ayurveda:Dosha ; rdfs:label "vata" .
+ayurveda:pitta   a ayurveda:Dosha ; rdfs:label "pitta" .
+ayurveda:kapha   a ayurveda:Dosha ; rdfs:label "kapha" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 5. Karma (actions, defined as-needed)
+# ═══════════════════════════════════════════════════════════════════
+
+ayurveda:deepana     a ayurveda:Karma ; rdfs:label "deepana" ;     ayurveda:commonName "appetizer" .
+ayurveda:pachana     a ayurveda:Karma ; rdfs:label "pachana" ;     ayurveda:commonName "digestive" .
+ayurveda:rasayana    a ayurveda:Karma ; rdfs:label "rasayana" ;    ayurveda:commonName "rejuvenative" .
+ayurveda:anulomana   a ayurveda:Karma ; rdfs:label "anulomana" ;   ayurveda:commonName "carminative" .
+ayurveda:medhya      a ayurveda:Karma ; rdfs:label "medhya" ;      ayurveda:commonName "brain tonic" .
+ayurveda:balya       a ayurveda:Karma ; rdfs:label "balya" ;       ayurveda:commonName "strength-giving" .
+ayurveda:shothahara  a ayurveda:Karma ; rdfs:label "shothahara" ;  ayurveda:commonName "anti-inflammatory" .
+ayurveda:krimighna   a ayurveda:Karma ; rdfs:label "krimighna" ;   ayurveda:commonName "anthelmintic" .
+ayurveda:jwaraghna   a ayurveda:Karma ; rdfs:label "jwaraghna" ;   ayurveda:commonName "antipyretic" .
+ayurveda:vajikarana  a ayurveda:Karma ; rdfs:label "vajikarana" ;  ayurveda:commonName "aphrodisiac" .
+ayurveda:virechana   a ayurveda:Karma ; rdfs:label "virechana" ;   ayurveda:commonName "purgative" .
+ayurveda:medoghna    a ayurveda:Karma ; rdfs:label "medoghna" ;    ayurveda:commonName "fat-reducing" .
+ayurveda:vatanulomana a ayurveda:Karma ; rdfs:label "vatanulomana" ; ayurveda:commonName "vata-directing" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 6. Traditions and Sources
+# ═══════════════════════════════════════════════════════════════════
+
+ayurveda:tradition-ayurveda  a vidya:Tradition ;
+    rdfs:label "ayurveda" .
+
+ayurveda:tradition-atreya  a vidya:Tradition ;
+    rdfs:label "atreya" ;
+    vidya:parentTradition ayurveda:tradition-ayurveda .
+
+ayurveda:tradition-dhanvantari  a vidya:Tradition ;
+    rdfs:label "dhanvantari" ;
+    vidya:parentTradition ayurveda:tradition-ayurveda .
+
+ayurveda:source-charaka  a vidya:Source ;
+    rdfs:label        "Charaka Samhita" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.95"^^xsd:float ;
+    rdfs:comment      "Charaka Samhita (Atreya tradition)" .
+
+ayurveda:source-sushruta  a vidya:Source ;
+    rdfs:label        "Sushruta Samhita" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.95"^^xsd:float ;
+    rdfs:comment      "Sushruta Samhita (Dhanvantari tradition)" .
+
+ayurveda:source-bhavaprakasha  a vidya:Source ;
+    rdfs:label        "Bhavaprakasha Nighantu" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.9"^^xsd:float ;
+    rdfs:comment      "Bhavaprakasha Nighantu (Bhavamishra, 16th century)" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 7. Theory Triples: Rasa-to-Dosha Mappings
+# ═══════════════════════════════════════════════════════════════════
+
+# Madhura (sweet) — pacifies vata and pitta, aggravates kapha
+ayurveda:madhura  ayurveda:pacifiesDosha   ayurveda:vata .
+ayurveda:madhura  ayurveda:pacifiesDosha   ayurveda:pitta .
+ayurveda:madhura  ayurveda:aggravatesDosha ayurveda:kapha .
+
+# Amla (sour) — pacifies vata, aggravates pitta and kapha
+ayurveda:amla     ayurveda:pacifiesDosha   ayurveda:vata .
+ayurveda:amla     ayurveda:aggravatesDosha ayurveda:pitta .
+ayurveda:amla     ayurveda:aggravatesDosha ayurveda:kapha .
+
+# Lavana (salty) — pacifies vata, aggravates pitta and kapha
+ayurveda:lavana   ayurveda:pacifiesDosha   ayurveda:vata .
+ayurveda:lavana   ayurveda:aggravatesDosha ayurveda:pitta .
+ayurveda:lavana   ayurveda:aggravatesDosha ayurveda:kapha .
+
+# Katu (pungent) — pacifies kapha, aggravates vata and pitta
+ayurveda:katu     ayurveda:pacifiesDosha   ayurveda:kapha .
+ayurveda:katu     ayurveda:aggravatesDosha ayurveda:vata .
+ayurveda:katu     ayurveda:aggravatesDosha ayurveda:pitta .
+
+# Tikta (bitter) — pacifies pitta and kapha, aggravates vata
+ayurveda:tikta    ayurveda:pacifiesDosha   ayurveda:pitta .
+ayurveda:tikta    ayurveda:pacifiesDosha   ayurveda:kapha .
+ayurveda:tikta    ayurveda:aggravatesDosha ayurveda:vata .
+
+# Kashaya (astringent) — pacifies pitta and kapha, aggravates vata
+ayurveda:kashaya  ayurveda:pacifiesDosha   ayurveda:pitta .
+ayurveda:kashaya  ayurveda:pacifiesDosha   ayurveda:kapha .
+ayurveda:kashaya  ayurveda:aggravatesDosha ayurveda:vata .
+
+# ═══════════════════════════════════════════════════════════════════
+# 8. Dravya Entities (15 substances)
+# ═══════════════════════════════════════════════════════════════════
+
+# ── 1. Haritaki ──
+ayurveda:haritaki  a ayurveda:Dravya ;
+    rdfs:label              "haritaki" ;
+    ayurveda:commonName     "chebulic myrobalan" ;
+    ayurveda:botanicalName  "Terminalia chebula" ;
+    ayurveda:hasRasa        ayurveda:kashaya, ayurveda:tikta, ayurveda:madhura, ayurveda:katu, ayurveda:amla ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:ruksha ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:rasayana, ayurveda:anulomana, ayurveda:deepana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:pitta, ayurveda:kapha .
+
+# ── 2. Amalaki ──
+ayurveda:amalaki  a ayurveda:Dravya ;
+    rdfs:label              "amalaki" ;
+    ayurveda:commonName     "Indian gooseberry" ;
+    ayurveda:botanicalName  "Emblica officinalis" ;
+    ayurveda:hasRasa        ayurveda:amla, ayurveda:kashaya, ayurveda:madhura, ayurveda:tikta, ayurveda:katu ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:ruksha, ayurveda:sheeta ;
+    ayurveda:hasVeerya      ayurveda:sheeta ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:rasayana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:pitta, ayurveda:kapha .
+
+# ── 3. Ashwagandha ──
+ayurveda:ashwagandha  a ayurveda:Dravya ;
+    rdfs:label              "ashwagandha" ;
+    ayurveda:commonName     "winter cherry" ;
+    ayurveda:botanicalName  "Withania somnifera" ;
+    ayurveda:hasRasa        ayurveda:tikta, ayurveda:katu, ayurveda:kashaya ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:snigdha ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:rasayana, ayurveda:balya, ayurveda:vajikarana, ayurveda:medhya ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:kapha ;
+    ayurveda:aggravatesDosha ayurveda:pitta .
+
+# ── 4. Haridra ──
+ayurveda:haridra  a ayurveda:Dravya ;
+    rdfs:label              "haridra" ;
+    ayurveda:commonName     "turmeric" ;
+    ayurveda:botanicalName  "Curcuma longa" ;
+    ayurveda:hasRasa        ayurveda:tikta, ayurveda:katu ;
+    ayurveda:hasGuna        ayurveda:ruksha, ayurveda:laghu ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:katu ;
+    ayurveda:hasKarma       ayurveda:shothahara, ayurveda:krimighna ;
+    ayurveda:pacifiesDosha  ayurveda:kapha, ayurveda:pitta ;
+    ayurveda:aggravatesDosha ayurveda:vata .
+
+# ── 5. Pippali ──
+ayurveda:pippali  a ayurveda:Dravya ;
+    rdfs:label              "pippali" ;
+    ayurveda:commonName     "long pepper" ;
+    ayurveda:botanicalName  "Piper longum" ;
+    ayurveda:hasRasa        ayurveda:katu ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:snigdha, ayurveda:tikshna ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:deepana, ayurveda:pachana, ayurveda:rasayana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:kapha ;
+    ayurveda:aggravatesDosha ayurveda:pitta .
+
+# ── 6. Guduchi ──
+ayurveda:guduchi  a ayurveda:Dravya ;
+    rdfs:label              "guduchi" ;
+    ayurveda:commonName     "heart-leaved moonseed" ;
+    ayurveda:botanicalName  "Tinospora cordifolia" ;
+    ayurveda:hasRasa        ayurveda:tikta, ayurveda:kashaya ;
+    ayurveda:hasGuna        ayurveda:guru, ayurveda:snigdha ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:rasayana, ayurveda:jwaraghna ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:pitta, ayurveda:kapha .
+
+# ── 7. Maricha ──
+ayurveda:maricha  a ayurveda:Dravya ;
+    rdfs:label              "maricha" ;
+    ayurveda:commonName     "black pepper" ;
+    ayurveda:botanicalName  "Piper nigrum" ;
+    ayurveda:hasRasa        ayurveda:katu ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:tikshna, ayurveda:ruksha ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:katu ;
+    ayurveda:hasKarma       ayurveda:deepana, ayurveda:pachana ;
+    ayurveda:pacifiesDosha  ayurveda:kapha, ayurveda:vata ;
+    ayurveda:aggravatesDosha ayurveda:pitta .
+
+# ── 8. Shunthi ──
+ayurveda:shunthi  a ayurveda:Dravya ;
+    rdfs:label              "shunthi" ;
+    ayurveda:commonName     "dry ginger" ;
+    ayurveda:botanicalName  "Zingiber officinale" ;
+    ayurveda:hasRasa        ayurveda:katu ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:snigdha ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:deepana, ayurveda:pachana, ayurveda:vatanulomana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:kapha ;
+    ayurveda:aggravatesDosha ayurveda:pitta .
+
+# ── 9. Tulasi ──
+ayurveda:tulasi  a ayurveda:Dravya ;
+    rdfs:label              "tulasi" ;
+    ayurveda:commonName     "holy basil" ;
+    ayurveda:botanicalName  "Ocimum sanctum" ;
+    ayurveda:hasRasa        ayurveda:katu, ayurveda:tikta ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:ruksha, ayurveda:tikshna ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:katu ;
+    ayurveda:hasKarma       ayurveda:deepana, ayurveda:jwaraghna ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:kapha ;
+    ayurveda:aggravatesDosha ayurveda:pitta .
+
+# ── 10. Brahmi ──
+ayurveda:brahmi  a ayurveda:Dravya ;
+    rdfs:label              "brahmi" ;
+    ayurveda:commonName     "bacopa" ;
+    ayurveda:botanicalName  "Bacopa monnieri" ;
+    ayurveda:hasRasa        ayurveda:tikta, ayurveda:kashaya ;
+    ayurveda:hasGuna        ayurveda:laghu ;
+    ayurveda:hasVeerya      ayurveda:sheeta ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:medhya, ayurveda:rasayana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:pitta, ayurveda:kapha .
+
+# ── 11. Shatavari ──
+ayurveda:shatavari  a ayurveda:Dravya ;
+    rdfs:label              "shatavari" ;
+    ayurveda:commonName     "wild asparagus" ;
+    ayurveda:botanicalName  "Asparagus racemosus" ;
+    ayurveda:hasRasa        ayurveda:madhura, ayurveda:tikta ;
+    ayurveda:hasGuna        ayurveda:guru, ayurveda:snigdha, ayurveda:sheeta ;
+    ayurveda:hasVeerya      ayurveda:sheeta ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:rasayana, ayurveda:balya, ayurveda:vajikarana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:pitta ;
+    ayurveda:aggravatesDosha ayurveda:kapha .
+
+# ── 12. Yashtimadhu ──
+ayurveda:yashtimadhu  a ayurveda:Dravya ;
+    rdfs:label              "yashtimadhu" ;
+    ayurveda:commonName     "licorice" ;
+    ayurveda:botanicalName  "Glycyrrhiza glabra" ;
+    ayurveda:hasRasa        ayurveda:madhura ;
+    ayurveda:hasGuna        ayurveda:guru, ayurveda:snigdha ;
+    ayurveda:hasVeerya      ayurveda:sheeta ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:rasayana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:pitta ;
+    ayurveda:aggravatesDosha ayurveda:kapha .
+
+# ── 13. Nimba ──
+ayurveda:nimba  a ayurveda:Dravya ;
+    rdfs:label              "nimba" ;
+    ayurveda:commonName     "neem" ;
+    ayurveda:botanicalName  "Azadirachta indica" ;
+    ayurveda:hasRasa        ayurveda:tikta, ayurveda:kashaya ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:ruksha ;
+    ayurveda:hasVeerya      ayurveda:sheeta ;
+    ayurveda:hasVipaka      ayurveda:katu ;
+    ayurveda:hasKarma       ayurveda:krimighna, ayurveda:jwaraghna ;
+    ayurveda:pacifiesDosha  ayurveda:pitta, ayurveda:kapha ;
+    ayurveda:aggravatesDosha ayurveda:vata .
+
+# ── 14. Guggulu ──
+ayurveda:guggulu  a ayurveda:Dravya ;
+    rdfs:label              "guggulu" ;
+    ayurveda:commonName     "Indian bdellium" ;
+    ayurveda:botanicalName  "Commiphora mukul" ;
+    ayurveda:hasRasa        ayurveda:tikta, ayurveda:katu, ayurveda:kashaya ;
+    ayurveda:hasGuna        ayurveda:laghu, ayurveda:tikshna, ayurveda:snigdha ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:katu ;
+    ayurveda:hasKarma       ayurveda:medoghna, ayurveda:shothahara ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:kapha ;
+    ayurveda:aggravatesDosha ayurveda:pitta .
+
+# ── 15. Eranda ──
+ayurveda:eranda  a ayurveda:Dravya ;
+    rdfs:label              "eranda" ;
+    ayurveda:commonName     "castor" ;
+    ayurveda:botanicalName  "Ricinus communis" ;
+    ayurveda:hasRasa        ayurveda:madhura, ayurveda:katu, ayurveda:kashaya ;
+    ayurveda:hasGuna        ayurveda:guru, ayurveda:snigdha, ayurveda:tikshna, ayurveda:sukshma ;
+    ayurveda:hasVeerya      ayurveda:ushna ;
+    ayurveda:hasVipaka      ayurveda:madhura ;
+    ayurveda:hasKarma       ayurveda:virechana, ayurveda:vatanulomana ;
+    ayurveda:pacifiesDosha  ayurveda:vata, ayurveda:kapha ;
+    ayurveda:aggravatesDosha ayurveda:pitta .
+
+# ═══════════════════════════════════════════════════════════════════
+# 9. RDF-star Provenance: Theory Triples (Rasa-to-Dosha)
+# ═══════════════════════════════════════════════════════════════════
+
+# Charaka Samhita is the primary source for rasa-dosha theory (Atreya tradition)
+
+<< ayurveda:madhura ayurveda:pacifiesDosha ayurveda:vata >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:madhura ayurveda:pacifiesDosha ayurveda:pitta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:madhura ayurveda:aggravatesDosha ayurveda:kapha >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:amla ayurveda:pacifiesDosha ayurveda:vata >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:amla ayurveda:aggravatesDosha ayurveda:pitta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:amla ayurveda:aggravatesDosha ayurveda:kapha >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:lavana ayurveda:pacifiesDosha ayurveda:vata >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:lavana ayurveda:aggravatesDosha ayurveda:pitta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:lavana ayurveda:aggravatesDosha ayurveda:kapha >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:katu ayurveda:pacifiesDosha ayurveda:kapha >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:katu ayurveda:aggravatesDosha ayurveda:vata >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:katu ayurveda:aggravatesDosha ayurveda:pitta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:tikta ayurveda:pacifiesDosha ayurveda:pitta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:tikta ayurveda:pacifiesDosha ayurveda:kapha >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:tikta ayurveda:aggravatesDosha ayurveda:vata >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:kashaya ayurveda:pacifiesDosha ayurveda:pitta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:kashaya ayurveda:pacifiesDosha ayurveda:kapha >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:kashaya ayurveda:aggravatesDosha ayurveda:vata >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ═══════════════════════════════════════════════════════════════════
+# 10. RDF-star Provenance: Dravya Properties
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Haritaki ──
+
+<< ayurveda:haritaki ayurveda:hasRasa ayurveda:kashaya >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:haritaki ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:haritaki ayurveda:hasVipaka ayurveda:madhura >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+# ── Amalaki ──
+
+<< ayurveda:amalaki ayurveda:hasRasa ayurveda:amla >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:amalaki ayurveda:hasVeerya ayurveda:sheeta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+# ── Ashwagandha ──
+
+<< ayurveda:ashwagandha ayurveda:hasRasa ayurveda:tikta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:ashwagandha ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:ashwagandha ayurveda:hasVipaka ayurveda:madhura >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:ashwagandha ayurveda:pacifiesDosha ayurveda:vata >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:ashwagandha ayurveda:pacifiesDosha ayurveda:kapha >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Haridra ──
+
+<< ayurveda:haridra ayurveda:hasRasa ayurveda:tikta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:haridra ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+# ── Pippali — CROSS-TEXT DISAGREEMENT on veerya ──
+# Charaka considers pippali anushna-sheeta (not-hot, i.e. cold in effect)
+# Sushruta and Bhavaprakasha classify it as ushna (hot)
+
+<< ayurveda:pippali ayurveda:hasVeerya ayurveda:sheeta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.85"^^xsd:float
+    ] .
+
+<< ayurveda:pippali ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-sushruta ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:pippali ayurveda:hasRasa ayurveda:katu >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:pippali ayurveda:hasVipaka ayurveda:madhura >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Guduchi ──
+
+<< ayurveda:guduchi ayurveda:hasRasa ayurveda:tikta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:guduchi ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Maricha ──
+
+<< ayurveda:maricha ayurveda:hasRasa ayurveda:katu >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:maricha ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-sushruta ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Shunthi ──
+
+<< ayurveda:shunthi ayurveda:hasRasa ayurveda:katu >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:shunthi ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Tulasi ──
+
+<< ayurveda:tulasi ayurveda:hasRasa ayurveda:katu >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:tulasi ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+# ── Brahmi ──
+
+<< ayurveda:brahmi ayurveda:hasRasa ayurveda:tikta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:brahmi ayurveda:hasVeerya ayurveda:sheeta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Shatavari ──
+
+<< ayurveda:shatavari ayurveda:hasRasa ayurveda:madhura >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:shatavari ayurveda:hasVeerya ayurveda:sheeta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+# ── Yashtimadhu ──
+
+<< ayurveda:yashtimadhu ayurveda:hasRasa ayurveda:madhura >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:yashtimadhu ayurveda:hasVeerya ayurveda:sheeta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Nimba ──
+
+<< ayurveda:nimba ayurveda:hasRasa ayurveda:tikta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-sushruta ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:nimba ayurveda:hasVeerya ayurveda:sheeta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Guggulu — rasa disagreement ──
+# Charaka: primarily tikta (bitter) and katu (pungent)
+# Sushruta: adds kashaya (astringent) as dominant rasa
+
+<< ayurveda:guggulu ayurveda:hasRasa ayurveda:tikta >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:guggulu ayurveda:hasRasa ayurveda:kashaya >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-sushruta ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .
+
+<< ayurveda:guggulu ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-sushruta ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ── Eranda ──
+
+<< ayurveda:eranda ayurveda:hasRasa ayurveda:madhura >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< ayurveda:eranda ayurveda:hasVeerya ayurveda:ushna >>
+    vidya:assertedBy [
+        vidya:tradition  ayurveda:tradition-atreya ;
+        vidya:source     ayurveda:source-charaka ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] ,
+    [
+        vidya:tradition  ayurveda:tradition-dhanvantari ;
+        vidya:source     ayurveda:source-bhavaprakasha ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.9"^^xsd:float
+    ] .

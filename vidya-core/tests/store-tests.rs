@@ -697,3 +697,157 @@ fn describe_with_mismatching_filter_excludes_unmatched_facts() {
     assert!(result.properties.is_empty(), "filtered describe should exclude unmatched properties");
     assert!(result.annotated_triples.is_empty(), "filtered describe should exclude unmatched annotated triples");
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Ayurveda seed tests
+// ═══════════════════════════════════════════════════════════════════
+
+fn load_ayurveda(store: &KnowledgeStore) {
+    let seed_path = project_root().join("seeds/ayurveda.ttl");
+    store.load_domain_from_file("ayurveda", &seed_path).unwrap();
+}
+
+#[test]
+fn load_ayurveda_seed() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+    assert!(store.triple_count().unwrap() > 100);
+}
+
+#[test]
+fn search_all_dravyas() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let result = store
+        .search("ayurveda", "Dravya", &[], &ProvenanceFilter::default())
+        .unwrap();
+    assert_eq!(result.entities.len(), 15);
+}
+
+#[test]
+fn describe_ashwagandha() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let result = store
+        .describe("ayurveda", "ashwagandha", &ProvenanceFilter::default())
+        .unwrap();
+
+    assert_eq!(result.label.as_deref(), Some("ashwagandha"));
+    assert!(result.types.iter().any(|t| t.contains("Dravya")));
+
+    let rasa_props: Vec<_> = result
+        .properties
+        .iter()
+        .filter(|p| p.predicate.contains("hasRasa"))
+        .collect();
+    assert!(!rasa_props.is_empty(), "ashwagandha should have rasa properties");
+
+    assert!(!result.annotated_triples.is_empty());
+    let veerya = result
+        .annotated_triples
+        .iter()
+        .find(|at| at.predicate.contains("hasVeerya"))
+        .expect("should have hasVeerya annotated triple");
+    assert!(veerya.object.contains("ushna"));
+    assert!(!veerya.provenance.is_empty());
+}
+
+#[test]
+fn describe_multi_provenance() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let result = store
+        .describe("ayurveda", "ashwagandha", &ProvenanceFilter::default())
+        .unwrap();
+
+    let veerya = result
+        .annotated_triples
+        .iter()
+        .find(|at| at.predicate.contains("hasVeerya") && at.object.contains("ushna"))
+        .expect("should have hasVeerya ushna");
+
+    assert!(
+        veerya.provenance.len() >= 2,
+        "ashwagandha hasVeerya ushna should have provenance from both Charaka and Bhavaprakasha, got {}",
+        veerya.provenance.len()
+    );
+
+    let sources: Vec<&str> = veerya.provenance.iter().map(|p| p.source.as_str()).collect();
+    assert!(sources.iter().any(|s| s.contains("charaka")), "should have Charaka source");
+    assert!(sources.iter().any(|s| s.contains("bhavaprakasha")), "should have Bhavaprakasha source");
+}
+
+#[test]
+fn search_dravya_by_dosha_entity_filter() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let result = store
+        .search(
+            "ayurveda",
+            "Dravya",
+            &[("pacifiesDosha".into(), "vata".into())],
+            &ProvenanceFilter::default(),
+        )
+        .unwrap();
+
+    let names: Vec<&str> = result.entities.iter().map(|e| e.label.as_str()).collect();
+    assert!(names.contains(&"ashwagandha"), "ashwagandha pacifies vata");
+    assert!(names.contains(&"haritaki"), "haritaki pacifies vata");
+    assert!(result.entities.len() >= 5, "many dravyas pacify vata");
+}
+
+#[test]
+fn search_rasa_aggravates_kapha() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let result = store
+        .search(
+            "ayurveda",
+            "Rasa",
+            &[("aggravatesDosha".into(), "kapha".into())],
+            &ProvenanceFilter::default(),
+        )
+        .unwrap();
+
+    let mut names: Vec<&str> = result.entities.iter().map(|e| e.label.as_str()).collect();
+    names.sort();
+    assert_eq!(names, vec!["amla", "lavana", "madhura"]);
+}
+
+#[test]
+fn provenance_veerya_disagreement() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_ayurveda(&store);
+
+    let result = store
+        .describe("ayurveda", "pippali", &ProvenanceFilter::default())
+        .unwrap();
+
+    let veerya_triples: Vec<_> = result
+        .annotated_triples
+        .iter()
+        .filter(|at| at.predicate.contains("hasVeerya"))
+        .collect();
+
+    assert!(
+        veerya_triples.len() >= 2,
+        "pippali should have at least 2 veerya triples (sheeta from Charaka, ushna from Sushruta), got {}",
+        veerya_triples.len()
+    );
+
+    let sheeta = veerya_triples.iter().find(|at| at.object.contains("sheeta"));
+    let ushna = veerya_triples.iter().find(|at| at.object.contains("ushna"));
+    assert!(sheeta.is_some(), "should have sheeta veerya from Charaka");
+    assert!(ushna.is_some(), "should have ushna veerya from Sushruta/Bhavaprakasha");
+
+    let sheeta_src = &sheeta.unwrap().provenance[0].source;
+    assert!(sheeta_src.contains("charaka"), "sheeta veerya should be from Charaka");
+
+    let ushna_sources: Vec<&str> = ushna.unwrap().provenance.iter().map(|p| p.source.as_str()).collect();
+    assert!(ushna_sources.iter().any(|s| s.contains("sushruta")), "ushna veerya should include Sushruta");
+}
