@@ -31,5 +31,10 @@ vidya:source      a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range vidy
 vidya:pramana     a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range vidya:Pramana .
 vidya:confidence  a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range xsd:float .
 
+# ── Properties: Citation (verse-level provenance within a source) ──
+vidya:sthana      a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range xsd:string .
+vidya:chapter     a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range xsd:integer .
+vidya:verse       a rdf:Property ; rdfs:domain vidya:Assertion ; rdfs:range xsd:integer .
+
 # ── Version marker (must be last — partial loads will miss it) ──
-vidya:BaseOntology  vidya:version "0.2.0" .
+vidya:BaseOntology  vidya:version "0.3.0" .
