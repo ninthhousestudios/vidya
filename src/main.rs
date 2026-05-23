@@ -81,8 +81,8 @@ enum Commands {
         domain: String,
         /// Kind short name (e.g. "Graha", "Rashi").
         kind: String,
-        /// Attribute filters as key=value pairs (e.g. element=fire).
-        #[arg(trailing_var_arg = true)]
+        /// Attribute filter as key=value (repeatable, e.g. -f element=fire).
+        #[arg(short, long = "filter", value_name = "KEY=VALUE")]
         filters: Vec<String>,
         #[arg(long)]
         json: bool,

@@ -103,7 +103,7 @@ vidya describe -d jyotish surya
 
 # Search by type, with optional attribute filters
 vidya search -d jyotish Graha
-vidya search -d jyotish Graha element=fire
+vidya search -d jyotish Graha -f element=fire
 
 # Walk relationships
 vidya traverse -d jyotish surya naturalFriend --depth 2
@@ -124,7 +124,7 @@ Set `VIDYA_DOMAIN` to skip the `-d` flag when working in one domain:
 ```
 export VIDYA_DOMAIN=jyotish
 vidya describe surya
-vidya search Graha element=fire
+vidya search Graha -f element=fire
 ```
 
 ### Store access
