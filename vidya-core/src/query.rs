@@ -241,6 +241,58 @@ fn validate_iri(iri: &str) -> Result<()> {
 }
 
 // ---------------------------------------------------------------------------
+// Alias-aware subject resolution
+// ---------------------------------------------------------------------------
+
+fn resolve_subject(store: &KnowledgeStore, domain: &str, name: &str) -> Result<String> {
+    let direct = ontology::resolve_iri(name, domain);
+    let graph_iri = ontology::domain_graph_iri(domain);
+    validate_iri(&direct)?;
+    validate_iri(&graph_iri)?;
+
+    let exists_q = format!(
+        "ASK {{ GRAPH <{graph_iri}> {{ <{direct}> ?p ?o }} }}"
+    );
+    if ask(store, &exists_q)? {
+        return Ok(direct);
+    }
+
+    let escaped = escape_sparql_string(name);
+    let q = format!(
+        "PREFIX rdfs: <{RDFS}>\n\
+         SELECT ?s WHERE {{\n\
+           GRAPH <{graph_iri}> {{\n\
+             ?s rdfs:label|<{dom}alias>|<{dom}western> ?val .\n\
+             FILTER(LCASE(STR(?val)) = LCASE(\"{escaped}\"))\n\
+           }}\n\
+         }} LIMIT 1",
+        dom = ontology::domain_graph_iri(domain),
+    );
+    let (_vars, rows) = execute_select(store, &q)?;
+    if let Some(row) = rows.first() {
+        if let Some(Some(Term::NamedNode(node))) = row.first() {
+            return Ok(node.as_str().to_string());
+        }
+    }
+
+    Err(VidyaError::NotFound(format!(
+        "{name} not found in domain {domain} (tried IRI and alias lookup)"
+    )))
+}
+
+fn ask(store: &KnowledgeStore, query: &str) -> Result<bool> {
+    match SparqlEvaluator::new()
+        .parse_query(query)
+        .map_err(|e| VidyaError::Internal(e.to_string()))?
+        .on_store(store.inner())
+        .execute()?
+    {
+        QueryResults::Boolean(b) => Ok(b),
+        _ => Err(VidyaError::Internal("expected ASK result".into())),
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Query execution helper
 // ---------------------------------------------------------------------------
 
@@ -326,13 +378,13 @@ pub fn provenance(
     object: &str,
     filter: &ProvenanceFilter,
 ) -> Result<ProvenanceResult> {
-    let subject_iri = ontology::resolve_iri(subject, domain);
+    let subject_iri = resolve_subject(store, domain, subject)?;
     let pred_iri = ontology::resolve_iri(predicate, domain);
     let graph_iri = ontology::domain_graph_iri(domain);
-    validate_iri(&subject_iri)?;
     validate_iri(&pred_iri)?;
     validate_iri(&graph_iri)?;
-    let obj_iri_raw = ontology::resolve_iri(object, domain);
+    let obj_iri_raw = resolve_subject(store, domain, object)
+        .unwrap_or_else(|_| ontology::resolve_iri(object, domain));
     let obj_iri_valid = validate_iri(&obj_iri_raw).is_ok();
     let obj_lit = object_as_literal(object);
 
@@ -408,10 +460,9 @@ pub fn traverse(
         )));
     }
 
-    let subject_iri = ontology::resolve_iri(subject, domain);
+    let subject_iri = resolve_subject(store, domain, subject)?;
     let pred_iri = ontology::resolve_iri(predicate, domain);
     let graph_iri = ontology::domain_graph_iri(domain);
-    validate_iri(&subject_iri)?;
     validate_iri(&pred_iri)?;
     validate_iri(&graph_iri)?;
 
@@ -495,10 +546,8 @@ pub fn traverse(
 // ---------------------------------------------------------------------------
 
 pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &ProvenanceFilter) -> Result<DescribeResult> {
-    let subject_iri = ontology::resolve_iri(subject, domain);
+    let subject_iri = resolve_subject(store, domain, subject)?;
     let graph_iri = ontology::domain_graph_iri(domain);
-    validate_iri(&subject_iri)?;
-    validate_iri(&graph_iri)?;
 
     // Query 1: all regular triples about the subject
     let mut b = SparqlBuilder::new();
