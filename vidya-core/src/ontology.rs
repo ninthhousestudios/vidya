@@ -1,6 +1,6 @@
 pub const VIDYA_BASE: &str = "http://vidya.ninthhouse.studio/ontology/";
 pub const DOMAIN_BASE: &str = "http://vidya.ninthhouse.studio/domain/";
-pub const BASE_ONTOLOGY_VERSION: &str = "0.2.0";
+pub const BASE_ONTOLOGY_VERSION: &str = "0.3.0";
 pub const EXPECTED_PRAMANA_COUNT: i64 = 6;
 
 pub const VIDYA_TTL: &str = include_str!("../../ontology/vidya.ttl");
