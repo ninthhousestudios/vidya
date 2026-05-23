@@ -73,8 +73,65 @@ seed file.
 
 - **vidya-core** — library crate: `KnowledgeStore`, query engine,
   ontology loading. Embeddable by other Rust projects.
-- **vidya** — binary crate: MCP server over Streamable HTTP with
+- **vidya** — binary crate: CLI + MCP server over Streamable HTTP with
   auth-token gating.
+
+## CLI
+
+The CLI lets humans (and agents via shell) query the knowledge graph
+directly without an MCP server running.
+
+### Loading domains
+
+```
+vidya load jyotish seeds/jyotish.ttl
+vidya load ayurveda seeds/ayurveda.ttl
+vidya domains
+```
+
+Domains persist in the Oxigraph store (`~/.vidya/store/`). Load once,
+query indefinitely.
+
+### Querying
+
+All query commands take `-d <domain>` or read from the `VIDYA_DOMAIN`
+env var. Add `--json` for machine-readable output.
+
+```
+# Describe an entity — properties and provenance
+vidya describe -d jyotish surya
+
+# Search by type, with optional attribute filters
+vidya search -d jyotish Graha
+vidya search -d jyotish Graha element=fire
+
+# Walk relationships
+vidya traverse -d jyotish surya naturalFriend --depth 2
+
+# Epistemological metadata for a specific triple
+vidya provenance -d jyotish surya exaltedIn mesha
+```
+
+Cross-cutting filters narrow results by tradition or pramana:
+
+```
+vidya search -d jyotish Graha --tradition tradition-bphs
+vidya describe -d jyotish surya --pramana vidya:shabda
+```
+
+Set `VIDYA_DOMAIN` to skip the `-d` flag when working in one domain:
+
+```
+export VIDYA_DOMAIN=jyotish
+vidya describe surya
+vidya search Graha element=fire
+```
+
+### Store access
+
+Query commands open the store read-only, so they work while the systemd
+service holds the write lock. Only `vidya load` requires exclusive
+(read-write) access — stop the service first if it's running.
 
 ## MCP tools
 
@@ -116,7 +173,7 @@ Provenance, multi-tradition perspectives, confidence-weighted assertions.
 
 It is not a good fit for:
 - Procedural rules (computational transformations, grammar engines)
-- General-purpose notes or personal knowledge (that's chitta)
+- General-purpose notes or personal knowledge (that's kosha, maybe)
 - Data that changes frequently (the seed model is batch-oriented)
 
 ## Deployment

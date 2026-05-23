@@ -5,10 +5,11 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use rmcp::{ServiceExt, transport::stdio};
 use tracing_subscriber::EnvFilter;
-use vidya_core::KnowledgeStore;
+use vidya_core::{KnowledgeStore, ProvenanceFilter};
 
 use vidya::{
     config::{Config, vidya_home},
+    format,
     mcp::VidyaServer,
 };
 
@@ -49,6 +50,83 @@ enum Commands {
         /// Enable and start the service after installing.
         #[arg(long)]
         enable: bool,
+    },
+    /// Load a domain from a Turtle (.ttl) file.
+    Load {
+        /// Domain name (e.g. "jyotish").
+        domain: String,
+        /// Path to .ttl file.
+        file: PathBuf,
+    },
+    /// List loaded domains.
+    Domains,
+    /// Describe an entity — all properties and provenance.
+    Describe {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        /// Subject short name (e.g. "surya").
+        subject: String,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        tradition: Option<String>,
+        #[arg(long)]
+        pramana: Option<String>,
+    },
+    /// Search entities by type.
+    Search {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        /// Kind short name (e.g. "Graha", "Rashi").
+        kind: String,
+        /// Attribute filters as key=value pairs (e.g. element=fire).
+        #[arg(trailing_var_arg = true)]
+        filters: Vec<String>,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        tradition: Option<String>,
+        #[arg(long)]
+        pramana: Option<String>,
+    },
+    /// Walk relationships from an entity.
+    Traverse {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        /// Subject short name.
+        subject: String,
+        /// Predicate short name (e.g. "naturalFriend").
+        predicate: String,
+        /// Max traversal depth (default 1, max 10).
+        #[arg(long, default_value_t = 1)]
+        depth: u32,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        tradition: Option<String>,
+        #[arg(long)]
+        pramana: Option<String>,
+    },
+    /// Show epistemological metadata for a specific triple.
+    Provenance {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        /// Subject short name.
+        subject: String,
+        /// Predicate short name.
+        predicate: String,
+        /// Object short name or literal.
+        object: String,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        tradition: Option<String>,
+        #[arg(long)]
+        pramana: Option<String>,
     },
 }
 
@@ -95,7 +173,178 @@ async fn main() -> Result<()> {
             }
         }
         Commands::InstallServices { enable } => cmd_install_services(enable),
+        Commands::Load { domain, file } => cmd_load(&domain, &file),
+        Commands::Domains => cmd_domains(),
+        Commands::Describe {
+            domain,
+            subject,
+            json,
+            tradition,
+            pramana,
+        } => cmd_describe(&domain, &subject, json, tradition, pramana),
+        Commands::Search {
+            domain,
+            kind,
+            filters,
+            json,
+            tradition,
+            pramana,
+        } => cmd_search(&domain, &kind, &filters, json, tradition, pramana),
+        Commands::Traverse {
+            domain,
+            subject,
+            predicate,
+            depth,
+            json,
+            tradition,
+            pramana,
+        } => cmd_traverse(&domain, &subject, &predicate, depth, json, tradition, pramana),
+        Commands::Provenance {
+            domain,
+            subject,
+            predicate,
+            object,
+            json,
+            tradition,
+            pramana,
+        } => cmd_provenance(&domain, &subject, &predicate, &object, json, tradition, pramana),
     }
+}
+
+fn open_store_ro() -> Result<KnowledgeStore> {
+    let cfg = Config::from_env();
+    KnowledgeStore::open_read_only(&cfg.store_path)
+        .map_err(|e| anyhow::anyhow!("{e}"))
+        .context("opening knowledge store (read-only)")
+}
+
+fn open_store_rw() -> Result<KnowledgeStore> {
+    let cfg = Config::from_env();
+    std::fs::create_dir_all(&cfg.store_path)
+        .with_context(|| format!("creating store directory {}", cfg.store_path.display()))?;
+    KnowledgeStore::open(&cfg.store_path)
+        .map_err(|e| anyhow::anyhow!("{e}"))
+        .context("opening knowledge store")
+}
+
+fn prov_filter(tradition: Option<String>, pramana: Option<String>) -> ProvenanceFilter {
+    ProvenanceFilter {
+        tradition,
+        pramana,
+    }
+}
+
+fn cmd_load(domain: &str, file: &PathBuf) -> Result<()> {
+    let store = open_store_rw()?;
+    store
+        .load_domain_from_file(domain, file)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let count = store.triple_count().map_err(|e| anyhow::anyhow!("{e}"))?;
+    println!("loaded {domain} ({count} triples total)");
+    Ok(())
+}
+
+fn cmd_domains() -> Result<()> {
+    let store = open_store_ro()?;
+    let domains = store.domains();
+    if domains.is_empty() {
+        println!("(no domains loaded)");
+    } else {
+        for d in domains {
+            println!("{d}");
+        }
+    }
+    Ok(())
+}
+
+fn cmd_describe(
+    domain: &str,
+    subject: &str,
+    json: bool,
+    tradition: Option<String>,
+    pramana: Option<String>,
+) -> Result<()> {
+    let store = open_store_ro()?;
+    let result = store
+        .describe(domain, subject, &prov_filter(tradition, pramana))
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    if json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
+    } else {
+        print!("{}", format::fmt_describe(&result));
+    }
+    Ok(())
+}
+
+fn cmd_search(
+    domain: &str,
+    kind: &str,
+    filters: &[String],
+    json: bool,
+    tradition: Option<String>,
+    pramana: Option<String>,
+) -> Result<()> {
+    let store = open_store_ro()?;
+    let parsed: Vec<(String, String)> = filters
+        .iter()
+        .map(|f| {
+            let (k, v) = f
+                .split_once('=')
+                .ok_or_else(|| anyhow::anyhow!("filter must be key=value, got: {f}"))?;
+            Ok((k.to_string(), v.to_string()))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let result = store
+        .search(domain, kind, &parsed, &prov_filter(tradition, pramana))
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    if json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
+    } else {
+        print!("{}", format::fmt_search(&result));
+    }
+    Ok(())
+}
+
+fn cmd_traverse(
+    domain: &str,
+    subject: &str,
+    predicate: &str,
+    depth: u32,
+    json: bool,
+    tradition: Option<String>,
+    pramana: Option<String>,
+) -> Result<()> {
+    let store = open_store_ro()?;
+    let result = store
+        .traverse(domain, subject, predicate, depth, &prov_filter(tradition, pramana))
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    if json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
+    } else {
+        print!("{}", format::fmt_traverse(&result));
+    }
+    Ok(())
+}
+
+fn cmd_provenance(
+    domain: &str,
+    subject: &str,
+    predicate: &str,
+    object: &str,
+    json: bool,
+    tradition: Option<String>,
+    pramana: Option<String>,
+) -> Result<()> {
+    let store = open_store_ro()?;
+    let result = store
+        .provenance(domain, subject, predicate, object, &prov_filter(tradition, pramana))
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    if json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
+    } else {
+        print!("{}", format::fmt_provenance(&result));
+    }
+    Ok(())
 }
 
 async fn serve_stdio(store: Arc<KnowledgeStore>) -> Result<()> {
