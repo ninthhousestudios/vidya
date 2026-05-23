@@ -36,4 +36,4 @@ tokio-util = { version = "0.7", features = ["rt"] }
 anyhow = "1"
 
 [dev-dependencies]
-oxigraph = { version = "0.5", features = ["rocksdb", "rdf-12"] }
+oxigraph = { version = "=0.5.8", features = ["rocksdb", "rdf-12"] }
