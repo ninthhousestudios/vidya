@@ -227,10 +227,10 @@ fn open_store_rw() -> Result<KnowledgeStore> {
         .context("opening knowledge store")
 }
 
-fn prov_filter(tradition: Option<String>, pramana: Option<String>) -> ProvenanceFilter {
+fn prov_filter(domain: &str, tradition: Option<String>, pramana: Option<String>) -> ProvenanceFilter {
     ProvenanceFilter {
-        tradition,
-        pramana,
+        tradition: tradition.map(|t| vidya_core::ontology::resolve_iri(&t, domain)),
+        pramana: pramana.map(|p| vidya_core::ontology::resolve_iri(&p, domain)),
     }
 }
 
@@ -266,7 +266,7 @@ fn cmd_describe(
 ) -> Result<()> {
     let store = open_store_ro()?;
     let result = store
-        .describe(domain, subject, &prov_filter(tradition, pramana))
+        .describe(domain, subject, &prov_filter(domain, tradition, pramana))
         .map_err(|e| anyhow::anyhow!("{e}"))?;
     if json {
         println!("{}", serde_json::to_string_pretty(&result)?);
@@ -295,7 +295,7 @@ fn cmd_search(
         })
         .collect::<Result<Vec<_>>>()?;
     let result = store
-        .search(domain, kind, &parsed, &prov_filter(tradition, pramana))
+        .search(domain, kind, &parsed, &prov_filter(domain, tradition, pramana))
         .map_err(|e| anyhow::anyhow!("{e}"))?;
     if json {
         println!("{}", serde_json::to_string_pretty(&result)?);
@@ -316,7 +316,7 @@ fn cmd_traverse(
 ) -> Result<()> {
     let store = open_store_ro()?;
     let result = store
-        .traverse(domain, subject, predicate, depth, &prov_filter(tradition, pramana))
+        .traverse(domain, subject, predicate, depth, &prov_filter(domain, tradition, pramana))
         .map_err(|e| anyhow::anyhow!("{e}"))?;
     if json {
         println!("{}", serde_json::to_string_pretty(&result)?);
@@ -337,7 +337,7 @@ fn cmd_provenance(
 ) -> Result<()> {
     let store = open_store_ro()?;
     let result = store
-        .provenance(domain, subject, predicate, object, &prov_filter(tradition, pramana))
+        .provenance(domain, subject, predicate, object, &prov_filter(domain, tradition, pramana))
         .map_err(|e| anyhow::anyhow!("{e}"))?;
     if json {
         println!("{}", serde_json::to_string_pretty(&result)?);
