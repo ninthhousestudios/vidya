@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use vidya_core::KnowledgeStore;
+use vidya_core::resolve;
 
 use crate::error::to_error_data;
 
@@ -22,6 +23,18 @@ impl VidyaServer {
             store,
             tool_router: Self::tool_router(),
         }
+    }
+
+    fn nl_resolve(
+        &self,
+        domain: &str,
+        mode: vidya_core::QueryMode,
+        input: &str,
+    ) -> Result<vidya_core::ResolutionReport, ErrorData> {
+        let vocab = resolve::build_vocab(&self.store, domain);
+        let vsa = resolve::build_vsa(&self.store, domain);
+        resolve::resolve(mode, input, &vocab, Some(&vsa), domain)
+            .map_err(|e| ErrorData::invalid_params(e.to_string(), None))
     }
 }
 
@@ -102,6 +115,17 @@ pub enum QueryMode {
     Provenance,
 }
 
+impl QueryMode {
+    fn to_core(self) -> vidya_core::QueryMode {
+        match self {
+            QueryMode::Describe => vidya_core::QueryMode::Describe,
+            QueryMode::Search => vidya_core::QueryMode::Search,
+            QueryMode::Traverse => vidya_core::QueryMode::Traverse,
+            QueryMode::Provenance => vidya_core::QueryMode::Provenance,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct QueryArgs {
     /// Query mode
@@ -159,7 +183,7 @@ impl VidyaServer {
     }
 
     #[tool(
-        description = "Query the knowledge graph. Modes: 'describe' (subject) returns all properties and provenance; 'search' (kind, filters) finds entities; 'traverse' (subject, predicate, depth) walks relationships; 'provenance' (subject, predicate, object) returns epistemological metadata. Optional cross-cutting filters: 'tradition' and 'pramana' scope any mode to matching assertions."
+        description = "Query the knowledge graph. Modes: 'describe' (subject) returns all properties and provenance; 'search' (kind, filters) finds entities; 'traverse' (subject, predicate, depth) walks relationships; 'provenance' (subject, predicate, object) returns epistemological metadata. Optional cross-cutting filters: 'tradition' and 'pramana' scope any mode to matching assertions. Names can be exact domain terms or natural-language aliases (e.g. 'mars' resolves to 'mangala')."
     )]
     pub async fn vidya_query(
         &self,
@@ -176,32 +200,57 @@ impl VidyaServer {
                 .map(|p| vidya_core::ontology::resolve_iri(p, &args.domain)),
         };
 
-        match args.mode {
-            QueryMode::Describe => {
+        let core_mode = args.mode.to_core();
+
+        match core_mode {
+            vidya_core::QueryMode::Describe => {
                 let subject = args.subject.ok_or_else(|| {
                     ErrorData::invalid_params("'subject' is required for describe mode", None)
                 })?;
-                let result = self
-                    .store
-                    .describe(&args.domain, &subject, &prov_filter)
-                    .map_err(to_error_data)?;
-                serde_json::to_string_pretty(&result)
-                    .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+                match self.store.describe(&args.domain, &subject, &prov_filter) {
+                    Ok(result) => return json_out(&result),
+                    Err(vidya_core::VidyaError::NotFound(_)) => {}
+                    Err(e) => return Err(to_error_data(e)),
+                }
+                let report = self.nl_resolve(&args.domain, core_mode, &subject)?;
+                match report.query {
+                    vidya_core::ResolvedQuery::Describe { ref subject_iri } => {
+                        let result = self.store
+                            .describe(&args.domain, &iri_local(subject_iri), &prov_filter)
+                            .map_err(to_error_data)?;
+                        json_out_resolved(&result, &report)
+                    }
+                    _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
+                }
             }
-            QueryMode::Search => {
+            vidya_core::QueryMode::Search => {
                 let kind = args.kind.ok_or_else(|| {
                     ErrorData::invalid_params("'kind' is required for search mode", None)
                 })?;
                 let filters: Vec<(String, String)> =
                     args.filters.unwrap_or_default().into_iter().collect();
-                let result = self
-                    .store
-                    .search(&args.domain, &kind, &filters, &prov_filter)
-                    .map_err(to_error_data)?;
-                serde_json::to_string_pretty(&result)
-                    .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+                match self.store.search(&args.domain, &kind, &filters, &prov_filter) {
+                    Ok(result) => return json_out(&result),
+                    Err(vidya_core::VidyaError::NotFound(_) | vidya_core::VidyaError::InvalidArgument(_)) => {}
+                    Err(e) => return Err(to_error_data(e)),
+                }
+                let mut nl_input = kind;
+                for (_, v) in &filters {
+                    nl_input.push(' ');
+                    nl_input.push_str(v);
+                }
+                let report = self.nl_resolve(&args.domain, core_mode, &nl_input)?;
+                match report.query {
+                    vidya_core::ResolvedQuery::Search { ref type_iri, ref filters } => {
+                        let result = self.store
+                            .search(&args.domain, &iri_local(type_iri), filters, &prov_filter)
+                            .map_err(to_error_data)?;
+                        json_out_resolved(&result, &report)
+                    }
+                    _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
+                }
             }
-            QueryMode::Traverse => {
+            vidya_core::QueryMode::Traverse => {
                 let subject = args.subject.ok_or_else(|| {
                     ErrorData::invalid_params("'subject' is required for traverse mode", None)
                 })?;
@@ -209,14 +258,24 @@ impl VidyaServer {
                     ErrorData::invalid_params("'predicate' is required for traverse mode", None)
                 })?;
                 let depth = args.depth.unwrap_or(1);
-                let result = self
-                    .store
-                    .traverse(&args.domain, &subject, &predicate, depth, &prov_filter)
-                    .map_err(to_error_data)?;
-                serde_json::to_string_pretty(&result)
-                    .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+                match self.store.traverse(&args.domain, &subject, &predicate, depth, &prov_filter) {
+                    Ok(result) => return json_out(&result),
+                    Err(vidya_core::VidyaError::NotFound(_)) => {}
+                    Err(e) => return Err(to_error_data(e)),
+                }
+                let nl_input = format!("{subject} {predicate}");
+                let report = self.nl_resolve(&args.domain, core_mode, &nl_input)?;
+                match report.query {
+                    vidya_core::ResolvedQuery::Traverse { ref subject_iri, ref predicate_iri } => {
+                        let result = self.store
+                            .traverse(&args.domain, &iri_local(subject_iri), &iri_local(predicate_iri), depth, &prov_filter)
+                            .map_err(to_error_data)?;
+                        json_out_resolved(&result, &report)
+                    }
+                    _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
+                }
             }
-            QueryMode::Provenance => {
+            vidya_core::QueryMode::Provenance => {
                 let subject = args.subject.ok_or_else(|| {
                     ErrorData::invalid_params("'subject' is required for provenance mode", None)
                 })?;
@@ -226,18 +285,23 @@ impl VidyaServer {
                 let object = args.object.ok_or_else(|| {
                     ErrorData::invalid_params("'object' is required for provenance mode", None)
                 })?;
-                let result = self
-                    .store
-                    .provenance(
-                        &args.domain,
-                        &subject,
-                        &predicate,
-                        &object,
-                        &prov_filter,
-                    )
-                    .map_err(to_error_data)?;
-                serde_json::to_string_pretty(&result)
-                    .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+                match self.store.provenance(&args.domain, &subject, &predicate, &object, &prov_filter) {
+                    Ok(result) => return json_out(&result),
+                    Err(vidya_core::VidyaError::NotFound(_)) => {}
+                    Err(e) => return Err(to_error_data(e)),
+                }
+                let nl_input = format!("{subject} {predicate} {object}");
+                let report = self.nl_resolve(&args.domain, core_mode, &nl_input)?;
+                match report.query {
+                    vidya_core::ResolvedQuery::Provenance { ref subject_iri, ref predicate_iri, ref object, object_is_literal } => {
+                        let obj = if object_is_literal { object.clone() } else { iri_local(object) };
+                        let result = self.store
+                            .provenance(&args.domain, &iri_local(subject_iri), &iri_local(predicate_iri), &obj, &prov_filter)
+                            .map_err(to_error_data)?;
+                        json_out_resolved(&result, &report)
+                    }
+                    _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
+                }
             }
         }
     }
@@ -316,6 +380,31 @@ impl VidyaServer {
         serde_json::to_string_pretty(&out)
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))
     }
+}
+
+fn json_out<T: serde::Serialize>(result: &T) -> Result<String, ErrorData> {
+    serde_json::to_string_pretty(result)
+        .map_err(|e| ErrorData::internal_error(e.to_string(), None))
+}
+
+fn json_out_resolved<T: serde::Serialize>(
+    result: &T,
+    report: &vidya_core::ResolutionReport,
+) -> Result<String, ErrorData> {
+    let json = serde_json::to_string_pretty(result)
+        .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
+    let mut out = format!("[resolved: {}]\n", report.resolution_details.join(", "));
+    if !report.unknown_tokens.is_empty() {
+        out.push_str(&format!("[unrecognized: {}]\n", report.unknown_tokens.join(", ")));
+    }
+    out.push_str(&json);
+    Ok(out)
+}
+
+fn iri_local(iri: &str) -> String {
+    iri.rsplit_once('/')
+        .map(|(_, local)| local.to_string())
+        .unwrap_or_else(|| iri.to_string())
 }
 
 #[tool_handler(router = self.tool_router)]
