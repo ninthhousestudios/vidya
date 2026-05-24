@@ -69,6 +69,23 @@ The base ontology (`ontology/vidya.ttl`) defines cross-domain concepts:
 Domain-specific classes and properties are declared in each domain's
 seed file.
 
+### Natural language resolution
+
+When a query doesn't match an exact entity name, vidya falls back to NL
+resolution. It builds a vocabulary index from the loaded domain
+(entity names, aliases, labels, type names, predicates, property values)
+and matches input tokens through a cascade: exact match, substring,
+edit distance, then VSA similarity.
+
+The VSA (Vector Symbolic Architecture) layer uses Holographic Reduced
+Representations (HRR) to encode each entity as a high-dimensional
+vector composed from its relationships. This enables fuzzy matching
+based on structural similarity — two entities with overlapping
+properties will have similar vectors even if their names are unrelated.
+
+The vocabulary and VSA index are cached per domain and invalidated
+automatically when domain data is reloaded.
+
 ### Crate structure
 
 - **vidya-core** — library crate: `KnowledgeStore`, query engine,
@@ -127,6 +144,36 @@ vidya describe surya
 vidya search Graha -f element=fire
 ```
 
+### Natural language resolution
+
+All query commands accept natural language input as a fallback. Exact
+names and structured flags always work as before — NL resolution only
+activates when the structured path returns NotFound.
+
+```
+# Western names resolve to domain entities
+vidya describe -d jyotish mars        # → mangala
+vidya traverse -d jyotish sun rules   # → surya rules
+
+# Free-text search with type + filter
+vidya search -d jyotish "fire graha"      # → element=fire filter on Graha
+vidya search -d jyotish "malefic graha"   # → nature=malefic filter on Graha
+
+# Typo correction
+vidya describe -d jyotish mangla      # → mangala (edit distance 1)
+```
+
+When NL resolution activates, vidya prints what it resolved to stderr:
+
+```
+  resolved: subject: mangala
+```
+
+Resolution uses a four-stage cascade: exact match, substring match,
+edit distance, then VSA similarity. See
+[docs/natural-language-queries.md](docs/natural-language-queries.md) for
+the full set of examples and limitations.
+
 ### Store access
 
 Query commands open the store read-only, so they work while the systemd
@@ -139,11 +186,30 @@ service holds the write lock. Only `vidya load` requires exclusive
 |------|---------|
 | `vidya_health` | Status, triple count, loaded domains |
 | `vidya_load` | Load a domain from inline Turtle or a `.ttl` file path |
-| `vidya_query` | Query in four modes: **describe** (entity profile), **search** (find by kind + filters), **traverse** (walk relationships), **provenance** (epistemological metadata for a triple) |
+| `vidya_query` | Query in four modes: **describe** (entity profile), **search** (find by kind + filters), **traverse** (walk relationships), **provenance** (epistemological metadata for a triple). Names can be exact domain terms or natural-language aliases. |
 | `vidya_assert` | Assert a single triple with required provenance |
 
 Cross-cutting filters on `tradition` and `pramana` apply to all query
 modes.
+
+### Response format
+
+`vidya_query` returns a JSON envelope:
+
+```json
+{
+  "result": { ... },
+  "resolution": {
+    "details": ["subject: mangala"],
+    "unknown_tokens": []
+  }
+}
+```
+
+The `result` field contains the query data. The `resolution` field is
+present only when NL fallback was used — exact-hit responses omit it.
+This gives clients a consistent shape to parse regardless of whether
+resolution was needed.
 
 ## Domains
 
@@ -158,12 +224,12 @@ The jyotish seed (`seeds/jyotish.ttl`, ~1,029 triples) covers:
 - RDF-star provenance on all relational claims, including contested
   assertions (e.g. Rahu/Ketu dignities at confidence 0.7)
 
-### Ayurveda — planned
+### Ayurveda — active
 
-Dravyaguna (pharmacology) from Bhavaprakasha Nighantu as the next
-domain. Substances with rasa, guna, veerya, vipaka, karma properties
-sourced from Charaka, Sushruta, and Bhavaprakasha — especially where
-they diverge.
+Dravyaguna (pharmacology) covering substances with rasa, guna, veerya,
+vipaka, karma properties sourced from Charaka, Sushruta, and
+Bhavaprakasha — especially where they diverge. Seed data in
+`seeds/ayurveda.ttl`.
 
 ## What fits in vidya (and what doesn't)
 
