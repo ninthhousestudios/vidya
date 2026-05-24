@@ -427,9 +427,8 @@ fn nl_resolve(
     mode: QueryMode,
     input: &str,
 ) -> Result<vidya_core::ResolutionReport> {
-    let vocab = resolve::build_vocab(store, domain);
-    let vsa = resolve::build_vsa(store, domain);
-    let report = resolve::resolve(mode, input, &vocab, Some(&vsa), domain)
+    let ctx = store.resolve_context(domain);
+    let report = resolve::resolve(mode, input, &ctx.vocab, Some(&ctx.vsa), domain)
         .map_err(|e| anyhow::anyhow!("{e}"))?;
     eprintln!("  resolved: {}", report.resolution_details.join(", "));
     if !report.unknown_tokens.is_empty() {

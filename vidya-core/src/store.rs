@@ -2,31 +2,41 @@ use oxigraph::io::{RdfFormat, RdfParser};
 use oxigraph::model::NamedNodeRef;
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
+use std::collections::HashMap;
 use std::path::Path;
+use std::sync::{Arc, RwLock};
 
 use crate::error::{Result, VidyaError};
 use crate::ontology;
+use crate::resolve::SchemaVocab;
+use crate::vsa::{EntityIndex, Hrr};
+
+pub struct ResolveContext {
+    pub vocab: SchemaVocab,
+    pub vsa: EntityIndex<Hrr>,
+}
 
 pub struct KnowledgeStore {
     store: Store,
+    resolve_cache: RwLock<HashMap<String, Arc<ResolveContext>>>,
 }
 
 impl KnowledgeStore {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let store = Store::open(path)?;
-        let ks = Self { store };
+        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()) };
         ks.ensure_base_ontology()?;
         Ok(ks)
     }
 
     pub fn open_read_only(path: impl AsRef<Path>) -> Result<Self> {
         let store = Store::open_read_only(path)?;
-        Ok(Self { store })
+        Ok(Self { store, resolve_cache: RwLock::new(HashMap::new()) })
     }
 
     pub fn new_memory() -> Result<Self> {
         let store = Store::new()?;
-        let ks = Self { store };
+        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()) };
         ks.ensure_base_ontology()?;
         Ok(ks)
     }
@@ -112,6 +122,17 @@ impl KnowledgeStore {
             .collect()
     }
 
+    pub fn resolve_context(&self, domain: &str) -> Arc<ResolveContext> {
+        if let Some(ctx) = self.resolve_cache.read().unwrap().get(domain) {
+            return ctx.clone();
+        }
+        let vocab = SchemaVocab::build(&self.store, domain);
+        let vsa = EntityIndex::build(Hrr::new(1024), &self.store, domain);
+        let ctx = Arc::new(ResolveContext { vocab, vsa });
+        self.resolve_cache.write().unwrap().insert(domain.to_string(), ctx.clone());
+        ctx
+    }
+
     pub fn load_domain(&self, name: &str, turtle: &str) -> Result<()> {
         let graph_iri = ontology::domain_graph_iri(name);
         let graph = NamedNodeRef::new(&graph_iri)
@@ -120,6 +141,7 @@ impl KnowledgeStore {
             .with_default_graph(graph)
             .without_named_graphs();
         self.store.load_from_reader(parser, turtle.as_bytes())?;
+        self.resolve_cache.write().unwrap().remove(name);
         tracing::info!(
             domain = name,
             triples = self.store.len().unwrap_or(0),

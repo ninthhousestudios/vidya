@@ -31,9 +31,8 @@ impl VidyaServer {
         mode: vidya_core::QueryMode,
         input: &str,
     ) -> Result<vidya_core::ResolutionReport, ErrorData> {
-        let vocab = resolve::build_vocab(&self.store, domain);
-        let vsa = resolve::build_vsa(&self.store, domain);
-        resolve::resolve(mode, input, &vocab, Some(&vsa), domain)
+        let ctx = self.store.resolve_context(domain);
+        resolve::resolve(mode, input, &ctx.vocab, Some(&ctx.vsa), domain)
             .map_err(|e| ErrorData::invalid_params(e.to_string(), None))
     }
 }
