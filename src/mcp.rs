@@ -126,6 +126,12 @@ impl QueryMode {
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct VocabArgs {
+    /// Domain name (e.g. "jyotish", "ayurveda")
+    pub domain: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct QueryArgs {
     /// Query mode
     pub mode: QueryMode,
@@ -303,6 +309,17 @@ impl VidyaServer {
                 }
             }
         }
+    }
+
+    #[tool(
+        description = "List the vocabulary tokens the NL resolver knows for a domain: entity names/aliases, type names, predicate names, and property values with their filter keys. Use this to discover what natural-language queries will work."
+    )]
+    pub async fn vidya_vocab(
+        &self,
+        Parameters(args): Parameters<VocabArgs>,
+    ) -> Result<String, ErrorData> {
+        let result = vidya_core::query::vocab(&self.store, &args.domain);
+        json_out(result)
     }
 
     #[tool(

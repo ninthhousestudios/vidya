@@ -111,6 +111,14 @@ enum Commands {
         #[arg(long)]
         pramana: Option<String>,
     },
+    /// List vocabulary tokens the NL resolver knows for a domain.
+    Vocab {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        #[arg(long)]
+        json: bool,
+    },
     /// Show epistemological metadata for a specific triple.
     Provenance {
         /// Domain name (or set VIDYA_DOMAIN).
@@ -176,6 +184,7 @@ async fn main() -> Result<()> {
         Commands::InstallServices { enable } => cmd_install_services(enable),
         Commands::Load { domain, file } => cmd_load(&domain, &file),
         Commands::Domains => cmd_domains(),
+        Commands::Vocab { domain, json } => cmd_vocab(&domain, json),
         Commands::Describe {
             domain,
             subject,
@@ -256,6 +265,12 @@ fn cmd_domains() -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn cmd_vocab(domain: &str, json: bool) -> Result<()> {
+    let store = open_store_ro()?;
+    let result = vidya_core::query::vocab(&store, domain);
+    output(&result, json, format::fmt_vocab)
 }
 
 fn cmd_describe(

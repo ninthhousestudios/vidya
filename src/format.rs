@@ -1,5 +1,5 @@
 use vidya_core::query::{
-    AnnotatedTriple, DescribeResult, ProvenanceResult, SearchResult, TraverseResult,
+    AnnotatedTriple, DescribeResult, ProvenanceResult, SearchResult, TraverseResult, VocabResult,
 };
 
 pub fn fmt_describe(r: &DescribeResult) -> String {
@@ -120,6 +120,62 @@ pub fn fmt_provenance(r: &ProvenanceResult) -> String {
         out.push_str(&format!("  pramana:    {}\n", a.pramana));
         out.push_str(&format!("  confidence: {}\n", a.confidence));
         out.push('\n');
+    }
+
+    out
+}
+
+pub fn fmt_vocab(r: &VocabResult) -> String {
+    let mut out = String::new();
+
+    out.push_str("Types:\n");
+    if r.types.is_empty() {
+        out.push_str("  (none)\n");
+    } else {
+        let max = r.types.iter().map(|t| t.name.len()).max().unwrap_or(0);
+        for t in &r.types {
+            out.push_str(&format!("  {:<w$}  {}\n", t.name, t.iri, w = max));
+        }
+    }
+
+    out.push_str("\nEntities:\n");
+    if r.entities.is_empty() {
+        out.push_str("  (none)\n");
+    } else {
+        let max = r
+            .entities
+            .iter()
+            .map(|e| e.names.join(", ").len())
+            .max()
+            .unwrap_or(0);
+        for e in &r.entities {
+            let names = e.names.join(", ");
+            out.push_str(&format!("  {:<w$}  {}\n", names, e.iri, w = max));
+        }
+    }
+
+    out.push_str("\nPredicates:\n");
+    if r.predicates.is_empty() {
+        out.push_str("  (none)\n");
+    } else {
+        for p in &r.predicates {
+            out.push_str(&format!("  {}\n", p.name));
+        }
+    }
+
+    out.push_str("\nValues (filter keys):\n");
+    if r.values.is_empty() {
+        out.push_str("  (none)\n");
+    } else {
+        let max = r.values.iter().map(|v| v.value.len()).max().unwrap_or(0);
+        for v in &r.values {
+            out.push_str(&format!(
+                "  {:<w$}  \u{2192} {}\n",
+                v.value,
+                v.predicate,
+                w = max
+            ));
+        }
     }
 
     out

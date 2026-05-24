@@ -84,6 +84,32 @@ pub struct ProvenanceFilter {
     pub pramana: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct VocabResult {
+    pub types: Vec<VocabEntry>,
+    pub entities: Vec<VocabEntity>,
+    pub predicates: Vec<VocabEntry>,
+    pub values: Vec<VocabValue>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct VocabEntry {
+    pub name: String,
+    pub iri: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct VocabEntity {
+    pub names: Vec<String>,
+    pub iri: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct VocabValue {
+    pub value: String,
+    pub predicate: String,
+}
+
 const MAX_TRAVERSE_DEPTH: u32 = 10;
 
 // ---------------------------------------------------------------------------
@@ -807,6 +833,69 @@ pub fn search(
         .collect();
 
     Ok(SearchResult { entities })
+}
+
+pub fn vocab(store: &KnowledgeStore, domain: &str) -> VocabResult {
+    let ctx = store.resolve_context(domain);
+    let v = &ctx.vocab;
+
+    let mut types: Vec<VocabEntry> = v
+        .type_names
+        .iter()
+        .map(|(name, iri)| VocabEntry {
+            name: name.clone(),
+            iri: shorten_iri(iri, domain),
+        })
+        .collect();
+    types.sort_by(|a, b| a.name.cmp(&b.name));
+
+    let mut entity_map: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (name, iris) in &v.entity_names {
+        for iri in iris {
+            entity_map
+                .entry(shorten_iri(iri, domain))
+                .or_default()
+                .push(name.clone());
+        }
+    }
+    let entities: Vec<VocabEntity> = entity_map
+        .into_iter()
+        .map(|(iri, mut names)| {
+            names.sort();
+            names.dedup();
+            VocabEntity { names, iri }
+        })
+        .collect();
+
+    let mut predicates: Vec<VocabEntry> = v
+        .predicate_names
+        .iter()
+        .map(|(name, iri)| VocabEntry {
+            name: name.clone(),
+            iri: shorten_iri(iri, domain),
+        })
+        .collect();
+    predicates.sort_by(|a, b| a.name.cmp(&b.name));
+
+    let mut values: Vec<VocabValue> = v
+        .value_index
+        .iter()
+        .flat_map(|(_, preds)| {
+            preds.iter().map(move |(pred, raw)| VocabValue {
+                value: raw.clone(),
+                predicate: pred.clone(),
+            })
+        })
+        .collect();
+    values.sort_by(|a, b| a.predicate.cmp(&b.predicate).then(a.value.cmp(&b.value)));
+    values.dedup_by(|a, b| a.value == b.value && a.predicate == b.predicate);
+
+    VocabResult {
+        types,
+        entities,
+        predicates,
+        values,
+    }
 }
 
 #[cfg(test)]
