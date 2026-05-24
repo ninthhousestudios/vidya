@@ -269,39 +269,21 @@ fn cmd_describe(
     let pf = prov_filter(domain, tradition, pramana);
 
     match store.describe(domain, subject, &pf) {
-        Ok(result) => {
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_describe(&result));
-            }
-            return Ok(());
-        }
+        Ok(result) => return output(&result, json, format::fmt_describe),
         Err(vidya_core::VidyaError::NotFound(_)) => {}
         Err(e) => return Err(anyhow::anyhow!("{e}")),
     }
 
-    let (vocab, vsa) = build_resolve_context(&store, domain);
-    let report = resolve::resolve(QueryMode::Describe, subject, &vocab, Some(&vsa), domain)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-
-    print_resolution_info(&report);
-
+    let report = nl_resolve(&store, domain, QueryMode::Describe, subject)?;
     match report.query {
         ResolvedQuery::Describe { ref subject_iri } => {
-            let short = iri_local_name(subject_iri);
             let result = store
-                .describe(domain, &short, &pf)
+                .describe(domain, &iri_local_name(subject_iri), &pf)
                 .map_err(|e| anyhow::anyhow!("{e}"))?;
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_describe(&result));
-            }
+            output(&result, json, format::fmt_describe)
         }
         _ => anyhow::bail!("NL resolution returned unexpected query mode"),
     }
-    Ok(())
 }
 
 fn cmd_search(
@@ -323,21 +305,12 @@ fn cmd_search(
         })
         .collect();
 
-    // Try structured resolution first
     match store.search(domain, kind, &parsed, &pf) {
-        Ok(result) => {
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_search(&result));
-            }
-            return Ok(());
-        }
+        Ok(result) => return output(&result, json, format::fmt_search),
         Err(vidya_core::VidyaError::NotFound(_) | vidya_core::VidyaError::InvalidArgument(_)) => {}
         Err(e) => return Err(anyhow::anyhow!("{e}")),
     }
 
-    // Build NL input from kind + filter values
     let mut nl_input = kind.to_string();
     for f in filters {
         if let Some((_, v)) = f.split_once('=') {
@@ -349,30 +322,19 @@ fn cmd_search(
         }
     }
 
-    let (vocab, vsa) = build_resolve_context(&store, domain);
-    let report = resolve::resolve(QueryMode::Search, &nl_input, &vocab, Some(&vsa), domain)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-
-    print_resolution_info(&report);
-
+    let report = nl_resolve(&store, domain, QueryMode::Search, &nl_input)?;
     match report.query {
         ResolvedQuery::Search {
             ref type_iri,
             ref filters,
         } => {
-            let type_short = iri_local_name(type_iri);
             let result = store
-                .search(domain, &type_short, filters, &pf)
+                .search(domain, &iri_local_name(type_iri), filters, &pf)
                 .map_err(|e| anyhow::anyhow!("{e}"))?;
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_search(&result));
-            }
+            output(&result, json, format::fmt_search)
         }
         _ => anyhow::bail!("NL resolution returned unexpected query mode"),
     }
-    Ok(())
 }
 
 fn cmd_traverse(
@@ -388,44 +350,25 @@ fn cmd_traverse(
     let pf = prov_filter(domain, tradition, pramana);
 
     match store.traverse(domain, subject, predicate, depth, &pf) {
-        Ok(result) => {
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_traverse(&result));
-            }
-            return Ok(());
-        }
+        Ok(result) => return output(&result, json, format::fmt_traverse),
         Err(vidya_core::VidyaError::NotFound(_)) => {}
         Err(e) => return Err(anyhow::anyhow!("{e}")),
     }
 
     let nl_input = format!("{subject} {predicate}");
-    let (vocab, vsa) = build_resolve_context(&store, domain);
-    let report = resolve::resolve(QueryMode::Traverse, &nl_input, &vocab, Some(&vsa), domain)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-
-    print_resolution_info(&report);
-
+    let report = nl_resolve(&store, domain, QueryMode::Traverse, &nl_input)?;
     match report.query {
         ResolvedQuery::Traverse {
             ref subject_iri,
             ref predicate_iri,
         } => {
-            let subj_short = iri_local_name(subject_iri);
-            let pred_short = iri_local_name(predicate_iri);
             let result = store
-                .traverse(domain, &subj_short, &pred_short, depth, &pf)
+                .traverse(domain, &iri_local_name(subject_iri), &iri_local_name(predicate_iri), depth, &pf)
                 .map_err(|e| anyhow::anyhow!("{e}"))?;
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_traverse(&result));
-            }
+            output(&result, json, format::fmt_traverse)
         }
         _ => anyhow::bail!("NL resolution returned unexpected query mode"),
     }
-    Ok(())
 }
 
 fn cmd_provenance(
@@ -441,25 +384,13 @@ fn cmd_provenance(
     let pf = prov_filter(domain, tradition, pramana);
 
     match store.provenance(domain, subject, predicate, object, &pf) {
-        Ok(result) => {
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_provenance(&result));
-            }
-            return Ok(());
-        }
+        Ok(result) => return output(&result, json, format::fmt_provenance),
         Err(vidya_core::VidyaError::NotFound(_)) => {}
         Err(e) => return Err(anyhow::anyhow!("{e}")),
     }
 
     let nl_input = format!("{subject} {predicate} {object}");
-    let (vocab, vsa) = build_resolve_context(&store, domain);
-    let report = resolve::resolve(QueryMode::Provenance, &nl_input, &vocab, Some(&vsa), domain)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-
-    print_resolution_info(&report);
-
+    let report = nl_resolve(&store, domain, QueryMode::Provenance, &nl_input)?;
     match report.query {
         ResolvedQuery::Provenance {
             ref subject_iri,
@@ -467,50 +398,50 @@ fn cmd_provenance(
             ref object,
             object_is_literal,
         } => {
-            let subj_short = iri_local_name(subject_iri);
-            let pred_short = iri_local_name(predicate_iri);
             let obj_str = if object_is_literal {
                 object.clone()
             } else {
                 iri_local_name(object)
             };
             let result = store
-                .provenance(domain, &subj_short, &pred_short, &obj_str, &pf)
+                .provenance(domain, &iri_local_name(subject_iri), &iri_local_name(predicate_iri), &obj_str, &pf)
                 .map_err(|e| anyhow::anyhow!("{e}"))?;
-            if json {
-                println!("{}", serde_json::to_string_pretty(&result)?);
-            } else {
-                print!("{}", format::fmt_provenance(&result));
-            }
+            output(&result, json, format::fmt_provenance)
         }
         _ => anyhow::bail!("NL resolution returned unexpected query mode"),
+    }
+}
+
+fn output<T: serde::Serialize>(result: &T, json: bool, fmt: fn(&T) -> String) -> Result<()> {
+    if json {
+        println!("{}", serde_json::to_string_pretty(result)?);
+    } else {
+        print!("{}", fmt(result));
     }
     Ok(())
 }
 
-fn build_resolve_context(
+fn nl_resolve(
     store: &KnowledgeStore,
     domain: &str,
-) -> (vidya_core::resolve::SchemaVocab, vidya_core::vsa::EntityIndex<vidya_core::vsa::Hrr>) {
+    mode: QueryMode,
+    input: &str,
+) -> Result<vidya_core::ResolutionReport> {
     let vocab = resolve::build_vocab(store, domain);
     let vsa = resolve::build_vsa(store, domain);
-    (vocab, vsa)
+    let report = resolve::resolve(mode, input, &vocab, Some(&vsa), domain)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    eprintln!("  resolved: {}", report.resolution_details.join(", "));
+    if !report.unknown_tokens.is_empty() {
+        eprintln!("  unrecognized: {}", report.unknown_tokens.join(", "));
+    }
+    Ok(report)
 }
 
 fn iri_local_name(iri: &str) -> String {
     iri.rsplit_once('/')
         .map(|(_, local)| local.to_string())
         .unwrap_or_else(|| iri.to_string())
-}
-
-fn print_resolution_info(report: &vidya_core::ResolutionReport) {
-    eprintln!("  resolved: {}", report.resolution_details.join(", "));
-    if !report.unknown_tokens.is_empty() {
-        eprintln!(
-            "  unrecognized: {}",
-            report.unknown_tokens.join(", ")
-        );
-    }
 }
 
 async fn serve_stdio(store: Arc<KnowledgeStore>) -> Result<()> {
