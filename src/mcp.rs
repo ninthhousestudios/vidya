@@ -207,7 +207,7 @@ impl VidyaServer {
                     ErrorData::invalid_params("'subject' is required for describe mode", None)
                 })?;
                 match self.store.describe(&args.domain, &subject, &prov_filter) {
-                    Ok(result) => return json_out(&result),
+                    Ok(result) => return json_out(result),
                     Err(vidya_core::VidyaError::NotFound(_)) => {}
                     Err(e) => return Err(to_error_data(e)),
                 }
@@ -217,7 +217,7 @@ impl VidyaServer {
                         let result = self.store
                             .describe(&args.domain, &iri_local(subject_iri), &prov_filter)
                             .map_err(to_error_data)?;
-                        json_out_resolved(&result, &report)
+                        json_out_resolved(result, &report)
                     }
                     _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
                 }
@@ -229,8 +229,8 @@ impl VidyaServer {
                 let filters: Vec<(String, String)> =
                     args.filters.unwrap_or_default().into_iter().collect();
                 match self.store.search(&args.domain, &kind, &filters, &prov_filter) {
-                    Ok(result) => return json_out(&result),
-                    Err(vidya_core::VidyaError::NotFound(_) | vidya_core::VidyaError::InvalidArgument(_)) => {}
+                    Ok(result) => return json_out(result),
+                    Err(vidya_core::VidyaError::NotFound(_)) => {}
                     Err(e) => return Err(to_error_data(e)),
                 }
                 let mut nl_input = kind;
@@ -244,7 +244,7 @@ impl VidyaServer {
                         let result = self.store
                             .search(&args.domain, &iri_local(type_iri), filters, &prov_filter)
                             .map_err(to_error_data)?;
-                        json_out_resolved(&result, &report)
+                        json_out_resolved(result, &report)
                     }
                     _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
                 }
@@ -258,7 +258,7 @@ impl VidyaServer {
                 })?;
                 let depth = args.depth.unwrap_or(1);
                 match self.store.traverse(&args.domain, &subject, &predicate, depth, &prov_filter) {
-                    Ok(result) => return json_out(&result),
+                    Ok(result) => return json_out(result),
                     Err(vidya_core::VidyaError::NotFound(_)) => {}
                     Err(e) => return Err(to_error_data(e)),
                 }
@@ -269,7 +269,7 @@ impl VidyaServer {
                         let result = self.store
                             .traverse(&args.domain, &iri_local(subject_iri), &iri_local(predicate_iri), depth, &prov_filter)
                             .map_err(to_error_data)?;
-                        json_out_resolved(&result, &report)
+                        json_out_resolved(result, &report)
                     }
                     _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
                 }
@@ -285,7 +285,7 @@ impl VidyaServer {
                     ErrorData::invalid_params("'object' is required for provenance mode", None)
                 })?;
                 match self.store.provenance(&args.domain, &subject, &predicate, &object, &prov_filter) {
-                    Ok(result) => return json_out(&result),
+                    Ok(result) => return json_out(result),
                     Err(vidya_core::VidyaError::NotFound(_)) => {}
                     Err(e) => return Err(to_error_data(e)),
                 }
@@ -297,7 +297,7 @@ impl VidyaServer {
                         let result = self.store
                             .provenance(&args.domain, &iri_local(subject_iri), &iri_local(predicate_iri), &obj, &prov_filter)
                             .map_err(to_error_data)?;
-                        json_out_resolved(&result, &report)
+                        json_out_resolved(result, &report)
                     }
                     _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
                 }
@@ -381,23 +381,39 @@ impl VidyaServer {
     }
 }
 
-fn json_out<T: serde::Serialize>(result: &T) -> Result<String, ErrorData> {
-    serde_json::to_string_pretty(result)
+#[derive(Serialize)]
+struct QueryResponse<T: serde::Serialize> {
+    result: T,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    resolution: Option<ResolutionMeta>,
+}
+
+#[derive(Serialize)]
+struct ResolutionMeta {
+    details: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    unknown_tokens: Vec<String>,
+}
+
+fn json_out<T: serde::Serialize>(result: T) -> Result<String, ErrorData> {
+    let envelope = QueryResponse { result, resolution: None };
+    serde_json::to_string_pretty(&envelope)
         .map_err(|e| ErrorData::internal_error(e.to_string(), None))
 }
 
 fn json_out_resolved<T: serde::Serialize>(
-    result: &T,
+    result: T,
     report: &vidya_core::ResolutionReport,
 ) -> Result<String, ErrorData> {
-    let json = serde_json::to_string_pretty(result)
-        .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-    let mut out = format!("[resolved: {}]\n", report.resolution_details.join(", "));
-    if !report.unknown_tokens.is_empty() {
-        out.push_str(&format!("[unrecognized: {}]\n", report.unknown_tokens.join(", ")));
-    }
-    out.push_str(&json);
-    Ok(out)
+    let envelope = QueryResponse {
+        result,
+        resolution: Some(ResolutionMeta {
+            details: report.resolution_details.clone(),
+            unknown_tokens: report.unknown_tokens.clone(),
+        }),
+    };
+    serde_json::to_string_pretty(&envelope)
+        .map_err(|e| ErrorData::internal_error(e.to_string(), None))
 }
 
 fn iri_local(iri: &str) -> String {

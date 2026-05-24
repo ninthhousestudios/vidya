@@ -4,6 +4,7 @@ use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 
 use crate::error::{Result, VidyaError};
@@ -19,24 +20,25 @@ pub struct ResolveContext {
 pub struct KnowledgeStore {
     store: Store,
     resolve_cache: RwLock<HashMap<String, Arc<ResolveContext>>>,
+    cache_generation: AtomicU64,
 }
 
 impl KnowledgeStore {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let store = Store::open(path)?;
-        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()) };
+        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0) };
         ks.ensure_base_ontology()?;
         Ok(ks)
     }
 
     pub fn open_read_only(path: impl AsRef<Path>) -> Result<Self> {
         let store = Store::open_read_only(path)?;
-        Ok(Self { store, resolve_cache: RwLock::new(HashMap::new()) })
+        Ok(Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0) })
     }
 
     pub fn new_memory() -> Result<Self> {
         let store = Store::new()?;
-        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()) };
+        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0) };
         ks.ensure_base_ontology()?;
         Ok(ks)
     }
@@ -126,10 +128,13 @@ impl KnowledgeStore {
         if let Some(ctx) = self.resolve_cache.read().unwrap().get(domain) {
             return ctx.clone();
         }
+        let gen_before = self.cache_generation.load(Ordering::Acquire);
         let vocab = SchemaVocab::build(&self.store, domain);
         let vsa = EntityIndex::build(Hrr::new(1024), &self.store, domain);
         let ctx = Arc::new(ResolveContext { vocab, vsa });
-        self.resolve_cache.write().unwrap().insert(domain.to_string(), ctx.clone());
+        if self.cache_generation.load(Ordering::Acquire) == gen_before {
+            self.resolve_cache.write().unwrap().insert(domain.to_string(), ctx.clone());
+        }
         ctx
     }
 
@@ -141,6 +146,7 @@ impl KnowledgeStore {
             .with_default_graph(graph)
             .without_named_graphs();
         self.store.load_from_reader(parser, turtle.as_bytes())?;
+        self.cache_generation.fetch_add(1, Ordering::Release);
         self.resolve_cache.write().unwrap().remove(name);
         tracing::info!(
             domain = name,
