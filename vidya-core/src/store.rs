@@ -206,6 +206,10 @@ impl KnowledgeStore {
         crate::query::provenance_coverage(self, domain)
     }
 
+    pub fn type_summary(&self, domain: &str) -> Result<Vec<crate::query::TypeSummary>> {
+        crate::query::type_summary(self, domain)
+    }
+
     pub fn assert_triple(
         &self,
         domain: &str,

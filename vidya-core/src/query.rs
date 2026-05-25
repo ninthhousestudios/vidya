@@ -92,6 +92,13 @@ pub struct CoverageResult {
 }
 
 #[derive(Debug, Serialize)]
+pub struct TypeSummary {
+    pub name: String,
+    pub iri: String,
+    pub count: usize,
+}
+
+#[derive(Debug, Serialize)]
 pub struct VocabResult {
     pub types: Vec<VocabEntry>,
     pub entities: Vec<VocabEntity>,
@@ -507,6 +514,44 @@ pub fn provenance_coverage(store: &KnowledgeStore, domain: &str) -> Result<Cover
         annotated,
         coverage,
     })
+}
+
+pub fn type_summary(store: &KnowledgeStore, domain: &str) -> Result<Vec<TypeSummary>> {
+    let graph_iri = ontology::domain_graph_iri(domain);
+    validate_iri(&graph_iri)?;
+
+    let query = format!(
+        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\
+         SELECT ?type (COUNT(DISTINCT ?s) AS ?count)\n\
+         WHERE {{\n\
+           GRAPH <{graph_iri}> {{ ?s rdf:type ?type }}\n\
+         }}\n\
+         GROUP BY ?type\n\
+         ORDER BY DESC(?count)"
+    );
+
+    let (vars, rows) = execute_select(store, &query)?;
+    let type_col = get_col(&vars, "type").unwrap();
+    let count_col = get_col(&vars, "count").unwrap();
+
+    let mut results = Vec::new();
+    for row in &rows {
+        let iri = match row.get(type_col).and_then(|t| t.as_ref()) {
+            Some(Term::NamedNode(nn)) => nn.as_str().to_string(),
+            _ => continue,
+        };
+        let count = match row.get(count_col).and_then(|t| t.as_ref()) {
+            Some(term) => {
+                let s = term.to_string();
+                s.split('"').nth(1).unwrap_or(&s).parse::<usize>().unwrap_or(0)
+            }
+            None => 0,
+        };
+        let name = shorten_iri(&iri, domain);
+        results.push(TypeSummary { name, iri, count });
+    }
+
+    Ok(results)
 }
 
 fn count_result(store: &KnowledgeStore, query: &str) -> Result<usize> {

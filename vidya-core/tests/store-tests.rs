@@ -908,3 +908,28 @@ fn provenance_coverage_empty_domain() {
     assert_eq!(cov.annotated, 0);
     assert_eq!(cov.coverage, 0.0);
 }
+
+#[test]
+fn type_summary_jyotish() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let types = store.type_summary("jyotish").unwrap();
+    assert!(!types.is_empty(), "jyotish should have entity types");
+
+    let graha = types.iter().find(|t| t.name == "Graha");
+    assert!(graha.is_some(), "should contain Graha type");
+    assert_eq!(graha.unwrap().count, 9);
+
+    let rashi = types.iter().find(|t| t.name == "Rashi");
+    assert!(rashi.is_some(), "should contain Rashi type");
+    assert_eq!(rashi.unwrap().count, 12);
+}
+
+#[test]
+fn type_summary_empty_domain() {
+    let store = KnowledgeStore::new_memory().unwrap();
+
+    let types = store.type_summary("nonexistent").unwrap();
+    assert!(types.is_empty());
+}
