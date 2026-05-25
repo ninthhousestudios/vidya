@@ -37,11 +37,13 @@ impl SchemaVocab {
         );
         let mut class_iris: Vec<String> = Vec::new();
         for cls_iri in select_one_str(store, &type_q) {
+            if is_infra_type(&cls_iri, vidya_base) {
+                continue;
+            }
             class_iris.push(cls_iri.clone());
             if let Some(local) = local_name(&cls_iri) {
                 type_names.insert(local.to_lowercase(), cls_iri.clone());
             }
-            // Index by rdfs:label of the class (search in domain graph)
             let cls_label_q = format!(
                 "SELECT ?lbl WHERE {{ \
                    GRAPH <{graph_iri}> {{ \
@@ -63,6 +65,9 @@ impl SchemaVocab {
              }}"
         );
         for cls_iri in select_one_str(store, &class_decl_q) {
+            if is_infra_type(&cls_iri, vidya_base) {
+                continue;
+            }
             if !class_iris.contains(&cls_iri) {
                 class_iris.push(cls_iri.clone());
             }
@@ -108,10 +113,8 @@ impl SchemaVocab {
                  {{ << ?s ?p ?o >> ?_ap ?_ao . }} \
                }} \
                FILTER(isIRI(?p)) \
-               FILTER(?p != <{rdf}type>) \
-               FILTER(?p != <{rdfs}label>) \
-               FILTER(?p != <{rdfs}comment>) \
-               FILTER(?p != <{rdfs}range>) \
+               FILTER(!STRSTARTS(STR(?p), \"{rdf}\")) \
+               FILTER(!STRSTARTS(STR(?p), \"{rdfs}\")) \
                FILTER(!STRSTARTS(STR(?p), \"{vidya_base}\")) \
              }}"
         );
@@ -237,4 +240,18 @@ fn dedup_value_vecs(map: &mut HashMap<String, Vec<(String, String)>>) {
         v.sort();
         v.dedup();
     }
+}
+
+const RDF_NS: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const RDFS_NS: &str = "http://www.w3.org/2000/01/rdf-schema#";
+const VIDYA_KEEP: &[&str] = &["Tradition", "Source"];
+
+fn is_infra_type(iri: &str, vidya_base: &str) -> bool {
+    if iri.starts_with(RDF_NS) || iri.starts_with(RDFS_NS) {
+        return true;
+    }
+    if let Some(local) = iri.strip_prefix(vidya_base) {
+        return !VIDYA_KEEP.contains(&local);
+    }
+    false
 }

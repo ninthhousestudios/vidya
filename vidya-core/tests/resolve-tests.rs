@@ -63,6 +63,30 @@ fn vocab_has_property_values() {
     );
 }
 
+#[test]
+fn vocab_excludes_rdf_infra_types() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    for key in vocab.type_names.keys() {
+        assert!(!key.contains("rdf-syntax"), "rdf:Property should be filtered: {key}");
+        assert!(!key.contains("rdf-schema"), "rdfs:Class should be filtered: {key}");
+    }
+    assert!(!vocab.type_names.contains_key("assertion"), "vidya:Assertion should be filtered");
+    assert!(vocab.type_names.contains_key("tradition"), "vidya:Tradition should be kept");
+    assert!(vocab.type_names.contains_key("source"), "vidya:Source should be kept");
+}
+
+#[test]
+fn vocab_excludes_rdf_infra_predicates() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    for key in vocab.predicate_names.keys() {
+        assert!(!key.contains("rdf-syntax"), "rdf: predicates should be filtered: {key}");
+        assert!(!key.contains("rdf-schema"), "rdfs: predicates should be filtered: {key}");
+    }
+    assert!(vocab.predicate_names.contains_key("exaltedin"), "domain predicates should remain");
+}
+
 // ── Describe mode ──
 
 #[test]
