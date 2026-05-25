@@ -1,3 +1,5 @@
+// binary bipolar is an alternative architecture to hrr
+// we decided that hrr was more suitable for vidya; see yojana task vidya/28 for the spike results
 use super::VsaOps;
 
 #[derive(Clone)]
@@ -31,7 +33,9 @@ impl Xoshiro128 {
     }
 
     fn next_u32(&mut self) -> u32 {
-        let result = (self.state[1].wrapping_mul(5)).rotate_left(7).wrapping_mul(9);
+        let result = (self.state[1].wrapping_mul(5))
+            .rotate_left(7)
+            .wrapping_mul(9);
         let t = self.state[1] << 9;
         self.state[2] ^= self.state[0];
         self.state[3] ^= self.state[1];
@@ -145,10 +149,7 @@ mod tests {
         let a = seeded_vec(&ops, "alpha");
         let b = seeded_vec(&ops, "beta");
         let sim = ops.similarity(&a, &b);
-        assert!(
-            (sim - 0.5).abs() < 0.05,
-            "expected ~0.5, got {sim:.4}"
-        );
+        assert!((sim - 0.5).abs() < 0.05, "expected ~0.5, got {sim:.4}");
     }
 
     #[test]
@@ -167,14 +168,8 @@ mod tests {
         let bound = ops.bind(&a, &b);
         let sim_a = ops.similarity(&bound, &a);
         let sim_b = ops.similarity(&bound, &b);
-        assert!(
-            (sim_a - 0.5).abs() < 0.05,
-            "sim_a={sim_a:.4}"
-        );
-        assert!(
-            (sim_b - 0.5).abs() < 0.05,
-            "sim_b={sim_b:.4}"
-        );
+        assert!((sim_a - 0.5).abs() < 0.05, "sim_a={sim_a:.4}");
+        assert!((sim_b - 0.5).abs() < 0.05, "sim_b={sim_b:.4}");
     }
 
     #[test]
