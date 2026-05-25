@@ -6,6 +6,6 @@ pub mod store;
 pub mod vsa;
 
 pub use error::{Result, VidyaError};
-pub use query::{DescribeResult, ProvenanceFilter, ProvenanceResult, SearchResult, TraverseResult, VocabResult};
+pub use query::{CoverageResult, DescribeResult, ProvenanceFilter, ProvenanceResult, SearchResult, TraverseResult, VocabResult};
 pub use resolve::{QueryMode, ResolvedQuery, ResolutionReport};
 pub use store::{KnowledgeStore, ResolveContext};

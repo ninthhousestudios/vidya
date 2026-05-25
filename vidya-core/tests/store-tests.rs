@@ -887,3 +887,24 @@ fn search_contested_veerya_finds_pippali() {
     let names: Vec<&str> = sheeta_result.entities.iter().map(|e| e.label.as_str()).collect();
     assert!(names.contains(&"pippali"), "pippali should appear in sheeta veerya search (Charaka classification)");
 }
+
+#[test]
+fn provenance_coverage_jyotish() {
+    let store = KnowledgeStore::new_memory().unwrap();
+    load_jyotish(&store);
+
+    let cov = store.provenance_coverage("jyotish").unwrap();
+    assert!(cov.total > 0, "jyotish domain should have triples");
+    assert!(cov.annotated > 0, "jyotish domain should have annotated triples");
+    assert!(cov.coverage > 0.0 && cov.coverage <= 1.0, "coverage={}", cov.coverage);
+}
+
+#[test]
+fn provenance_coverage_empty_domain() {
+    let store = KnowledgeStore::new_memory().unwrap();
+
+    let cov = store.provenance_coverage("nonexistent").unwrap();
+    assert_eq!(cov.total, 0);
+    assert_eq!(cov.annotated, 0);
+    assert_eq!(cov.coverage, 0.0);
+}

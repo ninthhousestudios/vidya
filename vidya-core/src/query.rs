@@ -85,6 +85,13 @@ pub struct ProvenanceFilter {
 }
 
 #[derive(Debug, Serialize)]
+pub struct CoverageResult {
+    pub total: usize,
+    pub annotated: usize,
+    pub coverage: f64,
+}
+
+#[derive(Debug, Serialize)]
 pub struct VocabResult {
     pub types: Vec<VocabEntry>,
     pub entities: Vec<VocabEntity>,
@@ -466,6 +473,58 @@ pub fn provenance(
         object: object.to_string(),
         assertions,
     })
+}
+
+// ---------------------------------------------------------------------------
+// Provenance coverage
+// ---------------------------------------------------------------------------
+
+pub fn provenance_coverage(store: &KnowledgeStore, domain: &str) -> Result<CoverageResult> {
+    let graph_iri = ontology::domain_graph_iri(domain);
+    validate_iri(&graph_iri)?;
+
+    let q_total = format!(
+        "SELECT (COUNT(*) AS ?cnt) WHERE {{ GRAPH <{graph_iri}> {{ ?s ?p ?o }} }}"
+    );
+    let q_annotated = format!(
+        "PREFIX vidya: <{}>\n\
+         SELECT (COUNT(DISTINCT *) AS ?cnt) WHERE {{\n\
+           GRAPH <{graph_iri}> {{ << ?s ?p ?o >> vidya:assertedBy ?_ }}\n\
+         }}",
+        ontology::VIDYA_BASE
+    );
+
+    let total = count_result(store, &q_total)?;
+    let annotated = count_result(store, &q_annotated)?;
+    let coverage = if total == 0 {
+        0.0
+    } else {
+        annotated as f64 / total as f64
+    };
+
+    Ok(CoverageResult {
+        total,
+        annotated,
+        coverage,
+    })
+}
+
+fn count_result(store: &KnowledgeStore, query: &str) -> Result<usize> {
+    let (vars, rows) = execute_select(store, query)?;
+    let idx = get_col(&vars, "cnt").unwrap();
+    match rows.first().and_then(|r| r[idx].as_ref()) {
+        Some(term) => {
+            let s = term.to_string();
+            let n = s
+                .split('"')
+                .nth(1)
+                .unwrap_or(&s)
+                .parse::<usize>()
+                .unwrap_or(0);
+            Ok(n)
+        }
+        None => Ok(0),
+    }
 }
 
 // ---------------------------------------------------------------------------

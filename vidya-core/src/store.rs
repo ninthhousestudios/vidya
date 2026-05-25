@@ -202,6 +202,10 @@ impl KnowledgeStore {
         crate::query::provenance(self, domain, subject, predicate, object, filter)
     }
 
+    pub fn provenance_coverage(&self, domain: &str) -> Result<crate::query::CoverageResult> {
+        crate::query::provenance_coverage(self, domain)
+    }
+
     pub fn assert_triple(
         &self,
         domain: &str,
