@@ -163,6 +163,30 @@ pub struct QueryArgs {
     pub pramana: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct SimilarArgs {
+    /// Domain name (e.g. "jyotish")
+    pub domain: String,
+    /// Entity short name or alias (e.g. "mangala", "mars")
+    pub entity: String,
+    /// Number of results to return (default 5)
+    #[serde(default)]
+    pub top: Option<usize>,
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct UnbindArgs {
+    /// Domain name (e.g. "jyotish")
+    pub domain: String,
+    /// Subject entity short name or alias (e.g. "mangala", "mars")
+    pub subject: String,
+    /// Predicate short name (e.g. "rules", "exaltedIn")
+    pub predicate: String,
+    /// Number of results to return (default 5)
+    #[serde(default)]
+    pub top: Option<usize>,
+}
+
 #[tool_router(router = tool_router)]
 impl VidyaServer {
     #[tool(
@@ -312,6 +336,57 @@ impl VidyaServer {
     }
 
     #[tool(
+        description = "Find the most similar entities to a given entity by VSA vector similarity. Returns a ranked list of (entity, cosine similarity score) pairs. Entity names can be exact domain terms or natural-language aliases."
+    )]
+    pub async fn vidya_similar(
+        &self,
+        Parameters(args): Parameters<SimilarArgs>,
+    ) -> Result<String, ErrorData> {
+        let top = args.top.unwrap_or(5);
+        match self.store.similar(&args.domain, &args.entity, top) {
+            Ok(result) => return json_out(result),
+            Err(vidya_core::VidyaError::NotFound(_)) => {}
+            Err(e) => return Err(to_error_data(e)),
+        }
+        let report = self.nl_resolve(&args.domain, vidya_core::QueryMode::Describe, &args.entity)?;
+        match report.query {
+            vidya_core::ResolvedQuery::Describe { ref subject_iri } => {
+                let result = self.store
+                    .similar(&args.domain, &iri_local(subject_iri), top)
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
+            _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
+        }
+    }
+
+    #[tool(
+        description = "VSA role-filler recovery: given an entity and a predicate, unbind the predicate from the entity's vector and search for the most likely objects. Returns a ranked list of candidate fillers with similarity scores. Use this to discover or verify relationships."
+    )]
+    pub async fn vidya_unbind(
+        &self,
+        Parameters(args): Parameters<UnbindArgs>,
+    ) -> Result<String, ErrorData> {
+        let top = args.top.unwrap_or(5);
+        match self.store.unbind(&args.domain, &args.subject, &args.predicate, top) {
+            Ok(result) => return json_out(result),
+            Err(vidya_core::VidyaError::NotFound(_)) => {}
+            Err(e) => return Err(to_error_data(e)),
+        }
+        let nl_input = format!("{} {}", args.subject, args.predicate);
+        let report = self.nl_resolve(&args.domain, vidya_core::QueryMode::Traverse, &nl_input)?;
+        match report.query {
+            vidya_core::ResolvedQuery::Traverse { ref subject_iri, ref predicate_iri } => {
+                let result = self.store
+                    .unbind(&args.domain, &iri_local(subject_iri), &iri_local(predicate_iri), top)
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
+            _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
+        }
+    }
+
+    #[tool(
         description = "List the vocabulary tokens the NL resolver knows for a domain: entity names/aliases, type names, predicate names, and property values with their filter keys. Use this to discover what natural-language queries will work."
     )]
     pub async fn vidya_vocab(
@@ -376,6 +451,15 @@ impl VidyaServer {
                 self.store
                     .load_domain_from_file(&args.domain, &path)
                     .map_err(to_error_data)?;
+                let synonym_path = std::path::Path::new(&path)
+                    .with_file_name(format!("{}-synonyms.toml", &args.domain));
+                if synonym_path.exists() {
+                    let content: String = std::fs::read_to_string(&synonym_path)
+                        .map_err(|e| to_error_data(vidya_core::VidyaError::from(e)))?;
+                    self.store
+                        .load_synonyms(&args.domain, &content)
+                        .map_err(to_error_data)?;
+                }
             }
             _ => {
                 return Err(ErrorData::invalid_params(
@@ -445,7 +529,7 @@ impl ServerHandler for VidyaServer {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build()).with_instructions(
             "vidya — structured knowledge graph backed by Oxigraph. \
              RDF triplestore with named graphs per domain, RDF-star provenance, \
-             and SPARQL internally. Tools: vidya_health, vidya_load, vidya_query, vidya_assert.",
+             and SPARQL internally. Tools: vidya_health, vidya_load, vidya_query, vidya_assert, vidya_similar, vidya_unbind, vidya_vocab.",
         )
     }
 }

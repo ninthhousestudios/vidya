@@ -124,6 +124,19 @@ pub struct VocabValue {
     pub predicate: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct SimilarityResult {
+    pub query: String,
+    pub matches: Vec<SimilarityMatch>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SimilarityMatch {
+    pub iri: String,
+    pub label: String,
+    pub score: f64,
+}
+
 const MAX_TRAVERSE_DEPTH: u32 = 10;
 
 // ---------------------------------------------------------------------------

@@ -119,6 +119,34 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Find entities most similar to a given entity (VSA cosine similarity).
+    Similar {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        /// Entity short name (e.g. "mangala", "mars").
+        entity: String,
+        /// Number of results to return.
+        #[arg(long, default_value_t = 5)]
+        top: usize,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Recover role-fillers via VSA unbind (e.g. what is mangala's exaltedIn?).
+    Unbind {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        /// Subject entity short name.
+        subject: String,
+        /// Predicate short name (e.g. "rules", "exaltedIn").
+        predicate: String,
+        /// Number of results to return.
+        #[arg(long, default_value_t = 5)]
+        top: usize,
+        #[arg(long)]
+        json: bool,
+    },
     /// Show epistemological metadata for a specific triple.
     Provenance {
         /// Domain name (or set VIDYA_DOMAIN).
@@ -209,6 +237,19 @@ async fn main() -> Result<()> {
             tradition,
             pramana,
         } => cmd_traverse(&domain, &subject, &predicate, depth, json, tradition, pramana),
+        Commands::Similar {
+            domain,
+            entity,
+            top,
+            json,
+        } => cmd_similar(&domain, &entity, top, json),
+        Commands::Unbind {
+            domain,
+            subject,
+            predicate,
+            top,
+            json,
+        } => cmd_unbind(&domain, &subject, &predicate, top, json),
         Commands::Provenance {
             domain,
             subject,
@@ -249,6 +290,14 @@ fn cmd_load(domain: &str, file: &PathBuf) -> Result<()> {
     store
         .load_domain_from_file(domain, file)
         .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let synonym_path = file.with_file_name(format!("{domain}-synonyms.toml"));
+    if synonym_path.exists() {
+        let content = std::fs::read_to_string(&synonym_path)?;
+        store
+            .load_synonyms(domain, &content)
+            .map_err(|e| anyhow::anyhow!("{e}"))?;
+        println!("loaded synonyms from {}", synonym_path.display());
+    }
     let count = store.triple_count().map_err(|e| anyhow::anyhow!("{e}"))?;
     println!("loaded {domain} ({count} triples total)");
     Ok(())
@@ -381,6 +430,58 @@ fn cmd_traverse(
                 .traverse(domain, &iri_local_name(subject_iri), &iri_local_name(predicate_iri), depth, &pf)
                 .map_err(|e| anyhow::anyhow!("{e}"))?;
             output(&result, json, format::fmt_traverse)
+        }
+        _ => anyhow::bail!("NL resolution returned unexpected query mode"),
+    }
+}
+
+fn cmd_similar(domain: &str, entity: &str, top: usize, json: bool) -> Result<()> {
+    let store = open_store_ro()?;
+
+    match store.similar(domain, entity, top) {
+        Ok(result) => return output(&result, json, format::fmt_similarity),
+        Err(vidya_core::VidyaError::NotFound(_)) => {}
+        Err(e) => return Err(anyhow::anyhow!("{e}")),
+    }
+
+    let report = nl_resolve(&store, domain, QueryMode::Describe, entity)?;
+    match report.query {
+        ResolvedQuery::Describe { ref subject_iri } => {
+            let result = store
+                .similar(domain, &iri_local_name(subject_iri), top)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_similarity)
+        }
+        _ => anyhow::bail!("NL resolution returned unexpected query mode"),
+    }
+}
+
+fn cmd_unbind(
+    domain: &str,
+    subject: &str,
+    predicate: &str,
+    top: usize,
+    json: bool,
+) -> Result<()> {
+    let store = open_store_ro()?;
+
+    match store.unbind(domain, subject, predicate, top) {
+        Ok(result) => return output(&result, json, format::fmt_similarity),
+        Err(vidya_core::VidyaError::NotFound(_)) => {}
+        Err(e) => return Err(anyhow::anyhow!("{e}")),
+    }
+
+    let nl_input = format!("{subject} {predicate}");
+    let report = nl_resolve(&store, domain, QueryMode::Traverse, &nl_input)?;
+    match report.query {
+        ResolvedQuery::Traverse {
+            ref subject_iri,
+            ref predicate_iri,
+        } => {
+            let result = store
+                .unbind(domain, &iri_local_name(subject_iri), &iri_local_name(predicate_iri), top)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_similarity)
         }
         _ => anyhow::bail!("NL resolution returned unexpected query mode"),
     }

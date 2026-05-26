@@ -9,6 +9,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::error::{Result, VidyaError};
 use crate::ontology;
+use crate::resolve::vocab::SynonymTable;
 use crate::resolve::SchemaVocab;
 use crate::vsa::{EntityIndex, Hrr};
 
@@ -21,24 +22,25 @@ pub struct KnowledgeStore {
     store: Store,
     resolve_cache: RwLock<HashMap<String, Arc<ResolveContext>>>,
     cache_generation: AtomicU64,
+    synonyms: RwLock<HashMap<String, SynonymTable>>,
 }
 
 impl KnowledgeStore {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let store = Store::open(path)?;
-        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0) };
+        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0), synonyms: RwLock::new(HashMap::new()) };
         ks.ensure_base_ontology()?;
         Ok(ks)
     }
 
     pub fn open_read_only(path: impl AsRef<Path>) -> Result<Self> {
         let store = Store::open_read_only(path)?;
-        Ok(Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0) })
+        Ok(Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0), synonyms: RwLock::new(HashMap::new()) })
     }
 
     pub fn new_memory() -> Result<Self> {
         let store = Store::new()?;
-        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0) };
+        let ks = Self { store, resolve_cache: RwLock::new(HashMap::new()), cache_generation: AtomicU64::new(0), synonyms: RwLock::new(HashMap::new()) };
         ks.ensure_base_ontology()?;
         Ok(ks)
     }
@@ -129,7 +131,10 @@ impl KnowledgeStore {
             return ctx.clone();
         }
         let gen_before = self.cache_generation.load(Ordering::Acquire);
-        let vocab = SchemaVocab::build(&self.store, domain);
+        let mut vocab = SchemaVocab::build(&self.store, domain);
+        if let Some(syns) = self.synonyms.read().unwrap().get(domain) {
+            vocab.apply_synonyms(syns);
+        }
         let vsa = EntityIndex::build(Hrr::new(1024), &self.store, domain);
         let ctx = Arc::new(ResolveContext { vocab, vsa });
         if self.cache_generation.load(Ordering::Acquire) == gen_before {
@@ -159,6 +164,14 @@ impl KnowledgeStore {
     pub fn load_domain_from_file(&self, name: &str, path: impl AsRef<Path>) -> Result<()> {
         let turtle = std::fs::read_to_string(path.as_ref())?;
         self.load_domain(name, &turtle)
+    }
+
+    pub fn load_synonyms(&self, domain: &str, content: &str) -> Result<()> {
+        let table = crate::resolve::vocab::parse_synonyms(content)
+            .map_err(|e| VidyaError::InvalidArgument(format!("bad synonym TOML: {e}")))?;
+        self.synonyms.write().unwrap().insert(domain.to_string(), table);
+        self.resolve_cache.write().unwrap().remove(domain);
+        Ok(())
     }
 
     pub fn describe(
@@ -208,6 +221,58 @@ impl KnowledgeStore {
 
     pub fn type_summary(&self, domain: &str) -> Result<Vec<crate::query::TypeSummary>> {
         crate::query::type_summary(self, domain)
+    }
+
+    pub fn similar(
+        &self,
+        domain: &str,
+        entity: &str,
+        top_k: usize,
+    ) -> Result<crate::query::SimilarityResult> {
+        let iri = ontology::resolve_iri(entity, domain);
+        let ctx = self.resolve_context(domain);
+        let raw = ctx.vsa.similar(&iri, top_k);
+        if raw.is_empty() {
+            return Err(VidyaError::NotFound(format!("entity not in VSA index: {entity}")));
+        }
+        Ok(crate::query::SimilarityResult {
+            query: format!("similar to {}", iri_local(&iri)),
+            matches: raw.into_iter().map(|(m_iri, score)| {
+                crate::query::SimilarityMatch {
+                    label: iri_local(&m_iri),
+                    iri: m_iri,
+                    score,
+                }
+            }).collect(),
+        })
+    }
+
+    pub fn unbind(
+        &self,
+        domain: &str,
+        subject: &str,
+        predicate: &str,
+        top_k: usize,
+    ) -> Result<crate::query::SimilarityResult> {
+        let subj_iri = ontology::resolve_iri(subject, domain);
+        let pred_iri = ontology::resolve_iri(predicate, domain);
+        let ctx = self.resolve_context(domain);
+        let raw = ctx.vsa.unbind_query(&subj_iri, &pred_iri, top_k);
+        if raw.is_empty() {
+            return Err(VidyaError::NotFound(format!(
+                "entity or predicate not in VSA index: {subject} / {predicate}"
+            )));
+        }
+        Ok(crate::query::SimilarityResult {
+            query: format!("unbind({}, {})", iri_local(&subj_iri), iri_local(&pred_iri)),
+            matches: raw.into_iter().map(|(m_iri, score)| {
+                crate::query::SimilarityMatch {
+                    label: iri_local(&m_iri),
+                    iri: m_iri,
+                    score,
+                }
+            }).collect(),
+        })
     }
 
     pub fn assert_triple(
@@ -268,4 +333,8 @@ impl KnowledgeStore {
 
         self.load_domain(domain, &turtle)
     }
+}
+
+fn iri_local(iri: &str) -> String {
+    iri.rsplit_once('/').map(|(_, l)| l).unwrap_or(iri).to_string()
 }

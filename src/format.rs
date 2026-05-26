@@ -1,5 +1,6 @@
 use vidya_core::query::{
-    AnnotatedTriple, DescribeResult, ProvenanceResult, SearchResult, TraverseResult, VocabResult,
+    AnnotatedTriple, DescribeResult, ProvenanceResult, SearchResult, SimilarityResult,
+    TraverseResult, VocabResult,
 };
 
 pub fn fmt_describe(r: &DescribeResult) -> String {
@@ -120,6 +121,31 @@ pub fn fmt_provenance(r: &ProvenanceResult) -> String {
         out.push_str(&format!("  pramana:    {}\n", a.pramana));
         out.push_str(&format!("  confidence: {}\n", a.confidence));
         out.push('\n');
+    }
+
+    out
+}
+
+pub fn fmt_similarity(r: &SimilarityResult) -> String {
+    let mut out = String::new();
+
+    out.push_str(&format!("  {}\n\n", r.query));
+
+    if r.matches.is_empty() {
+        out.push_str("  (no results)\n");
+        return out;
+    }
+
+    let max_label = r.matches.iter().map(|m| m.label.len()).max().unwrap_or(0);
+
+    for (i, m) in r.matches.iter().enumerate() {
+        out.push_str(&format!(
+            "  {:>2}. {:<w$}  {:.3}\n",
+            i + 1,
+            m.label,
+            m.score,
+            w = max_label
+        ));
     }
 
     out
