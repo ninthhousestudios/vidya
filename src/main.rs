@@ -315,7 +315,7 @@ fn prov_filter_via_vocab(
 ) -> ProvenanceFilter {
     let mut pf = ProvenanceFilter::default();
     if let Some(ref t) = tradition {
-        let scope = vocab.resolve_provenance(t);
+        let scope = vocab.resolve_provenance(t, vidya_core::resolve::intent::ScopeCategory::Tradition);
         if scope.tradition.is_some() || scope.source.is_some() {
             pf.tradition = scope.tradition;
             pf.source = scope.source;
@@ -324,7 +324,7 @@ fn prov_filter_via_vocab(
         }
     }
     if let Some(ref p) = pramana {
-        let scope = vocab.resolve_provenance(p);
+        let scope = vocab.resolve_provenance(p, vidya_core::resolve::intent::ScopeCategory::Pramana);
         if let Some(pram_iri) = scope.pramana {
             pf.pramana = Some(pram_iri);
         } else {

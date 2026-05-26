@@ -1,5 +1,5 @@
 use super::assemble::{AssembleError, QueryMode, ResolutionReport};
-use super::intent::IntentResult;
+use super::intent::{IntentResult, ScopeCategory};
 use super::matcher::{MatchConfidence, ResolvedToken};
 
 #[derive(Debug, Clone)]
@@ -13,6 +13,7 @@ pub struct ScoredCandidate {
     pub report: ResolutionReport,
     pub pattern_name: &'static str,
     pub scope_hint: Option<String>,
+    pub scope_category: ScopeCategory,
     pub total_score: f64,
     pub signals: Vec<ScoreSignal>,
 }
@@ -44,6 +45,7 @@ pub(crate) fn rank(attempts: Vec<ParseAttempt>) -> Vec<ScoredCandidate> {
                     report,
                     pattern_name: intent.pattern_name,
                     scope_hint: intent.scope_hint,
+                    scope_category: intent.scope_category,
                     total_score,
                     signals,
                 })
@@ -245,12 +247,14 @@ mod tests {
             mode: QueryMode::Traverse,
             slot_text: "mars exalted".to_string(),
             scope_hint: None,
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "traverse_what_is",
         };
         let describe_intent = IntentResult {
             mode: QueryMode::Describe,
             slot_text: "mars exalted".to_string(),
             scope_hint: None,
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "describe_what_is",
         };
 
@@ -294,12 +298,14 @@ mod tests {
             mode: QueryMode::Traverse,
             slot_text: "mars".to_string(),
             scope_hint: None,
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "traverse_what_is",
         };
         let describe_intent = IntentResult {
             mode: QueryMode::Describe,
             slot_text: "mars".to_string(),
             scope_hint: None,
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "describe_what_is",
         };
 
@@ -341,6 +347,7 @@ mod tests {
                     mode: QueryMode::Describe,
                     slot_text: "mars exalted".to_string(),
                     scope_hint: None,
+                    scope_category: ScopeCategory::Unknown,
                     pattern_name: "describe_what_is",
                 },
                 tokens: tokens.clone(),
@@ -359,6 +366,7 @@ mod tests {
                     mode: QueryMode::Traverse,
                     slot_text: "mars exalted".to_string(),
                     scope_hint: None,
+                    scope_category: ScopeCategory::Unknown,
                     pattern_name: "traverse_what_is",
                 },
                 tokens: tokens.clone(),

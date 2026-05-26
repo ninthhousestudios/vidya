@@ -620,6 +620,9 @@ pub fn traverse(
     if let Some(ref trad) = filter.tradition {
         validate_iri(trad)?;
     }
+    if let Some(ref src) = filter.source {
+        validate_iri(src)?;
+    }
     if let Some(ref pram) = filter.pramana {
         validate_iri(pram)?;
     }
@@ -648,7 +651,7 @@ pub fn traverse(
         b.add_select("?label");
         b.add_body(&format!("GRAPH <{graph_iri}> {{"));
         b.add_body(&format!("  VALUES ?start {{ {values} }}"));
-        if filter.tradition.is_some() || filter.pramana.is_some() {
+        if filter.tradition.is_some() || filter.source.is_some() || filter.pramana.is_some() {
             b.add_body(&format!("  << ?start <{pred_iri}> ?obj >> ?_any_p ?_any_o ."));
             apply_provenance_filter(&mut b, "?start", &format!("<{pred_iri}>"), "?obj", filter);
         } else {
@@ -770,6 +773,10 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &Pr
         validate_iri(trad)?;
         b3.add_filter(&format!("FILTER(?trad = <{trad}>)"));
     }
+    if let Some(ref src) = filter.source {
+        validate_iri(src)?;
+        b3.add_filter(&format!("FILTER(?src = <{src}>)"));
+    }
     if let Some(ref pram) = filter.pramana {
         validate_iri(pram)?;
         b3.add_filter(&format!("FILTER(?pramana = <{pram}>)"));
@@ -837,7 +844,7 @@ pub fn describe(store: &KnowledgeStore, domain: &str, subject: &str, filter: &Pr
             });
     }
 
-    let has_filter = filter.tradition.is_some() || filter.pramana.is_some();
+    let has_filter = filter.tradition.is_some() || filter.source.is_some() || filter.pramana.is_some();
 
     let keys: Vec<(String, String)> = if has_filter {
         let mut k: Vec<(String, String)> = prov_map.keys().cloned().collect();
@@ -925,7 +932,7 @@ pub fn search(
         }
     }
 
-    if prov_filter.tradition.is_some() || prov_filter.pramana.is_some() {
+    if prov_filter.tradition.is_some() || prov_filter.source.is_some() || prov_filter.pramana.is_some() {
         if let Some(ref trad) = prov_filter.tradition {
             validate_iri(trad)?;
         }

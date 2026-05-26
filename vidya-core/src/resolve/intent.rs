@@ -1,10 +1,18 @@
 use super::assemble::QueryMode;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScopeCategory {
+    Tradition,
+    Pramana,
+    Unknown,
+}
+
 #[derive(Debug)]
 pub struct IntentResult {
     pub mode: QueryMode,
     pub slot_text: String,
     pub scope_hint: Option<String>,
+    pub scope_category: ScopeCategory,
     pub pattern_name: &'static str,
 }
 
@@ -99,11 +107,13 @@ fn try_tradition_say(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Describe,
         slot_text: remainder.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "describe_fallback",
     });
 
     Some(IntentResult {
         scope_hint: Some(tradition.to_string()),
+        scope_category: ScopeCategory::Tradition,
         pattern_name: "tradition_say",
         ..inner
     })
@@ -125,11 +135,13 @@ fn try_tradition_according(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "describe_fallback",
     });
 
     Some(IntentResult {
         scope_hint: Some(tradition_text.to_string()),
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "tradition_according",
         ..inner
     })
@@ -155,10 +167,12 @@ fn try_pramana_from(input: &str) -> Option<IntentResult> {
             mode: QueryMode::Describe,
             slot_text: remainder.to_string(),
             scope_hint: None,
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "describe_fallback",
         });
         return Some(IntentResult {
             scope_hint: Some(pramana.to_string()),
+            scope_category: ScopeCategory::Pramana,
             pattern_name: "pramana_from",
             ..inner
         });
@@ -172,10 +186,12 @@ fn try_pramana_from(input: &str) -> Option<IntentResult> {
             mode: QueryMode::Describe,
             slot_text: remainder.to_string(),
             scope_hint: None,
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "describe_fallback",
         });
         return Some(IntentResult {
             scope_hint: Some(pramana.to_string()),
+            scope_category: ScopeCategory::Pramana,
             pattern_name: "pramana_from",
             ..inner
         });
@@ -189,10 +205,12 @@ fn try_pramana_from(input: &str) -> Option<IntentResult> {
             mode: QueryMode::Describe,
             slot_text: remainder.to_string(),
             scope_hint: None,
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "describe_fallback",
         });
         return Some(IntentResult {
             scope_hint: Some(scope_name.to_string()),
+            scope_category: ScopeCategory::Unknown,
             pattern_name: "pramana_from",
             ..inner
         });
@@ -219,6 +237,7 @@ fn try_similar(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Similar,
         slot_text: slot.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "similar",
     })
 }
@@ -237,6 +256,7 @@ fn try_search_where(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Search,
         slot_text: slot,
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "search_where",
     })
 }
@@ -253,6 +273,7 @@ fn try_search_what_are(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Search,
         slot_text: slot,
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "search_what_are",
     })
 }
@@ -270,6 +291,7 @@ fn try_traverse_possessive(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Traverse,
         slot_text: slot,
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "traverse_possessive",
     })
 }
@@ -286,6 +308,7 @@ fn try_traverse_does(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Traverse,
         slot_text: rest.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "traverse_does",
     })
 }
@@ -305,6 +328,7 @@ fn try_traverse_what_is(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Traverse,
         slot_text: rest.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "traverse_what_is",
     })
 }
@@ -319,6 +343,7 @@ fn try_describe_tell(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "describe_tell",
     })
 }
@@ -331,6 +356,7 @@ fn try_describe_explicit(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "describe_explicit",
     })
 }
@@ -343,6 +369,7 @@ fn try_describe_what_is(input: &str) -> Option<IntentResult> {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
         scope_hint: None,
+        scope_category: ScopeCategory::Unknown,
         pattern_name: "describe_what_is",
     })
 }

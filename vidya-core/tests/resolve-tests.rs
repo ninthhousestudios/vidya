@@ -799,7 +799,7 @@ fn vocab_has_pramana_names() {
 fn resolve_provenance_tradition() {
     let store = load_jyotish();
     let vocab = resolve::build_vocab(&store, "jyotish");
-    let scope = vocab.resolve_provenance("bphs");
+    let scope = vocab.resolve_provenance("bphs", resolve::intent::ScopeCategory::Tradition);
     assert!(scope.tradition.is_some(), "bphs should resolve as tradition");
 }
 
@@ -807,7 +807,7 @@ fn resolve_provenance_tradition() {
 fn resolve_provenance_pramana() {
     let store = load_jyotish();
     let vocab = resolve::build_vocab(&store, "jyotish");
-    let scope = vocab.resolve_provenance("shabda");
+    let scope = vocab.resolve_provenance("shabda", resolve::intent::ScopeCategory::Pramana);
     assert!(scope.pramana.is_some(), "shabda should resolve as pramana");
     assert!(scope.tradition.is_none(), "shabda should not be a tradition");
 }

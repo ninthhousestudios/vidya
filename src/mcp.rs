@@ -416,7 +416,7 @@ impl VidyaServer {
 
         let mut prov_filter = vidya_core::ProvenanceFilter::default();
         if let Some(ref t) = args.tradition {
-            let scope = ctx.vocab.resolve_provenance(t);
+            let scope = ctx.vocab.resolve_provenance(t, vidya_core::resolve::intent::ScopeCategory::Tradition);
             if scope.tradition.is_some() || scope.source.is_some() {
                 prov_filter.tradition = scope.tradition;
                 prov_filter.source = scope.source;
@@ -425,7 +425,7 @@ impl VidyaServer {
             }
         }
         if let Some(ref p) = args.pramana {
-            let scope = ctx.vocab.resolve_provenance(p);
+            let scope = ctx.vocab.resolve_provenance(p, vidya_core::resolve::intent::ScopeCategory::Pramana);
             if let Some(pram_iri) = scope.pramana {
                 prov_filter.pramana = Some(pram_iri);
             } else {

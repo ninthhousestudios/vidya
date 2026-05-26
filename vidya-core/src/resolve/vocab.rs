@@ -331,14 +331,34 @@ impl SchemaVocab {
         self.value_types.get(&key).map(|v| v.as_slice()).unwrap_or(&[])
     }
 
-    pub fn resolve_provenance(&self, name: &str) -> super::assemble::ProvenanceScope {
+    pub fn resolve_provenance(
+        &self,
+        name: &str,
+        category: super::intent::ScopeCategory,
+    ) -> super::assemble::ProvenanceScope {
+        use super::intent::ScopeCategory;
         let key = name.to_lowercase();
-        let tradition = self.tradition_names.get(&key).cloned()
-            .or_else(|| fuzzy_match_provenance(&key, &self.tradition_names));
-        let source = self.source_names.get(&key).cloned()
-            .or_else(|| fuzzy_match_provenance(&key, &self.source_names));
-        let pramana = self.pramana_names.get(&key).cloned()
-            .or_else(|| fuzzy_match_provenance(&key, &self.pramana_names));
+        let (tradition, source, pramana) = match category {
+            ScopeCategory::Tradition => {
+                let t = self.tradition_names.get(&key).cloned()
+                    .or_else(|| fuzzy_match_provenance(&key, &self.tradition_names));
+                (t, None, None)
+            }
+            ScopeCategory::Pramana => {
+                let p = self.pramana_names.get(&key).cloned()
+                    .or_else(|| fuzzy_match_provenance(&key, &self.pramana_names));
+                (None, None, p)
+            }
+            ScopeCategory::Unknown => {
+                let t = self.tradition_names.get(&key).cloned()
+                    .or_else(|| fuzzy_match_provenance(&key, &self.tradition_names));
+                let s = self.source_names.get(&key).cloned()
+                    .or_else(|| fuzzy_match_provenance(&key, &self.source_names));
+                let p = self.pramana_names.get(&key).cloned()
+                    .or_else(|| fuzzy_match_provenance(&key, &self.pramana_names));
+                (t, s, p)
+            }
+        };
         super::assemble::ProvenanceScope { tradition, source, pramana }
     }
 

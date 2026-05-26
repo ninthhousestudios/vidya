@@ -5,7 +5,7 @@ pub mod rank;
 pub mod vocab;
 
 pub use assemble::{AlternativeParse, AssembleError, ProvenanceScope, QueryMode, ResolvedQuery, ResolutionReport};
-pub use intent::IntentResult;
+pub use intent::{IntentResult, ScopeCategory};
 pub use matcher::{MatchConfidence, ResolvedToken};
 pub use vocab::{SchemaVocab, SynonymTable};
 
@@ -103,7 +103,7 @@ pub fn resolve_nl(
     }
 
     if let Some(ref hint) = winner.scope_hint {
-        let scope = vocab.resolve_provenance(hint);
+        let scope = vocab.resolve_provenance(hint, winner.scope_category);
         if scope.is_empty() {
             report
                 .resolution_details
