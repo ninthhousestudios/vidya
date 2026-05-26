@@ -1,0 +1,12 @@
+[types]
+planet = "Graha"
+planets = "Graha"
+sign = "Rashi"
+signs = "Rashi"
+house = "Bhava"
+houses = "Bhava"
+constellation = "Nakshatra"
+constellations = "Nakshatra"
+
+[predicates]
+exalted = "exaltedIn"

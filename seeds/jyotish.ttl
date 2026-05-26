@@ -1196,3 +1196,1096 @@ jyotish:shani jyotish:karaka "sorrow", "discipline", "servants", "delay", "chron
         vidya:pramana    vidya:shabda ;
         vidya:confidence "1.0"^^xsd:float
     ] .
+
+# Aditya system — the 12 solar deities and their retinues of 84 beings.
+# Extends the jyotish domain with the Aditya sign system (option 3: coexists
+# with Rashi entities, same archetypal qualities, no explicit equivalence link).
+#
+# Structural data: Srimad Bhagavatam 12.11.33-44
+# Compilation: Ernst Wilhelm, "The Adityas and Their Retinue"
+# Subtitles and descriptions: Sunflare project
+
+# ═══════════════════════════════════════════════════════════════════
+# 1. Being Type Classes
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:AdityaBeing  a rdfs:Class ;
+    rdfs:label   "aditya" ;
+    rdfs:comment "Solar deity; son of Aditi, embodying a specific form of divine love, each driving the chariot of the Sun through one sign" .
+
+jyotish:Rishi  a rdfs:Class ;
+    rdfs:label   "rishi" ;
+    rdfs:comment "Primordial seer who perceived the fundamental workings of Reality; reflects the innate Laws governing creation" .
+
+jyotish:Gandharva  a rdfs:Class ;
+    rdfs:label   "gandharva" ;
+    rdfs:comment "Celestial musician and divine warrior; the sacred masculine force that motivates action and expression in the world" .
+
+jyotish:Apsara  a rdfs:Class ;
+    rdfs:label   "apsara" ;
+    rdfs:comment "Celestial maiden governing subtle inner conditions; creates the mood and emotional catalyst necessary for expression" .
+
+jyotish:Naga  a rdfs:Class ;
+    rdfs:label   "naga" ;
+    rdfs:comment "Primal life force bound to individual existence; the deep unconscious pull that leads all beings back to their spiritual source" .
+
+jyotish:Yaksha  a rdfs:Class ;
+    rdfs:label   "yaksha" ;
+    rdfs:comment "Nature spirit whose mission is to differentiate; relates to the physical body and its unique expression" .
+
+jyotish:RakshasaBeing  a rdfs:Class ;
+    rdfs:label   "rakshasa" ;
+    rdfs:comment "Protective force derived from raksh (to protect) that can go astray; represents the struggle to use power wisely without it becoming destructive" .
+
+jyotish:DegreeRange  a rdfs:Class ;
+    rdfs:label   "degree range" ;
+    rdfs:comment "A degree range within a sign where a specific being is activated by the intersection of hora and trimsamsa" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 2. Properties
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:subtitle       a rdf:Property ; rdfs:label "subtitle" .
+jyotish:parity         a rdf:Property ; rdfs:label "parity" .
+jyotish:hasRishi       a rdf:Property ; rdfs:domain jyotish:AdityaBeing ; rdfs:range jyotish:Rishi .
+jyotish:hasGandharva   a rdf:Property ; rdfs:domain jyotish:AdityaBeing ; rdfs:range jyotish:Gandharva .
+jyotish:hasApsara      a rdf:Property ; rdfs:domain jyotish:AdityaBeing ; rdfs:range jyotish:Apsara .
+jyotish:hasNaga        a rdf:Property ; rdfs:domain jyotish:AdityaBeing ; rdfs:range jyotish:Naga .
+jyotish:hasYaksha      a rdf:Property ; rdfs:domain jyotish:AdityaBeing ; rdfs:range jyotish:Yaksha .
+jyotish:hasRakshasa    a rdf:Property ; rdfs:domain jyotish:AdityaBeing ; rdfs:range jyotish:RakshasaBeing .
+jyotish:activatesBeingType  a rdf:Property ; rdfs:label "activates being type" .
+jyotish:ofAditya       a rdf:Property ; rdfs:domain jyotish:DegreeRange ; rdfs:range jyotish:AdityaBeing .
+jyotish:startDegree    a rdf:Property ; rdfs:domain jyotish:DegreeRange ; rdfs:range xsd:integer .
+jyotish:endDegree      a rdf:Property ; rdfs:domain jyotish:DegreeRange ; rdfs:range xsd:integer .
+jyotish:hora           a rdf:Property ; rdfs:domain jyotish:DegreeRange ; rdfs:range jyotish:Graha .
+jyotish:trimsamsaLord  a rdf:Property ; rdfs:domain jyotish:DegreeRange ; rdfs:range jyotish:Graha .
+jyotish:activeBeing    a rdf:Property ; rdfs:domain jyotish:DegreeRange .
+
+# ═══════════════════════════════════════════════════════════════════
+# 3. Traditions and Sources
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:tradition-aditya  a vidya:Tradition ;
+    rdfs:label "aditya" .
+
+jyotish:source-bhagavatam  a vidya:Source ;
+    rdfs:label        "Srimad Bhagavatam" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.95"^^xsd:float ;
+    rdfs:comment      "Srimad Bhagavatam 12.11.33-44" .
+
+jyotish:source-ernst-wilhelm  a vidya:Source ;
+    rdfs:label        "The Adityas and Their Retinue" ;
+    vidya:sourceKind  "text" ;
+    vidya:reliability "0.9"^^xsd:float ;
+    rdfs:comment      "Ernst Wilhelm, The Adityas and Their Retinue" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 4. Aditya Entities (12)
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:dhata  a jyotish:AdityaBeing ;
+    rdfs:label          "Dhata" ;
+    jyotish:subtitle    "The Love of Bearing" ;
+    jyotish:signNumber  1 ;
+    jyotish:element     "fire" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "masculine" ;
+    jyotish:parity      "odd" ;
+    jyotish:hasRishi    jyotish:pulastya ;
+    jyotish:hasGandharva jyotish:tumburu ;
+    jyotish:hasApsara   jyotish:kritasthali ;
+    jyotish:hasNaga     jyotish:vasuki ;
+    jyotish:hasYaksha   jyotish:rathakrit ;
+    jyotish:hasRakshasa jyotish:heti .
+
+jyotish:aryama  a jyotish:AdityaBeing ;
+    rdfs:label          "Aryama" ;
+    jyotish:subtitle    "The Love of Companionship" ;
+    jyotish:signNumber  2 ;
+    jyotish:element     "earth" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "feminine" ;
+    jyotish:parity      "even" ;
+    jyotish:hasRishi    jyotish:pulaha ;
+    jyotish:hasGandharva jyotish:narada ;
+    jyotish:hasApsara   jyotish:punjikasthali ;
+    jyotish:hasNaga     jyotish:kacchanira ;
+    jyotish:hasYaksha   jyotish:rathauja ;
+    jyotish:hasRakshasa jyotish:praheti .
+
+jyotish:mitra  a jyotish:AdityaBeing ;
+    rdfs:label          "Mitra" ;
+    jyotish:subtitle    "The Love of Friendship" ;
+    jyotish:signNumber  3 ;
+    jyotish:element     "air" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "masculine" ;
+    jyotish:parity      "odd" ;
+    jyotish:hasRishi    jyotish:atri ;
+    jyotish:hasGandharva jyotish:haha ;
+    jyotish:hasApsara   jyotish:menaka ;
+    jyotish:hasNaga     jyotish:takshaka ;
+    jyotish:hasYaksha   jyotish:rathasvana ;
+    jyotish:hasRakshasa jyotish:paurusheya .
+
+jyotish:varuna  a jyotish:AdityaBeing ;
+    rdfs:label          "Varuna" ;
+    jyotish:subtitle    "All-Encompassing Love" ;
+    jyotish:signNumber  4 ;
+    jyotish:element     "water" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "feminine" ;
+    jyotish:parity      "even" ;
+    jyotish:hasRishi    jyotish:vasishtha ;
+    jyotish:hasGandharva jyotish:huhu ;
+    jyotish:hasApsara   jyotish:sahajanya ;
+    jyotish:hasNaga     jyotish:shukra-naga ;
+    jyotish:hasYaksha   jyotish:rathachitra ;
+    jyotish:hasRakshasa jyotish:chitrasvana .
+
+jyotish:indra  a jyotish:AdityaBeing ;
+    rdfs:label          "Indra" ;
+    jyotish:subtitle    "Self-Love" ;
+    jyotish:signNumber  5 ;
+    jyotish:element     "fire" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "masculine" ;
+    jyotish:parity      "odd" ;
+    jyotish:hasRishi    jyotish:angiras ;
+    jyotish:hasGandharva jyotish:vishvavasu-indra ;
+    jyotish:hasApsara   jyotish:pramlocha ;
+    jyotish:hasNaga     jyotish:elapattra ;
+    jyotish:hasYaksha   jyotish:shrota ;
+    jyotish:hasRakshasa jyotish:varya .
+
+jyotish:vivasvan  a jyotish:AdityaBeing ;
+    rdfs:label          "Vivasvan" ;
+    jyotish:subtitle    "The Love of Humanity" ;
+    jyotish:signNumber  6 ;
+    jyotish:element     "earth" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "feminine" ;
+    jyotish:parity      "even" ;
+    jyotish:hasRishi    jyotish:bhrigu ;
+    jyotish:hasGandharva jyotish:ugrasena ;
+    jyotish:hasApsara   jyotish:anumloca ;
+    jyotish:hasNaga     jyotish:shankhapala ;
+    jyotish:hasYaksha   jyotish:asarana ;
+    jyotish:hasRakshasa jyotish:vyaghra .
+
+jyotish:tvashta  a jyotish:AdityaBeing ;
+    rdfs:label          "Tvashta" ;
+    jyotish:subtitle    "The Love of Creating Useful Forms" ;
+    jyotish:signNumber  7 ;
+    jyotish:element     "air" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "masculine" ;
+    jyotish:parity      "odd" ;
+    jyotish:hasRishi    jyotish:jamadagni ;
+    jyotish:hasGandharva jyotish:dhritarashtra ;
+    jyotish:hasApsara   jyotish:tilottama ;
+    jyotish:hasNaga     jyotish:kambala ;
+    jyotish:hasYaksha   jyotish:shatajit ;
+    jyotish:hasRakshasa jyotish:brahmapeta .
+
+jyotish:vishnu  a jyotish:AdityaBeing ;
+    rdfs:label          "Vishnu" ;
+    jyotish:subtitle    "The Love of God" ;
+    jyotish:signNumber  8 ;
+    jyotish:element     "water" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "feminine" ;
+    jyotish:parity      "even" ;
+    jyotish:hasRishi    jyotish:vishvamitra ;
+    jyotish:hasGandharva jyotish:suryavarcas ;
+    jyotish:hasApsara   jyotish:rambha ;
+    jyotish:hasNaga     jyotish:ashvatara ;
+    jyotish:hasYaksha   jyotish:satyajit ;
+    jyotish:hasRakshasa jyotish:makhapeta .
+
+jyotish:amshu  a jyotish:AdityaBeing ;
+    rdfs:label          "Amshu" ;
+    jyotish:subtitle    "The Love of Authenticity" ;
+    jyotish:signNumber  9 ;
+    jyotish:element     "fire" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "masculine" ;
+    jyotish:parity      "odd" ;
+    jyotish:hasRishi    jyotish:kashyapa ;
+    jyotish:hasGandharva jyotish:ritasena ;
+    jyotish:hasApsara   jyotish:urvashi ;
+    jyotish:hasNaga     jyotish:mahashankha ;
+    jyotish:hasYaksha   jyotish:tarkshya ;
+    jyotish:hasRakshasa jyotish:vidhyucchatru .
+
+jyotish:bhaga  a jyotish:AdityaBeing ;
+    rdfs:label          "Bhaga" ;
+    jyotish:subtitle    "The Love of Discipline" ;
+    jyotish:signNumber  10 ;
+    jyotish:element     "earth" ;
+    jyotish:quality     "movable" ;
+    jyotish:gender      "feminine" ;
+    jyotish:parity      "even" ;
+    jyotish:hasRishi    jyotish:ayu ;
+    jyotish:hasGandharva jyotish:urnayu ;
+    jyotish:hasApsara   jyotish:purvacitta ;
+    jyotish:hasNaga     jyotish:karkotaka ;
+    jyotish:hasYaksha   jyotish:arishtanemi ;
+    jyotish:hasRakshasa jyotish:sphurja .
+
+jyotish:pusha  a jyotish:AdityaBeing ;
+    rdfs:label          "Pusha" ;
+    jyotish:subtitle    "The Love of Service" ;
+    jyotish:signNumber  11 ;
+    jyotish:element     "air" ;
+    jyotish:quality     "fixed" ;
+    jyotish:gender      "masculine" ;
+    jyotish:parity      "odd" ;
+    jyotish:hasRishi    jyotish:gautama ;
+    jyotish:hasGandharva jyotish:suruci ;
+    jyotish:hasApsara   jyotish:ghritachi ;
+    jyotish:hasNaga     jyotish:dhananjaya ;
+    jyotish:hasYaksha   jyotish:sushena ;
+    jyotish:hasRakshasa jyotish:vata .
+
+jyotish:parjanya  a jyotish:AdityaBeing ;
+    rdfs:label          "Parjanya" ;
+    jyotish:subtitle    "The Love of Life" ;
+    jyotish:signNumber  12 ;
+    jyotish:element     "water" ;
+    jyotish:quality     "dual" ;
+    jyotish:gender      "feminine" ;
+    jyotish:parity      "even" ;
+    jyotish:hasRishi    jyotish:bharadvaja ;
+    jyotish:hasGandharva jyotish:vishvavasu-parjanya ;
+    jyotish:hasApsara   jyotish:visvaci ;
+    jyotish:hasNaga     jyotish:airavata ;
+    jyotish:hasYaksha   jyotish:senajit ;
+    jyotish:hasRakshasa jyotish:varcas .
+
+# ═══════════════════════════════════════════════════════════════════
+# 5. Rishi Entities (12)
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:pulastya  a jyotish:Rishi ;
+    rdfs:label       "Pulastya" ;
+    jyotish:subtitle "The Law of Protection" .
+
+jyotish:pulaha  a jyotish:Rishi ;
+    rdfs:label       "Pulaha" ;
+    jyotish:subtitle "The Law of Enduring" .
+
+jyotish:atri  a jyotish:Rishi ;
+    rdfs:label       "Atri" ;
+    jyotish:subtitle "The Law of Potential" .
+
+jyotish:vasishtha  a jyotish:Rishi ;
+    rdfs:label       "Vasishtha" ;
+    jyotish:subtitle "The Law of Consciousness" .
+
+jyotish:angiras  a jyotish:Rishi ;
+    rdfs:label       "Angiras" ;
+    jyotish:subtitle "The Law of Essence" .
+
+jyotish:bhrigu  a jyotish:Rishi ;
+    rdfs:label       "Bhrigu" ;
+    jyotish:subtitle "The Law of Man" .
+
+jyotish:jamadagni  a jyotish:Rishi ;
+    rdfs:label       "Jamadagni" ;
+    jyotish:subtitle "Paternal Law" .
+
+jyotish:vishvamitra  a jyotish:Rishi ;
+    rdfs:label       "Vishvamitra" ;
+    jyotish:subtitle "The Law of Transformation" .
+
+jyotish:kashyapa  a jyotish:Rishi ;
+    rdfs:label       "Kashyapa" ;
+    jyotish:subtitle "The Law of Creative Manifestation" .
+
+jyotish:ayu  a jyotish:Rishi ;
+    rdfs:label       "Ayu" ;
+    jyotish:subtitle "The Law of Effort" .
+
+jyotish:gautama  a jyotish:Rishi ;
+    rdfs:label       "Gautama" ;
+    jyotish:subtitle "The Law of Need" .
+
+jyotish:bharadvaja  a jyotish:Rishi ;
+    rdfs:label       "Bharadvaja" ;
+    jyotish:subtitle "The Law of Return" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 6. Gandharva Entities (12)
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:tumburu  a jyotish:Gandharva ;
+    rdfs:label       "Tumburu" ;
+    jyotish:subtitle "The King's Most Expressive Servant" .
+
+jyotish:narada  a jyotish:Gandharva ;
+    rdfs:label       "Narada" ;
+    jyotish:subtitle "The World's Most Capable and Responsible Man" .
+
+jyotish:haha  a jyotish:Gandharva ;
+    rdfs:label       "Haha" ;
+    jyotish:subtitle "He Who Can Only Say Yes and Does So Perfectly" .
+
+jyotish:huhu  a jyotish:Gandharva ;
+    rdfs:label       "Huhu" ;
+    jyotish:subtitle "He Who Can Only Say No but Does So Perfectly" .
+
+jyotish:vishvavasu-indra  a jyotish:Gandharva ;
+    rdfs:label       "Vishvavasu" ;
+    jyotish:subtitle "The Most Righteous and Glorious King" .
+
+jyotish:ugrasena  a jyotish:Gandharva ;
+    rdfs:label       "Ugrasena" ;
+    jyotish:subtitle "He Who Sees the Situation Clearly and Deals with It Perfectly" .
+
+jyotish:dhritarashtra  a jyotish:Gandharva ;
+    rdfs:label       "Dhritarashtra" ;
+    jyotish:subtitle "He Who Is an Expert Judge of What Is Truly Valuable" .
+
+jyotish:suryavarcas  a jyotish:Gandharva ;
+    rdfs:label       "Suryavarcas" ;
+    jyotish:subtitle "He Who Can Do the Impossible" .
+
+jyotish:ritasena  a jyotish:Gandharva ;
+    rdfs:label       "Ritasena" ;
+    jyotish:subtitle "He Who Acts Only from His Innate Knowing of Himself" .
+
+jyotish:urnayu  a jyotish:Gandharva ;
+    rdfs:label       "Urnayu" ;
+    jyotish:subtitle "He Who Has No Fear at All of Death" .
+
+jyotish:suruci  a jyotish:Gandharva ;
+    rdfs:label       "Suruci" ;
+    jyotish:subtitle "He Who Uses His Power Like the Sharpest Knife" .
+
+jyotish:vishvavasu-parjanya  a jyotish:Gandharva ;
+    rdfs:label       "Vishvavasu" ;
+    jyotish:subtitle "The Sacred Masculine's Sacred Feminine" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 7. Apsara Entities (12)
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:kritasthali  a jyotish:Apsara ;
+    rdfs:label       "Kritasthali" ;
+    jyotish:subtitle "She Who Stirs What Lies Dormant Within Us" .
+
+jyotish:punjikasthali  a jyotish:Apsara ;
+    rdfs:label       "Punjikasthali" ;
+    jyotish:subtitle "She Who Makes What We Feel into Something Solid" .
+
+jyotish:menaka  a jyotish:Apsara ;
+    rdfs:label       "Menaka" ;
+    jyotish:subtitle "The Secret Sauce" .
+
+jyotish:sahajanya  a jyotish:Apsara ;
+    rdfs:label       "Sahajanya" ;
+    jyotish:subtitle "She Who Makes Us Powerful in Our Own Skin" .
+
+jyotish:pramlocha  a jyotish:Apsara ;
+    rdfs:label       "Pramlocha" ;
+    jyotish:subtitle "She Who Loosens What Is Not Truly Ours" .
+
+jyotish:anumloca  a jyotish:Apsara ;
+    rdfs:label       "Anumloca" ;
+    jyotish:subtitle "She Who Engenders a Feeling of Belonging" .
+
+jyotish:tilottama  a jyotish:Apsara ;
+    rdfs:label       "Tilottama" ;
+    jyotish:subtitle "The Uncontrollable Appreciation of the Innate Beauty of Everything" .
+
+jyotish:rambha  a jyotish:Apsara ;
+    rdfs:label       "Rambha" ;
+    jyotish:subtitle "She Who Scrutinizes How We Use Our Energy" .
+
+jyotish:urvashi  a jyotish:Apsara ;
+    rdfs:label       "Urvashi" ;
+    jyotish:subtitle "She Who Awakens the Need to Create" .
+
+jyotish:purvacitta  a jyotish:Apsara ;
+    rdfs:label       "Purvacitta" ;
+    jyotish:subtitle "She Who Readies the Heart for What Is Coming" .
+
+jyotish:ghritachi  a jyotish:Apsara ;
+    rdfs:label       "Ghritachi" ;
+    jyotish:subtitle "She Who Provides the Energy for Everything" .
+
+jyotish:visvaci  a jyotish:Apsara ;
+    rdfs:label       "Visvaci" ;
+    jyotish:subtitle "She Who Is Always in the Mood for What Is Happening Right Now" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 8. Naga Entities (12)
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:vasuki  a jyotish:Naga ;
+    rdfs:label       "Vasuki" ;
+    jyotish:subtitle "The Primal Wound" .
+
+jyotish:kacchanira  a jyotish:Naga ;
+    rdfs:label       "Kacchanira" ;
+    jyotish:subtitle "How Attentive Are You Really" .
+
+jyotish:takshaka  a jyotish:Naga ;
+    rdfs:label       "Takshaka" ;
+    jyotish:subtitle "Rock Bottom" .
+
+jyotish:shukra-naga  a jyotish:Naga ;
+    rdfs:label       "Shukra" ;
+    jyotish:subtitle "The Grace of God" .
+
+jyotish:elapattra  a jyotish:Naga ;
+    rdfs:label       "Elapattra" ;
+    jyotish:subtitle "The Urge to Become the Best We Can Possibly Be" .
+
+jyotish:shankhapala  a jyotish:Naga ;
+    rdfs:label       "Shankhapala" ;
+    jyotish:subtitle "The Urge to Find the Truth" .
+
+jyotish:kambala  a jyotish:Naga ;
+    rdfs:label       "Kambala" ;
+    jyotish:subtitle "The Urge to Find What Is Undyingly Valuable" .
+
+jyotish:ashvatara  a jyotish:Naga ;
+    rdfs:label       "Ashvatara" ;
+    jyotish:subtitle "The Urge to Break Through" .
+
+jyotish:mahashankha  a jyotish:Naga ;
+    rdfs:label       "Mahashankha" ;
+    jyotish:subtitle "The Urge to Stay Focused on What Truly Matters" .
+
+jyotish:karkotaka  a jyotish:Naga ;
+    rdfs:label       "Karkotaka" ;
+    jyotish:subtitle "The Urge to Remorse and Making Amends" .
+
+jyotish:dhananjaya  a jyotish:Naga ;
+    rdfs:label       "Dhananjaya" ;
+    jyotish:subtitle "The Urge to Attain the Truest Wealth" .
+
+jyotish:airavata  a jyotish:Naga ;
+    rdfs:label       "Airavata" ;
+    jyotish:subtitle "The Burning Desire for Liberation" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 9. Yaksha Entities (12)
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:rathakrit  a jyotish:Yaksha ;
+    rdfs:label       "Rathakrit" ;
+    jyotish:subtitle "The Body Itself" .
+
+jyotish:rathauja  a jyotish:Yaksha ;
+    rdfs:label       "Rathauja" ;
+    jyotish:subtitle "The Body's Power" .
+
+jyotish:rathasvana  a jyotish:Yaksha ;
+    rdfs:label       "Rathasvana" ;
+    jyotish:subtitle "The Body's Indicators" .
+
+jyotish:rathachitra  a jyotish:Yaksha ;
+    rdfs:label       "Rathachitra" ;
+    jyotish:subtitle "The Body Radiant" .
+
+jyotish:shrota  a jyotish:Yaksha ;
+    rdfs:label       "Shrota" ;
+    jyotish:subtitle "The Body Listening" .
+
+jyotish:asarana  a jyotish:Yaksha ;
+    rdfs:label       "Asarana" ;
+    jyotish:subtitle "The Body Relating" .
+
+jyotish:shatajit  a jyotish:Yaksha ;
+    rdfs:label       "Shatajit" ;
+    jyotish:subtitle "The Body's Purpose" .
+
+jyotish:satyajit  a jyotish:Yaksha ;
+    rdfs:label       "Satyajit" ;
+    jyotish:subtitle "The Body Loosens Its Hold" .
+
+jyotish:tarkshya  a jyotish:Yaksha ;
+    rdfs:label       "Tarkshya" ;
+    jyotish:subtitle "The Body's Focused Intent" .
+
+jyotish:arishtanemi  a jyotish:Yaksha ;
+    rdfs:label       "Arishtanemi" ;
+    jyotish:subtitle "The Body Unstoppable" .
+
+jyotish:sushena  a jyotish:Yaksha ;
+    rdfs:label       "Sushena" ;
+    jyotish:subtitle "The Body Expert" .
+
+jyotish:senajit  a jyotish:Yaksha ;
+    rdfs:label       "Senajit" ;
+    jyotish:subtitle "The Body Transcended" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 10. Rakshasa Entities (12)
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:heti  a jyotish:RakshasaBeing ;
+    rdfs:label       "Heti" ;
+    jyotish:subtitle "The Struggle of Lethality" .
+
+jyotish:praheti  a jyotish:RakshasaBeing ;
+    rdfs:label       "Praheti" ;
+    jyotish:subtitle "The Struggle Against Lethality" .
+
+jyotish:paurusheya  a jyotish:RakshasaBeing ;
+    rdfs:label       "Paurusheya" ;
+    jyotish:subtitle "The Struggle for Humanity" .
+
+jyotish:chitrasvana  a jyotish:RakshasaBeing ;
+    rdfs:label       "Chitrasvana" ;
+    jyotish:subtitle "The Struggle of Bad Vibrations" .
+
+jyotish:varya  a jyotish:RakshasaBeing ;
+    rdfs:label       "Varya" ;
+    jyotish:subtitle "The Struggle of Pride" .
+
+jyotish:vyaghra  a jyotish:RakshasaBeing ;
+    rdfs:label       "Vyaghra" ;
+    jyotish:subtitle "The Struggle of Being Authentic" .
+
+jyotish:brahmapeta  a jyotish:RakshasaBeing ;
+    rdfs:label       "Brahmapeta" ;
+    jyotish:subtitle "The Struggle of Self-Control" .
+
+jyotish:makhapeta  a jyotish:RakshasaBeing ;
+    rdfs:label       "Makhapeta" ;
+    jyotish:subtitle "The Struggle of Actually Making the Change" .
+
+jyotish:vidhyucchatru  a jyotish:RakshasaBeing ;
+    rdfs:label       "Vidhyucchatru" ;
+    jyotish:subtitle "The Struggle of Knowing One's Own Self" .
+
+jyotish:sphurja  a jyotish:RakshasaBeing ;
+    rdfs:label       "Sphurja" ;
+    jyotish:subtitle "The Battle Itself" .
+
+jyotish:vata  a jyotish:RakshasaBeing ;
+    rdfs:label       "Vata" ;
+    jyotish:subtitle "The Struggle of Conquering Totally" .
+
+jyotish:varcas  a jyotish:RakshasaBeing ;
+    rdfs:label       "Varcas" ;
+    jyotish:subtitle "The Struggle of Not Blocking the Flow" .
+
+# ═══════════════════════════════════════════════════════════════════
+# 11. Trimsamsa-to-Being-Type Mappings
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:mangala  jyotish:activatesBeingType jyotish:Gandharva .
+jyotish:shani    jyotish:activatesBeingType jyotish:RakshasaBeing .
+jyotish:guru     jyotish:activatesBeingType jyotish:Rishi .
+jyotish:budha    jyotish:activatesBeingType jyotish:Yaksha .
+jyotish:shukra   jyotish:activatesBeingType jyotish:Apsara .
+
+# ═══════════════════════════════════════════════════════════════════
+# 12. RDF-star Provenance: Aditya Sign Assignments
+# ═══════════════════════════════════════════════════════════════════
+
+<< jyotish:dhata jyotish:signNumber 1 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:aryama jyotish:signNumber 2 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:mitra jyotish:signNumber 3 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:varuna jyotish:signNumber 4 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:indra jyotish:signNumber 5 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:vivasvan jyotish:signNumber 6 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:tvashta jyotish:signNumber 7 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:vishnu jyotish:signNumber 8 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:amshu jyotish:signNumber 9 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:bhaga jyotish:signNumber 10 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:pusha jyotish:signNumber 11 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+<< jyotish:parjanya jyotish:signNumber 12 >>
+    vidya:assertedBy [
+        vidya:tradition  jyotish:tradition-aditya ;
+        vidya:source     jyotish:source-bhagavatam ;
+        vidya:pramana    vidya:shabda ;
+        vidya:confidence "0.95"^^xsd:float
+    ] .
+
+# ═══════════════════════════════════════════════════════════════════
+# 13. Hora-Trimsamsa Degree Ranges (72)
+# ═══════════════════════════════════════════════════════════════════
+# Each entry maps a degree range within a sign to the specific being
+# activated by the intersection of hora (Sun/Moon) and trimsamsa lord.
+# Odd signs: Sun hora 0-15°, Moon hora 15-30°
+# Even signs: Moon hora 0-15°, Sun hora 15-30°
+# Jupiter bridges both horas in every sign.
+
+# ── Dhata (Aries, odd) ──
+
+jyotish:dhata-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:dhata ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:tumburu .
+
+jyotish:dhata-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:dhata ;
+    jyotish:startDegree 5 ; jyotish:endDegree 10 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:heti .
+
+jyotish:dhata-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:dhata ;
+    jyotish:startDegree 10 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:pulastya .
+
+jyotish:dhata-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:dhata ;
+    jyotish:startDegree 15 ; jyotish:endDegree 18 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:pulastya .
+
+jyotish:dhata-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:dhata ;
+    jyotish:startDegree 18 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:rathakrit .
+
+jyotish:dhata-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:dhata ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:kritasthali .
+
+# ── Aryama (Taurus, even) ──
+
+jyotish:aryama-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:aryama ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:punjikasthali .
+
+jyotish:aryama-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:aryama ;
+    jyotish:startDegree 5 ; jyotish:endDegree 12 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:rathauja .
+
+jyotish:aryama-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:aryama ;
+    jyotish:startDegree 12 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:pulaha .
+
+jyotish:aryama-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:aryama ;
+    jyotish:startDegree 15 ; jyotish:endDegree 20 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:pulaha .
+
+jyotish:aryama-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:aryama ;
+    jyotish:startDegree 20 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:praheti .
+
+jyotish:aryama-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:aryama ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:narada .
+
+# ── Mitra (Gemini, odd) ──
+
+jyotish:mitra-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:mitra ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:haha .
+
+jyotish:mitra-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:mitra ;
+    jyotish:startDegree 5 ; jyotish:endDegree 10 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:paurusheya .
+
+jyotish:mitra-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:mitra ;
+    jyotish:startDegree 10 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:atri .
+
+jyotish:mitra-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:mitra ;
+    jyotish:startDegree 15 ; jyotish:endDegree 18 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:atri .
+
+jyotish:mitra-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:mitra ;
+    jyotish:startDegree 18 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:rathasvana .
+
+jyotish:mitra-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:mitra ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:menaka .
+
+# ── Varuna (Cancer, even) ──
+
+jyotish:varuna-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:varuna ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:sahajanya .
+
+jyotish:varuna-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:varuna ;
+    jyotish:startDegree 5 ; jyotish:endDegree 12 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:rathachitra .
+
+jyotish:varuna-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:varuna ;
+    jyotish:startDegree 12 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:vasishtha .
+
+jyotish:varuna-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:varuna ;
+    jyotish:startDegree 15 ; jyotish:endDegree 20 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:vasishtha .
+
+jyotish:varuna-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:varuna ;
+    jyotish:startDegree 20 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:chitrasvana .
+
+jyotish:varuna-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:varuna ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:huhu .
+
+# ── Indra (Leo, odd) ──
+
+jyotish:indra-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:indra ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:vishvavasu-indra .
+
+jyotish:indra-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:indra ;
+    jyotish:startDegree 5 ; jyotish:endDegree 10 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:varya .
+
+jyotish:indra-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:indra ;
+    jyotish:startDegree 10 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:angiras .
+
+jyotish:indra-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:indra ;
+    jyotish:startDegree 15 ; jyotish:endDegree 18 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:angiras .
+
+jyotish:indra-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:indra ;
+    jyotish:startDegree 18 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:shrota .
+
+jyotish:indra-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:indra ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:pramlocha .
+
+# ── Vivasvan (Virgo, even) ──
+
+jyotish:vivasvan-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vivasvan ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:anumloca .
+
+jyotish:vivasvan-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vivasvan ;
+    jyotish:startDegree 5 ; jyotish:endDegree 12 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:asarana .
+
+jyotish:vivasvan-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vivasvan ;
+    jyotish:startDegree 12 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:bhrigu .
+
+jyotish:vivasvan-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vivasvan ;
+    jyotish:startDegree 15 ; jyotish:endDegree 20 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:bhrigu .
+
+jyotish:vivasvan-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vivasvan ;
+    jyotish:startDegree 20 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:vyaghra .
+
+jyotish:vivasvan-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vivasvan ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:ugrasena .
+
+# ── Tvashta (Libra, odd) ──
+
+jyotish:tvashta-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:tvashta ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:dhritarashtra .
+
+jyotish:tvashta-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:tvashta ;
+    jyotish:startDegree 5 ; jyotish:endDegree 10 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:brahmapeta .
+
+jyotish:tvashta-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:tvashta ;
+    jyotish:startDegree 10 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:jamadagni .
+
+jyotish:tvashta-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:tvashta ;
+    jyotish:startDegree 15 ; jyotish:endDegree 18 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:jamadagni .
+
+jyotish:tvashta-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:tvashta ;
+    jyotish:startDegree 18 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:shatajit .
+
+jyotish:tvashta-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:tvashta ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:tilottama .
+
+# ── Vishnu (Scorpio, even) ──
+
+jyotish:vishnu-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vishnu ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:rambha .
+
+jyotish:vishnu-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vishnu ;
+    jyotish:startDegree 5 ; jyotish:endDegree 12 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:satyajit .
+
+jyotish:vishnu-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vishnu ;
+    jyotish:startDegree 12 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:vishvamitra .
+
+jyotish:vishnu-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vishnu ;
+    jyotish:startDegree 15 ; jyotish:endDegree 20 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:vishvamitra .
+
+jyotish:vishnu-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vishnu ;
+    jyotish:startDegree 20 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:makhapeta .
+
+jyotish:vishnu-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:vishnu ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:suryavarcas .
+
+# ── Amshu (Sagittarius, odd) ──
+
+jyotish:amshu-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:amshu ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:ritasena .
+
+jyotish:amshu-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:amshu ;
+    jyotish:startDegree 5 ; jyotish:endDegree 10 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:vidhyucchatru .
+
+jyotish:amshu-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:amshu ;
+    jyotish:startDegree 10 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:kashyapa .
+
+jyotish:amshu-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:amshu ;
+    jyotish:startDegree 15 ; jyotish:endDegree 18 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:kashyapa .
+
+jyotish:amshu-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:amshu ;
+    jyotish:startDegree 18 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:tarkshya .
+
+jyotish:amshu-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:amshu ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:urvashi .
+
+# ── Bhaga (Capricorn, even) ──
+
+jyotish:bhaga-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:bhaga ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:purvacitta .
+
+jyotish:bhaga-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:bhaga ;
+    jyotish:startDegree 5 ; jyotish:endDegree 12 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:arishtanemi .
+
+jyotish:bhaga-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:bhaga ;
+    jyotish:startDegree 12 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:ayu .
+
+jyotish:bhaga-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:bhaga ;
+    jyotish:startDegree 15 ; jyotish:endDegree 20 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:ayu .
+
+jyotish:bhaga-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:bhaga ;
+    jyotish:startDegree 20 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:sphurja .
+
+jyotish:bhaga-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:bhaga ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:urnayu .
+
+# ── Pusha (Aquarius, odd) ──
+
+jyotish:pusha-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:pusha ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:suruci .
+
+jyotish:pusha-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:pusha ;
+    jyotish:startDegree 5 ; jyotish:endDegree 10 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:vata .
+
+jyotish:pusha-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:pusha ;
+    jyotish:startDegree 10 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:gautama .
+
+jyotish:pusha-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:pusha ;
+    jyotish:startDegree 15 ; jyotish:endDegree 18 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:gautama .
+
+jyotish:pusha-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:pusha ;
+    jyotish:startDegree 18 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:sushena .
+
+jyotish:pusha-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:pusha ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:ghritachi .
+
+# ── Parjanya (Pisces, even) ──
+
+jyotish:parjanya-chandra-shukra  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:parjanya ;
+    jyotish:startDegree 0 ; jyotish:endDegree 5 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:shukra ;
+    jyotish:activeBeing jyotish:visvaci .
+
+jyotish:parjanya-chandra-budha  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:parjanya ;
+    jyotish:startDegree 5 ; jyotish:endDegree 12 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:budha ;
+    jyotish:activeBeing jyotish:senajit .
+
+jyotish:parjanya-chandra-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:parjanya ;
+    jyotish:startDegree 12 ; jyotish:endDegree 15 ;
+    jyotish:hora jyotish:chandra ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:bharadvaja .
+
+jyotish:parjanya-surya-guru  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:parjanya ;
+    jyotish:startDegree 15 ; jyotish:endDegree 20 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:guru ;
+    jyotish:activeBeing jyotish:bharadvaja .
+
+jyotish:parjanya-surya-shani  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:parjanya ;
+    jyotish:startDegree 20 ; jyotish:endDegree 25 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:shani ;
+    jyotish:activeBeing jyotish:varcas .
+
+jyotish:parjanya-surya-mangala  a jyotish:DegreeRange ; jyotish:ofAditya jyotish:parjanya ;
+    jyotish:startDegree 25 ; jyotish:endDegree 30 ;
+    jyotish:hora jyotish:surya ; jyotish:trimsamsaLord jyotish:mangala ;
+    jyotish:activeBeing jyotish:vishvavasu-parjanya .
+
+# ═══════════════════════════════════════════════════════════════════
+# 14. Provenance: Hora-Trimsamsa Degree Ranges
+# ═══════════════════════════════════════════════════════════════════
+
+jyotish:assertion-hora-trimsamsa  a vidya:Assertion ;
+    vidya:tradition  jyotish:tradition-aditya ;
+    vidya:source     jyotish:source-ernst-wilhelm ;
+    vidya:pramana    vidya:anumana ;
+    vidya:confidence "0.9"^^xsd:float ;
+    rdfs:comment     "Covers all DegreeRange entities: hora-trimsamsa synthesis from SB 12.11.33-44 retinue assignments combined with traditional hora and trimsamsa divisions" .

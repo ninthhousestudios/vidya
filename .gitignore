@@ -4,3 +4,5 @@ target/
 # AgentOps session artifacts
 .agents/
 index.db
+docs/windows-error.md
+.antigravitycli/
