@@ -1,7 +1,7 @@
 use super::matcher::ResolvedToken;
 use super::vocab::SchemaVocab;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ResolvedQuery {
     Describe {
         subject_iri: String,
@@ -29,11 +29,20 @@ pub enum ResolvedQuery {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ResolutionReport {
     pub query: ResolvedQuery,
     pub unknown_tokens: Vec<String>,
     pub resolution_details: Vec<String>,
+    pub alternatives: Vec<AlternativeParse>,
+}
+
+#[derive(Debug, Clone)]
+pub struct AlternativeParse {
+    pub query: ResolvedQuery,
+    pub pattern_name: String,
+    pub score: f64,
+    pub score_breakdown: Vec<(String, f64)>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -114,6 +123,7 @@ fn assemble_describe(
             },
             unknown_tokens,
             resolution_details: vec![format!("subject: {}", short_name(entities[0]))],
+            alternatives: Vec::new(),
         }),
         _ => {
             let deduped: Vec<&str> = dedup_strs(&entities);
@@ -124,6 +134,7 @@ fn assemble_describe(
                     },
                     unknown_tokens,
                     resolution_details: vec![format!("subject: {}", short_name(deduped[0]))],
+                    alternatives: Vec::new(),
                 });
             }
             Err(AssembleError::AmbiguousEntity {
@@ -191,6 +202,7 @@ fn assemble_search(
         },
         unknown_tokens,
         resolution_details: details,
+        alternatives: Vec::new(),
     })
 }
 
@@ -271,6 +283,7 @@ fn assemble_traverse(
             format!("subject: {}", short_name(&subject_iri)),
             format!("predicate: {}", short_name(&predicate_iri)),
         ],
+        alternatives: Vec::new(),
     })
 }
 
@@ -354,6 +367,7 @@ fn assemble_provenance(
                 }
             ),
         ],
+        alternatives: Vec::new(),
     })
 }
 
@@ -379,6 +393,7 @@ fn assemble_similar(
             },
             unknown_tokens,
             resolution_details: vec![format!("subject: {}", short_name(iri))],
+            alternatives: Vec::new(),
         }),
         iris => Err(AssembleError::AmbiguousEntity {
             entities: iris.iter().map(|e| short_name(e)).collect(),
@@ -430,6 +445,7 @@ fn assemble_unbind(
             format!("subject: {}", short_name(&subject_iri)),
             format!("predicate: {}", short_name(&predicate_iri)),
         ],
+        alternatives: Vec::new(),
     })
 }
 

@@ -39,11 +39,33 @@ pub fn detect_intent(raw_input: &str) -> Option<IntentResult> {
     if let Some(r) = try_describe_explicit(n) {
         return Some(r);
     }
+    if let Some(r) = try_traverse_what_is(n) {
+        return Some(r);
+    }
     if let Some(r) = try_describe_what_is(n) {
         return Some(r);
     }
 
     None
+}
+
+pub fn detect_all_intents(raw_input: &str) -> Vec<IntentResult> {
+    let n = normalize(raw_input);
+    let n = n.as_str();
+
+    let mut results = Vec::new();
+    if let Some(r) = try_tradition_say(n) { results.push(r); }
+    if let Some(r) = try_tradition_according(n) { results.push(r); }
+    if let Some(r) = try_similar(n) { results.push(r); }
+    if let Some(r) = try_search_where(n) { results.push(r); }
+    if let Some(r) = try_search_what_are(n) { results.push(r); }
+    if let Some(r) = try_traverse_possessive(n) { results.push(r); }
+    if let Some(r) = try_traverse_does(n) { results.push(r); }
+    if let Some(r) = try_traverse_what_is(n) { results.push(r); }
+    if let Some(r) = try_describe_tell(n) { results.push(r); }
+    if let Some(r) = try_describe_explicit(n) { results.push(r); }
+    if let Some(r) = try_describe_what_is(n) { results.push(r); }
+    results
 }
 
 fn normalize(input: &str) -> String {
@@ -195,6 +217,25 @@ fn try_traverse_does(input: &str) -> Option<IntentResult> {
         slot_text: rest.to_string(),
         tradition: None,
         pattern_name: "traverse_does",
+    })
+}
+
+// "what is X Y" where there are >= 2 content words — candidate traverse
+fn try_traverse_what_is(input: &str) -> Option<IntentResult> {
+    let rest = input.strip_prefix("what is ")?;
+    let rest = non_empty(rest)?;
+    let content_words: Vec<&str> = rest
+        .split_whitespace()
+        .filter(|w| !super::matcher::STOPWORDS.contains(w))
+        .collect();
+    if content_words.len() < 2 {
+        return None;
+    }
+    Some(IntentResult {
+        mode: QueryMode::Traverse,
+        slot_text: rest.to_string(),
+        tradition: None,
+        pattern_name: "traverse_what_is",
     })
 }
 

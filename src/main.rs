@@ -361,6 +361,17 @@ fn cmd_ask(
     if !report.unknown_tokens.is_empty() {
         eprintln!("  unrecognized: {}", report.unknown_tokens.join(", "));
     }
+    if !report.alternatives.is_empty() {
+        eprintln!("  alternatives:");
+        for alt in &report.alternatives {
+            eprintln!(
+                "    {} ({}, score: {:.2})",
+                alt.pattern_name,
+                format_query_mode(&alt.query),
+                alt.score
+            );
+        }
+    }
 
     match report.query {
         ResolvedQuery::Describe { ref subject_iri } => {
@@ -650,6 +661,17 @@ fn nl_resolve(
         eprintln!("  unrecognized: {}", report.unknown_tokens.join(", "));
     }
     Ok(report)
+}
+
+fn format_query_mode(q: &ResolvedQuery) -> &'static str {
+    match q {
+        ResolvedQuery::Describe { .. } => "describe",
+        ResolvedQuery::Search { .. } => "search",
+        ResolvedQuery::Traverse { .. } => "traverse",
+        ResolvedQuery::Provenance { .. } => "provenance",
+        ResolvedQuery::Similar { .. } => "similar",
+        ResolvedQuery::Unbind { .. } => "unbind",
+    }
 }
 
 fn iri_local_name(iri: &str) -> String {

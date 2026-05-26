@@ -31,7 +31,7 @@ pub enum MatchConfidence {
     Vsa,
 }
 
-const STOPWORDS: &[&str] = &[
+pub(crate) const STOPWORDS: &[&str] = &[
     "a", "an", "the", "in", "of", "is", "are", "was", "were", "what", "which", "who", "that",
     "this", "for", "with", "from", "by", "to", "and", "or", "not", "do", "does", "did", "has",
     "have", "had", "be", "been", "being", "it", "its", "my", "me", "about", "tell",

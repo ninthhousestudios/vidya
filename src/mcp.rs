@@ -621,6 +621,15 @@ struct ResolutionMeta {
     details: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     unknown_tokens: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    alternatives: Vec<AlternativeMeta>,
+}
+
+#[derive(Serialize)]
+struct AlternativeMeta {
+    pattern: String,
+    score: f64,
+    score_breakdown: Vec<(String, f64)>,
 }
 
 fn json_out<T: serde::Serialize>(result: T) -> Result<String, ErrorData> {
@@ -638,6 +647,15 @@ fn json_out_resolved<T: serde::Serialize>(
         resolution: Some(ResolutionMeta {
             details: report.resolution_details.clone(),
             unknown_tokens: report.unknown_tokens.clone(),
+            alternatives: report
+                .alternatives
+                .iter()
+                .map(|a| AlternativeMeta {
+                    pattern: a.pattern_name.clone(),
+                    score: a.score,
+                    score_breakdown: a.score_breakdown.clone(),
+                })
+                .collect(),
         }),
     };
     serde_json::to_string_pretty(&envelope)

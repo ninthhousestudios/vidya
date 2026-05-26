@@ -610,3 +610,141 @@ fn intent_what_are_search_with_synonyms() {
         other => panic!("expected Search, got {other:?}"),
     }
 }
+
+#[test]
+fn ranking_what_is_mars_exalted_in() {
+    let store = load_jyotish_with_synonyms();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what is Mars exalted in?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+
+    match &report.query {
+        ResolvedQuery::Traverse {
+            subject_iri,
+            predicate_iri,
+        } => {
+            assert!(iri_ends_with(subject_iri, "mangala"));
+            assert!(iri_ends_with(predicate_iri, "exaltedIn"));
+        }
+        other => panic!("expected Traverse as top parse, got {other:?}"),
+    }
+
+    assert!(
+        !report.alternatives.is_empty(),
+        "should have alternative parses"
+    );
+}
+
+#[test]
+fn ranking_simple_describe_stays_describe() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what is Mars?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+
+    assert!(matches!(&report.query, ResolvedQuery::Describe { .. }));
+}
+
+#[test]
+fn ranking_what_does_mars_rule() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what does Mars rule?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+
+    match &report.query {
+        ResolvedQuery::Traverse {
+            subject_iri,
+            predicate_iri,
+        } => {
+            assert!(iri_ends_with(subject_iri, "mangala"));
+            assert!(iri_ends_with(predicate_iri, "rules"));
+        }
+        other => panic!("expected Traverse, got {other:?}"),
+    }
+}
+
+#[test]
+fn ranking_score_breakdown_in_details() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "tell me about Mars",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+
+    assert!(
+        report.resolution_details.iter().any(|d| d.contains("score:")),
+        "should contain score in details: {:?}",
+        report.resolution_details
+    );
+    assert!(
+        report
+            .resolution_details
+            .iter()
+            .any(|d| d.contains("token_coverage")),
+        "should contain signal breakdown: {:?}",
+        report.resolution_details
+    );
+}
+
+#[test]
+fn ranking_tradition_preserves_tradition() {
+    let store = load_jyotish_with_synonyms();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what does parashara say about Mars?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+
+    assert!(
+        report
+            .resolution_details
+            .iter()
+            .any(|d| d.contains("tradition:")),
+        "should contain tradition in details: {:?}",
+        report.resolution_details
+    );
+}
+
+#[test]
+fn ranking_alternatives_have_scores() {
+    let store = load_jyotish_with_synonyms();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what is Mars exalted in?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+
+    for alt in &report.alternatives {
+        assert!(alt.score > 0.0, "alternative should have positive score");
+        assert!(
+            !alt.score_breakdown.is_empty(),
+            "alternative should have score breakdown"
+        );
+    }
+}

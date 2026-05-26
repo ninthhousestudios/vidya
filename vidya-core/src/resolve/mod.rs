@@ -1,9 +1,10 @@
 pub mod assemble;
 pub mod intent;
 pub mod matcher;
+pub mod rank;
 pub mod vocab;
 
-pub use assemble::{AssembleError, QueryMode, ResolvedQuery, ResolutionReport};
+pub use assemble::{AlternativeParse, AssembleError, QueryMode, ResolvedQuery, ResolutionReport};
 pub use intent::IntentResult;
 pub use matcher::{MatchConfidence, ResolvedToken};
 pub use vocab::{SchemaVocab, SynonymTable};
@@ -37,23 +38,88 @@ pub fn resolve_nl(
     vsa: Option<&EntityIndex<Hrr>>,
     domain: &str,
 ) -> std::result::Result<ResolutionReport, IntentError> {
-    let intent = intent::detect_intent(raw_input).ok_or(IntentError::NoIntentDetected)?;
+    let intents = intent::detect_all_intents(raw_input);
+    if intents.is_empty() {
+        return Err(IntentError::NoIntentDetected);
+    }
 
-    let tokens = matcher::tokenize(&intent.slot_text);
-    let matched = matcher::match_tokens(&tokens, vocab, vsa, domain);
-    let mut report = assemble::assemble(intent.mode, &matched, vocab)?;
+    let attempts: Vec<rank::ParseAttempt> = intents
+        .into_iter()
+        .map(|intent| {
+            let tokens = matcher::tokenize(&intent.slot_text);
+            let matched = matcher::match_tokens(&tokens, vocab, vsa, domain);
+            match assemble::assemble(intent.mode, &matched, vocab) {
+                Ok(report) => rank::ParseAttempt::Ok {
+                    intent,
+                    tokens: matched,
+                    report,
+                },
+                Err(error) => rank::ParseAttempt::Err {
+                    _intent: intent,
+                    _tokens: matched,
+                    _error: error,
+                },
+            }
+        })
+        .collect();
+
+    let mut ranked = rank::rank(attempts);
+
+    if ranked.is_empty() {
+        let intent = intent::detect_intent(raw_input).unwrap();
+        let tokens = matcher::tokenize(&intent.slot_text);
+        let matched = matcher::match_tokens(&tokens, vocab, vsa, domain);
+        return Err(IntentError::Assemble(
+            assemble::assemble(intent.mode, &matched, vocab).unwrap_err(),
+        ));
+    }
+
+    let winner = ranked.remove(0);
+    let mut report = winner.report;
+
+    report.alternatives = ranked
+        .iter()
+        .map(|c| assemble::AlternativeParse {
+            query: c.report.query.clone(),
+            pattern_name: c.pattern_name.to_string(),
+            score: c.total_score,
+            score_breakdown: c.signals.iter().map(|s| (s.name.to_string(), s.value)).collect(),
+        })
+        .collect();
 
     report.resolution_details.insert(
         0,
-        format!("intent: {:?} (pattern: {})", intent.mode, intent.pattern_name),
+        format!(
+            "intent: {:?} (pattern: {}, score: {:.2})",
+            query_mode_of(&report.query),
+            winner.pattern_name,
+            winner.total_score,
+        ),
     );
-    if let Some(tradition) = &intent.tradition {
+    for signal in &winner.signals {
+        report
+            .resolution_details
+            .push(format!("  {}: {:.3}", signal.name, signal.value));
+    }
+
+    if let Some(tradition) = &winner.tradition {
         report
             .resolution_details
             .push(format!("tradition: {tradition}"));
     }
 
     Ok(report)
+}
+
+fn query_mode_of(q: &ResolvedQuery) -> QueryMode {
+    match q {
+        ResolvedQuery::Describe { .. } => QueryMode::Describe,
+        ResolvedQuery::Search { .. } => QueryMode::Search,
+        ResolvedQuery::Traverse { .. } => QueryMode::Traverse,
+        ResolvedQuery::Provenance { .. } => QueryMode::Provenance,
+        ResolvedQuery::Similar { .. } => QueryMode::Similar,
+        ResolvedQuery::Unbind { .. } => QueryMode::Unbind,
+    }
 }
 
 pub fn build_vocab(store: &KnowledgeStore, domain: &str) -> SchemaVocab {
