@@ -1,9 +1,14 @@
 # Natural Language Queries
 
-Vidya's CLI commands accept free-text input instead of requiring exact entity
-names and structured flags. You still pick the query mode (`describe`, `search`,
-`traverse`, `provenance`) — the NL layer resolves your arguments within that
-mode.
+Vidya supports two levels of natural language:
+
+1. **`vidya ask`** — fully freeform. Auto-detects the query mode from the
+   question shape, resolves entity/type/predicate names, and applies
+   tradition/source/pramana scoping from the question text.
+
+2. **NL fallback on structured commands** — `describe`, `search`, `traverse`,
+   `provenance` accept natural language arguments. You pick the mode; vidya
+   resolves your arguments within it.
 
 Structured input still works identically. NL resolution is a fallback that
 activates only when the structured path fails.
@@ -20,9 +25,16 @@ On NL fallback, vidya builds a vocabulary index from the loaded domain:
   quoted triples (e.g. "rules", "exaltedIn", "naturalFriend")
 - **Property values** — literal values keyed by predicate (e.g. "fire" under
   element, "malefic" under nature)
+- **English synonyms** — from a per-domain TOML file (e.g.
+  `seeds/jyotish-synonyms.toml`) that maps "planet" → Graha, "sign" → Rashi,
+  "exalted" → exaltedIn, etc.
+- **Tradition/source/pramana names** — instances of vidya:Tradition,
+  vidya:Source, and vidya:Pramana, by local name, label, and stripped prefix
+  (e.g. "bphs" matches `tradition-bphs`)
 
-Your input is tokenized, stopwords stripped, and each token matched against
-this vocabulary using a cascade:
+Your input is tokenized (multi-word entities are matched as phrases before
+falling back to individual tokens), stopwords stripped, and each token matched
+against this vocabulary using a cascade:
 
 1. **Exact match** (case-insensitive) on any name/alias/label
 2. **Substring match** for tokens >= 3 characters
@@ -186,34 +198,34 @@ vidya provenance -d jyotish mangala rules mesha
 - **Resolve Sanskrit aliases**: Soma → chandra, Ravi → surya, Kuja → mangala
 - **Resolve hyphenated aliases**: Bhumi-putra → mangala
 - **Match types by label**: graha, rashi, bhava, nakshatra (case-insensitive)
+- **English synonyms**: "planet" → Graha, "sign" → Rashi, "house" → Bhava,
+  "constellation" → Nakshatra (via per-domain synonym table)
 - **Map property values to filters**: fire → element=fire, malefic → nature=malefic,
   movable → quality=movable
+- **Infer type from value**: `"fire"` alone resolves to Graha search with
+  element=fire, because the value→type reverse index knows which types carry
+  that property
+- **Multi-word entity matching**: "1st House" matches as a phrase before
+  individual tokens are considered
+- **Intent detection** (`vidya ask`): auto-detects describe, search, traverse,
+  similar, tradition-scoped, and pramana-scoped modes from question shape
+- **Deterministic ranking**: when input is ambiguous, picks the best
+  interpretation using shape-validity and pattern-specificity scoring, and
+  shows ranked alternatives
 - **Correct minor typos**: mangla → mangala (edit distance 1)
 - **Report what was resolved**: prints to stderr so you can verify
 - **Report unknown tokens**: if part of your input wasn't recognized, it tells you
 - **Stay backwards compatible**: exact names and structured flags work as before
 
-## What it cannot do
-
-- **No English synonyms.** "planets" does not resolve to Graha. You must use
-  domain vocabulary: graha, rashi, bhava, etc. Same for "signs" (use rashi),
-  "houses" (use bhava).
-
-- **No intent detection.** You must pick the mode yourself. "what is Mars
-  exalted in?" doesn't auto-detect that you want `traverse` — you must run
-  `vidya traverse`.
-
-- **No multi-word entity matching.** Entities with spaces in their labels
-  (like "1st House") won't resolve from free text because tokenization splits
-  on whitespace.
-
-- **No type inference.** `vidya search -d jyotish "fire"` fails because
-  there's no type token. You must include the type: `"fire graha"`.
+## Current limitations
 
 - **Edit distance is noisy for short words.** A 2-letter typo in a 4-letter
   word matches many candidates. Works best for longer terms (6+ characters).
 
 - **No cross-domain resolution.** Resolution operates within a single domain.
+
+- **Synonym table is per-domain.** Each domain needs its own TOML file
+  (e.g. `seeds/jyotish-synonyms.toml`). There's no shared English vocabulary.
 
 ## Resolution indicator
 

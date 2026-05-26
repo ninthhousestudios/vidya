@@ -75,7 +75,18 @@ When a query doesn't match an exact entity name, vidya falls back to NL
 resolution. It builds a vocabulary index from the loaded domain
 (entity names, aliases, labels, type names, predicates, property values)
 and matches input tokens through a cascade: exact match, substring,
-edit distance, then VSA similarity.
+edit distance, then VSA similarity. Multi-word entities (e.g. "1st
+House") are matched as phrases before individual tokens are considered.
+
+An English synonym table (per-domain TOML file, e.g.
+`seeds/jyotish-synonyms.toml`) maps common English words to domain
+vocabulary — "planet" resolves to Graha, "sign" to Rashi, "house" to
+Bhava — so you don't need to know the Sanskrit terms.
+
+When a search query contains property values but no explicit type token,
+vidya infers the type from the value's reverse index (e.g. "fire" alone
+resolves to a Graha search with element=fire, because Graha is the type
+whose entities carry that property).
 
 The VSA (Vector Symbolic Architecture) layer uses Holographic Reduced
 Representations (HRR) to encode each entity as a high-dimensional
@@ -136,6 +147,16 @@ vidya search -d jyotish Graha --tradition tradition-bphs
 vidya describe -d jyotish surya --pramana vidya:shabda
 ```
 
+### Vocabulary inspection
+
+List the tokens the NL resolver knows, useful for discovering what
+natural-language queries will work:
+
+```
+vidya vocab -d jyotish
+vidya vocab -d jyotish --json
+```
+
 Set `VIDYA_DOMAIN` to skip the `-d` flag when working in one domain:
 
 ```
@@ -168,8 +189,20 @@ Intent detection maps question patterns to query modes:
 | "what Xs are Y", "find Xs where Y is Z" | search |
 | "similar to X", "what is related to X" | similar |
 | "what does T say about X", "according to T, ..." | tradition-scoped |
+| "show claims from P pramana about X", "from P about X" | pramana-scoped |
 
-Tradition and pramana filters work with `ask` too:
+Scope patterns compose with inner patterns — "according to BPHS, what
+does Mars rule?" detects both the tradition scope and the traverse mode.
+The scope hint is resolved against the domain's traditions, sources, and
+pramanas using the same fuzzy cascade as entity names: "bphs" matches
+`tradition-bphs`, "inference" matches `vidya:anumana`, etc.
+
+When the input is ambiguous (e.g. "what is Mars's exaltation" matches
+both traverse and describe), `ask` picks the best interpretation using
+deterministic scoring and prints ranked alternatives to stderr.
+
+Tradition and pramana filters work with `ask` too (explicit flags
+override NL-detected scope):
 
 ```
 vidya ask -d jyotish "tell me about Mars" --tradition tradition-bphs
@@ -186,9 +219,13 @@ resolution only activates when the structured path returns NotFound.
 vidya describe -d jyotish mars        # → mangala
 vidya traverse -d jyotish sun rules   # → surya rules
 
-# Free-text search with type + filter
-vidya search -d jyotish "fire graha"      # → element=fire filter on Graha
-vidya search -d jyotish "malefic graha"   # → nature=malefic filter on Graha
+# English synonyms via synonym table
+vidya search -d jyotish "fire planet"     # → element=fire filter on Graha
+vidya search -d jyotish "malefic planet"  # → nature=malefic filter on Graha
+
+# Type inference — value alone infers the type
+vidya search -d jyotish "fire"            # → element=fire filter on Graha
+vidya search -d jyotish "movable"         # → quality=movable filter on Rashi
 
 # Typo correction
 vidya describe -d jyotish mangla      # → mangala (edit distance 1)
@@ -221,6 +258,7 @@ service holds the write lock. Only `vidya load` requires exclusive
 | `vidya_query` | Structured query in four modes: **describe** (entity profile), **search** (find by kind + filters), **traverse** (walk relationships), **provenance** (epistemological metadata for a triple). Names can be exact domain terms or natural-language aliases. |
 | `vidya_similar` | Find structurally similar entities via VSA cosine similarity |
 | `vidya_unbind` | VSA role-filler recovery — given entity + predicate, find likely objects |
+| `vidya_vocab` | List vocabulary tokens the NL resolver knows for a domain — entity names, type names, predicates, property values |
 | `vidya_assert` | Assert a single triple with required provenance |
 
 Cross-cutting filters on `tradition` and `pramana` apply to all query
