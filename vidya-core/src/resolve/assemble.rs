@@ -20,6 +20,13 @@ pub enum ResolvedQuery {
         object: String,
         object_is_literal: bool,
     },
+    Similar {
+        subject_iri: String,
+    },
+    Unbind {
+        subject_iri: String,
+        predicate_iri: String,
+    },
 }
 
 #[derive(Debug)]
@@ -53,6 +60,8 @@ pub enum QueryMode {
     Search,
     Traverse,
     Provenance,
+    Similar,
+    Unbind,
 }
 
 pub fn assemble(
@@ -78,6 +87,8 @@ pub fn assemble(
         QueryMode::Search => assemble_search(tokens, unknown_tokens, vocab),
         QueryMode::Traverse => assemble_traverse(tokens, unknown_tokens),
         QueryMode::Provenance => assemble_provenance(tokens, unknown_tokens),
+        QueryMode::Similar => assemble_similar(tokens, unknown_tokens),
+        QueryMode::Unbind => assemble_unbind(tokens, unknown_tokens),
     }
 }
 
@@ -342,6 +353,82 @@ fn assemble_provenance(
                     short_name(&object)
                 }
             ),
+        ],
+    })
+}
+
+fn assemble_similar(
+    tokens: &[ResolvedToken],
+    unknown_tokens: Vec<String>,
+) -> std::result::Result<ResolutionReport, AssembleError> {
+    let entities: Vec<&str> = tokens
+        .iter()
+        .filter_map(|t| match t {
+            ResolvedToken::Entity { iri, .. } => Some(iri.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    match dedup_strs(&entities).as_slice() {
+        [] => Err(AssembleError::NoEntity {
+            candidates: suggest_from_tokens(tokens),
+        }),
+        [iri] => Ok(ResolutionReport {
+            query: ResolvedQuery::Similar {
+                subject_iri: iri.to_string(),
+            },
+            unknown_tokens,
+            resolution_details: vec![format!("subject: {}", short_name(iri))],
+        }),
+        iris => Err(AssembleError::AmbiguousEntity {
+            entities: iris.iter().map(|e| short_name(e)).collect(),
+        }),
+    }
+}
+
+fn assemble_unbind(
+    tokens: &[ResolvedToken],
+    unknown_tokens: Vec<String>,
+) -> std::result::Result<ResolutionReport, AssembleError> {
+    let entities: Vec<&str> = tokens
+        .iter()
+        .filter_map(|t| match t {
+            ResolvedToken::Entity { iri, .. } => Some(iri.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    let predicates: Vec<&str> = tokens
+        .iter()
+        .filter_map(|t| match t {
+            ResolvedToken::Predicate { iri, .. } => Some(iri.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    let subject_iri = match dedup_strs(&entities).first() {
+        Some(e) => e.to_string(),
+        None => {
+            return Err(AssembleError::NoEntity {
+                candidates: suggest_from_tokens(tokens),
+            })
+        }
+    };
+
+    let predicate_iri = match predicates.first() {
+        Some(p) => p.to_string(),
+        None => return Err(AssembleError::NoPredicate),
+    };
+
+    Ok(ResolutionReport {
+        query: ResolvedQuery::Unbind {
+            subject_iri: subject_iri.clone(),
+            predicate_iri: predicate_iri.clone(),
+        },
+        unknown_tokens,
+        resolution_details: vec![
+            format!("subject: {}", short_name(&subject_iri)),
+            format!("predicate: {}", short_name(&predicate_iri)),
         ],
     })
 }

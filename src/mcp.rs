@@ -187,6 +187,20 @@ pub struct UnbindArgs {
     pub top: Option<usize>,
 }
 
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct AskArgs {
+    /// Domain name (e.g. "jyotish")
+    pub domain: String,
+    /// Freeform natural language question (e.g. "what does Mars rule", "tell me about Surya", "similar to Mars")
+    pub question: String,
+    /// Cross-cutting: filter by tradition (e.g. "tradition-bphs")
+    #[serde(default)]
+    pub tradition: Option<String>,
+    /// Cross-cutting: filter by pramana (e.g. "vidya:shabda")
+    #[serde(default)]
+    pub pramana: Option<String>,
+}
+
 #[tool_router(router = tool_router)]
 impl VidyaServer {
     #[tool(
@@ -332,6 +346,10 @@ impl VidyaServer {
                     _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
                 }
             }
+            _ => Err(ErrorData::invalid_params(
+                "use vidya_similar or vidya_unbind for similar/unbind queries",
+                None,
+            )),
         }
     }
 
@@ -383,6 +401,115 @@ impl VidyaServer {
                 json_out_resolved(result, &report)
             }
             _ => Err(ErrorData::internal_error("unexpected resolution mode", None)),
+        }
+    }
+
+    #[tool(
+        description = "Ask a natural language question about the knowledge graph. Auto-detects query mode from the question shape. Examples: 'tell me about Mars', 'what does Mars rule', 'what fire planets exist', 'what is related to Mars', 'similar to Mars'. Returns structured results with resolution details showing how the question was interpreted."
+    )]
+    pub async fn vidya_ask(
+        &self,
+        Parameters(args): Parameters<AskArgs>,
+    ) -> Result<String, ErrorData> {
+        let prov_filter = vidya_core::ProvenanceFilter {
+            tradition: args
+                .tradition
+                .as_deref()
+                .map(|t| vidya_core::ontology::resolve_iri(t, &args.domain)),
+            pramana: args
+                .pramana
+                .as_deref()
+                .map(|p| vidya_core::ontology::resolve_iri(p, &args.domain)),
+        };
+
+        let ctx = self.store.resolve_context(&args.domain);
+        let report = vidya_core::resolve::resolve_nl(
+            &args.question,
+            &ctx.vocab,
+            Some(&ctx.vsa),
+            &args.domain,
+        )
+        .map_err(|e| ErrorData::invalid_params(e.to_string(), None))?;
+
+        match report.query {
+            vidya_core::ResolvedQuery::Describe { ref subject_iri } => {
+                let result = self
+                    .store
+                    .describe(&args.domain, &iri_local(subject_iri), &prov_filter)
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
+            vidya_core::ResolvedQuery::Search {
+                ref type_iri,
+                ref filters,
+            } => {
+                let result = self
+                    .store
+                    .search(&args.domain, &iri_local(type_iri), filters, &prov_filter)
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
+            vidya_core::ResolvedQuery::Traverse {
+                ref subject_iri,
+                ref predicate_iri,
+            } => {
+                let result = self
+                    .store
+                    .traverse(
+                        &args.domain,
+                        &iri_local(subject_iri),
+                        &iri_local(predicate_iri),
+                        1,
+                        &prov_filter,
+                    )
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
+            vidya_core::ResolvedQuery::Similar { ref subject_iri } => {
+                let result = self
+                    .store
+                    .similar(&args.domain, &iri_local(subject_iri), 5)
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
+            vidya_core::ResolvedQuery::Unbind {
+                ref subject_iri,
+                ref predicate_iri,
+            } => {
+                let result = self
+                    .store
+                    .unbind(
+                        &args.domain,
+                        &iri_local(subject_iri),
+                        &iri_local(predicate_iri),
+                        5,
+                    )
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
+            vidya_core::ResolvedQuery::Provenance {
+                ref subject_iri,
+                ref predicate_iri,
+                ref object,
+                object_is_literal,
+            } => {
+                let obj = if object_is_literal {
+                    object.clone()
+                } else {
+                    iri_local(object)
+                };
+                let result = self
+                    .store
+                    .provenance(
+                        &args.domain,
+                        &iri_local(subject_iri),
+                        &iri_local(predicate_iri),
+                        &obj,
+                        &prov_filter,
+                    )
+                    .map_err(to_error_data)?;
+                json_out_resolved(result, &report)
+            }
         }
     }
 

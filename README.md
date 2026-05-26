@@ -144,11 +144,42 @@ vidya describe surya
 vidya search Graha -f element=fire
 ```
 
-### Natural language resolution
+### Natural language queries
 
-All query commands accept natural language input as a fallback. Exact
-names and structured flags always work as before — NL resolution only
-activates when the structured path returns NotFound.
+`vidya ask` takes freeform questions and auto-detects the query mode
+from the question shape:
+
+```
+vidya ask -d jyotish "tell me about Mars"
+vidya ask -d jyotish "what does Mars rule?"
+vidya ask -d jyotish "what is Mars?"
+vidya ask -d jyotish "what planets are fire?"
+vidya ask -d jyotish "similar to Mars"
+vidya ask -d jyotish "find grahas where element is fire"
+vidya ask -d jyotish "what is Mars's exaltation?"
+```
+
+Intent detection maps question patterns to query modes:
+
+| Pattern | Mode |
+|---------|------|
+| "tell me about X", "describe X", "what is X" | describe |
+| "what does X Y", "what is X's Y" | traverse |
+| "what Xs are Y", "find Xs where Y is Z" | search |
+| "similar to X", "what is related to X" | similar |
+| "what does T say about X", "according to T, ..." | tradition-scoped |
+
+Tradition and pramana filters work with `ask` too:
+
+```
+vidya ask -d jyotish "tell me about Mars" --tradition tradition-bphs
+```
+
+### Natural language resolution (fallback)
+
+All structured query commands also accept natural language input as a
+fallback. Exact names and structured flags always work as before — NL
+resolution only activates when the structured path returns NotFound.
 
 ```
 # Western names resolve to domain entities
@@ -186,7 +217,10 @@ service holds the write lock. Only `vidya load` requires exclusive
 |------|---------|
 | `vidya_health` | Status, triple count, loaded domains |
 | `vidya_load` | Load a domain from inline Turtle or a `.ttl` file path |
-| `vidya_query` | Query in four modes: **describe** (entity profile), **search** (find by kind + filters), **traverse** (walk relationships), **provenance** (epistemological metadata for a triple). Names can be exact domain terms or natural-language aliases. |
+| `vidya_ask` | Freeform natural language query — auto-detects mode from the question shape (describe, search, traverse, similar, etc.) |
+| `vidya_query` | Structured query in four modes: **describe** (entity profile), **search** (find by kind + filters), **traverse** (walk relationships), **provenance** (epistemological metadata for a triple). Names can be exact domain terms or natural-language aliases. |
+| `vidya_similar` | Find structurally similar entities via VSA cosine similarity |
+| `vidya_unbind` | VSA role-filler recovery — given entity + predicate, find likely objects |
 | `vidya_assert` | Assert a single triple with required provenance |
 
 Cross-cutting filters on `tradition` and `pramana` apply to all query

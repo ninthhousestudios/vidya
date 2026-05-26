@@ -7,5 +7,5 @@ pub mod vsa;
 
 pub use error::{Result, VidyaError};
 pub use query::{CoverageResult, DescribeResult, ProvenanceFilter, ProvenanceResult, SearchResult, SimilarityResult, SimilarityMatch, TraverseResult, TypeSummary, VocabResult};
-pub use resolve::{QueryMode, ResolvedQuery, ResolutionReport};
+pub use resolve::{IntentError, QueryMode, ResolvedQuery, ResolutionReport};
 pub use store::{KnowledgeStore, ResolveContext};

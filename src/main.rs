@@ -147,6 +147,20 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Ask a freeform natural language question (auto-detects query mode).
+    Ask {
+        /// Domain name (or set VIDYA_DOMAIN).
+        #[arg(short, long, env = "VIDYA_DOMAIN")]
+        domain: String,
+        /// Freeform question (e.g. "what does Mars rule", "tell me about Surya").
+        question: String,
+        #[arg(long)]
+        json: bool,
+        #[arg(long)]
+        tradition: Option<String>,
+        #[arg(long)]
+        pramana: Option<String>,
+    },
     /// Show epistemological metadata for a specific triple.
     Provenance {
         /// Domain name (or set VIDYA_DOMAIN).
@@ -250,6 +264,13 @@ async fn main() -> Result<()> {
             top,
             json,
         } => cmd_unbind(&domain, &subject, &predicate, top, json),
+        Commands::Ask {
+            domain,
+            question,
+            json,
+            tradition,
+            pramana,
+        } => cmd_ask(&domain, &question, json, tradition, pramana),
         Commands::Provenance {
             domain,
             subject,
@@ -320,6 +341,84 @@ fn cmd_vocab(domain: &str, json: bool) -> Result<()> {
     let store = open_store_ro()?;
     let result = vidya_core::query::vocab(&store, domain);
     output(&result, json, format::fmt_vocab)
+}
+
+fn cmd_ask(
+    domain: &str,
+    question: &str,
+    json: bool,
+    tradition: Option<String>,
+    pramana: Option<String>,
+) -> Result<()> {
+    let store = open_store_ro()?;
+    let ctx = store.resolve_context(domain);
+    let pf = prov_filter(domain, tradition, pramana);
+
+    let report = resolve::resolve_nl(question, &ctx.vocab, Some(&ctx.vsa), domain)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+    eprintln!("  resolved: {}", report.resolution_details.join(", "));
+    if !report.unknown_tokens.is_empty() {
+        eprintln!("  unrecognized: {}", report.unknown_tokens.join(", "));
+    }
+
+    match report.query {
+        ResolvedQuery::Describe { ref subject_iri } => {
+            let result = store
+                .describe(domain, &iri_local_name(subject_iri), &pf)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_describe)
+        }
+        ResolvedQuery::Search {
+            ref type_iri,
+            ref filters,
+        } => {
+            let result = store
+                .search(domain, &iri_local_name(type_iri), filters, &pf)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_search)
+        }
+        ResolvedQuery::Traverse {
+            ref subject_iri,
+            ref predicate_iri,
+        } => {
+            let result = store
+                .traverse(domain, &iri_local_name(subject_iri), &iri_local_name(predicate_iri), 1, &pf)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_traverse)
+        }
+        ResolvedQuery::Similar { ref subject_iri } => {
+            let result = store
+                .similar(domain, &iri_local_name(subject_iri), 5)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_similarity)
+        }
+        ResolvedQuery::Unbind {
+            ref subject_iri,
+            ref predicate_iri,
+        } => {
+            let result = store
+                .unbind(domain, &iri_local_name(subject_iri), &iri_local_name(predicate_iri), 5)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_similarity)
+        }
+        ResolvedQuery::Provenance {
+            ref subject_iri,
+            ref predicate_iri,
+            ref object,
+            object_is_literal,
+        } => {
+            let obj_str = if object_is_literal {
+                object.clone()
+            } else {
+                iri_local_name(object)
+            };
+            let result = store
+                .provenance(domain, &iri_local_name(subject_iri), &iri_local_name(predicate_iri), &obj_str, &pf)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            output(&result, json, format::fmt_provenance)
+        }
+    }
 }
 
 fn cmd_describe(

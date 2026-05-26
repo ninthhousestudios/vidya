@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use vidya_core::resolve::{self, QueryMode, ResolvedQuery};
+use vidya_core::resolve::{self, QueryMode, ResolvedQuery, IntentError};
 use vidya_core::KnowledgeStore;
 
 fn load_jyotish() -> KnowledgeStore {
@@ -494,4 +494,119 @@ fn tokenizer_handles_mixed_case_and_stopwords() {
     assert!(tokens.contains(&"planets".to_string()));
     assert!(!tokens.contains(&"tell".to_string()));
     assert!(!tokens.contains(&"the".to_string()));
+}
+
+// ── Intent-based resolve_nl tests ──
+
+#[test]
+fn intent_tell_me_about() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl("tell me about Mars", &ctx.vocab, Some(&ctx.vsa), "jyotish")
+        .expect("should resolve");
+    match &report.query {
+        ResolvedQuery::Describe { subject_iri } => {
+            assert!(iri_ends_with(subject_iri, "mangala"));
+        }
+        other => panic!("expected Describe, got {other:?}"),
+    }
+    assert!(report.resolution_details[0].contains("intent:"));
+}
+
+#[test]
+fn intent_what_does_x_rule() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what does Mars rule?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+    match &report.query {
+        ResolvedQuery::Traverse {
+            subject_iri,
+            predicate_iri,
+        } => {
+            assert!(iri_ends_with(subject_iri, "mangala"));
+            assert!(iri_ends_with(predicate_iri, "rules"));
+        }
+        other => panic!("expected Traverse, got {other:?}"),
+    }
+}
+
+#[test]
+fn intent_what_is_describe() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report =
+        resolve::resolve_nl("what is Mars?", &ctx.vocab, Some(&ctx.vsa), "jyotish")
+            .expect("should resolve");
+    match &report.query {
+        ResolvedQuery::Describe { subject_iri } => {
+            assert!(iri_ends_with(subject_iri, "mangala"));
+        }
+        other => panic!("expected Describe, got {other:?}"),
+    }
+}
+
+#[test]
+fn intent_similar_to() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl("similar to Mars", &ctx.vocab, Some(&ctx.vsa), "jyotish")
+        .expect("should resolve");
+    match &report.query {
+        ResolvedQuery::Similar { subject_iri } => {
+            assert!(iri_ends_with(subject_iri, "mangala"));
+        }
+        other => panic!("expected Similar, got {other:?}"),
+    }
+}
+
+#[test]
+fn intent_describe_explicit() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report =
+        resolve::resolve_nl("describe Surya", &ctx.vocab, Some(&ctx.vsa), "jyotish")
+            .expect("should resolve");
+    match &report.query {
+        ResolvedQuery::Describe { subject_iri } => {
+            assert!(iri_ends_with(subject_iri, "surya"));
+        }
+        other => panic!("expected Describe, got {other:?}"),
+    }
+}
+
+#[test]
+fn intent_no_match_returns_error() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let result = resolve::resolve_nl("frobnicator xyzzy", &ctx.vocab, Some(&ctx.vsa), "jyotish");
+    assert!(result.is_err());
+    assert!(matches!(
+        result.unwrap_err(),
+        IntentError::NoIntentDetected
+    ));
+}
+
+#[test]
+fn intent_what_are_search_with_synonyms() {
+    let store = load_jyotish_with_synonyms();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what planets are fire?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+    match &report.query {
+        ResolvedQuery::Search { type_iri, .. } => {
+            assert!(iri_ends_with(type_iri, "Graha"));
+        }
+        other => panic!("expected Search, got {other:?}"),
+    }
 }
