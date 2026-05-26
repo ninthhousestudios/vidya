@@ -59,10 +59,21 @@ pub fn match_tokens(
     vsa: Option<&EntityIndex<Hrr>>,
     domain: &str,
 ) -> Vec<ResolvedToken> {
-    tokens
-        .iter()
-        .map(|token| match_single(token, vocab, vsa, domain))
-        .collect()
+    let mut result = Vec::new();
+    let mut i = 0;
+    while i < tokens.len() {
+        if i + 1 < tokens.len() {
+            let bigram = format!("{} {}", tokens[i], tokens[i + 1]);
+            if let Some(r) = try_exact(&bigram, vocab) {
+                result.push(r);
+                i += 2;
+                continue;
+            }
+        }
+        result.push(match_single(&tokens[i], vocab, vsa, domain));
+        i += 1;
+    }
+    result
 }
 
 fn match_single(
@@ -287,5 +298,66 @@ mod tests {
         assert_eq!(edit_distance("mars", "mras"), 2);
         assert_eq!(edit_distance("mars", "mar"), 1);
         assert_eq!(edit_distance("", "abc"), 3);
+    }
+
+    #[test]
+    fn tokenize_preserves_words_for_bigram() {
+        let tokens = tokenize("1st House");
+        assert_eq!(tokens, vec!["1st", "house"]);
+    }
+
+    #[test]
+    fn match_tokens_bigram_entity() {
+        use std::collections::HashMap;
+
+        let mut entity_names = HashMap::new();
+        entity_names.insert("1st house".to_string(), vec!["urn:bhava-1".to_string()]);
+
+        let vocab = SchemaVocab {
+            entity_names,
+            type_names: HashMap::new(),
+            predicate_names: HashMap::new(),
+            value_index: HashMap::new(),
+            value_types: HashMap::new(),
+        };
+
+        let tokens = tokenize("1st House");
+        let matched = match_tokens(&tokens, &vocab, None, "test");
+        assert_eq!(matched.len(), 1);
+        assert_eq!(
+            matched[0],
+            ResolvedToken::Entity {
+                iri: "urn:bhava-1".to_string(),
+                confidence: MatchConfidence::Exact,
+            }
+        );
+    }
+
+    #[test]
+    fn match_tokens_bigram_miss_falls_through() {
+        use std::collections::HashMap;
+
+        let mut entity_names = HashMap::new();
+        entity_names.insert("mars".to_string(), vec!["urn:mangala".to_string()]);
+
+        let vocab = SchemaVocab {
+            entity_names,
+            type_names: HashMap::new(),
+            predicate_names: HashMap::new(),
+            value_index: HashMap::new(),
+            value_types: HashMap::new(),
+        };
+
+        let tokens = tokenize("mars rules");
+        let matched = match_tokens(&tokens, &vocab, None, "test");
+        assert_eq!(matched.len(), 2);
+        assert_eq!(
+            matched[0],
+            ResolvedToken::Entity {
+                iri: "urn:mangala".to_string(),
+                confidence: MatchConfidence::Exact,
+            }
+        );
+        matches!(&matched[1], ResolvedToken::Unknown(_));
     }
 }

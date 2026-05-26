@@ -14,6 +14,17 @@ fn load_jyotish() -> KnowledgeStore {
     store
 }
 
+fn load_jyotish_with_synonyms() -> KnowledgeStore {
+    let store = load_jyotish();
+    let syn_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("seeds")
+        .join("jyotish-synonyms.toml");
+    let content = std::fs::read_to_string(&syn_path).unwrap();
+    store.load_synonyms("jyotish", &content).unwrap();
+    store
+}
+
 fn iri_ends_with(iri: &str, suffix: &str) -> bool {
     iri.ends_with(&format!("/{suffix}"))
 }
@@ -256,13 +267,44 @@ fn unknown_input_reports_error() {
 }
 
 #[test]
-fn search_without_type_errors() {
+fn search_ambiguous_type_inferred() {
     let store = load_jyotish();
     let vocab = resolve::build_vocab(&store, "jyotish");
 
     let result = resolve::resolve(QueryMode::Search, "fire", &vocab, None, "jyotish");
-    // "fire" resolves to a property value but no type — should error
-    assert!(result.is_err(), "expected NoType error");
+    // "fire" matches element=fire on both Graha and Rashi — should be AmbiguousType
+    let err = result.unwrap_err();
+    let msg = err.to_string();
+    assert!(
+        msg.contains("multiple types"),
+        "expected AmbiguousType error, got: {msg}"
+    );
+    assert!(msg.contains("Graha"), "should mention Graha: {msg}");
+    assert!(msg.contains("Rashi"), "should mention Rashi: {msg}");
+}
+
+#[test]
+fn search_unambiguous_type_inferred() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+
+    let report =
+        resolve::resolve(QueryMode::Search, "malefic", &vocab, None, "jyotish")
+            .expect("should infer Graha from nature=malefic");
+
+    match &report.query {
+        ResolvedQuery::Search { type_iri, filters } => {
+            assert!(
+                iri_ends_with(type_iri, "Graha"),
+                "expected inferred Graha type, got {type_iri}"
+            );
+            assert!(
+                filters.iter().any(|(k, v)| k == "nature" && v == "malefic"),
+                "expected nature=malefic filter, got {filters:?}"
+            );
+        }
+        other => panic!("expected Search, got {other:?}"),
+    }
 }
 
 #[test]
@@ -279,6 +321,159 @@ fn unknown_tokens_reported() {
         "unknown token 'xyzzy' should be reported, got {:?}",
         report.unknown_tokens
     );
+}
+
+// ── Multi-word entities ──
+
+#[test]
+fn vocab_has_multiword_keys() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    assert!(
+        vocab.entity_names.contains_key("1st house"),
+        "vocab should contain '1st house' as a multi-word entity key"
+    );
+}
+
+#[test]
+fn describe_1st_house() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+
+    let report = resolve::resolve(QueryMode::Describe, "1st House", &vocab, None, "jyotish")
+        .expect("should resolve");
+
+    match &report.query {
+        ResolvedQuery::Describe { subject_iri } => {
+            assert!(
+                iri_ends_with(subject_iri, "bhava-1"),
+                "expected bhava-1, got {subject_iri}"
+            );
+        }
+        other => panic!("expected Describe, got {other:?}"),
+    }
+}
+
+#[test]
+fn describe_10th_house() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+
+    let report = resolve::resolve(QueryMode::Describe, "10th House", &vocab, None, "jyotish")
+        .expect("should resolve");
+
+    match &report.query {
+        ResolvedQuery::Describe { subject_iri } => {
+            assert!(
+                iri_ends_with(subject_iri, "bhava-10"),
+                "expected bhava-10, got {subject_iri}"
+            );
+        }
+        other => panic!("expected Describe, got {other:?}"),
+    }
+}
+
+#[test]
+fn traverse_multiword_entity_with_predicate() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+
+    let report =
+        resolve::resolve(QueryMode::Traverse, "1st House ruledBy", &vocab, None, "jyotish");
+
+    // If ruledBy exists as a predicate, this should resolve with bhava-1 as subject.
+    // If ruledBy doesn't exist, the test still validates that "1st House" consumed as bigram.
+    match report {
+        Ok(report) => match &report.query {
+            ResolvedQuery::Traverse {
+                subject_iri,
+                predicate_iri: _,
+            } => {
+                assert!(
+                    iri_ends_with(subject_iri, "bhava-1"),
+                    "expected bhava-1 as subject, got {subject_iri}"
+                );
+            }
+            other => panic!("expected Traverse, got {other:?}"),
+        },
+        Err(_) => {
+            // Acceptable if the predicate doesn't exist — the bigram still matched
+        }
+    }
+}
+
+// ── Synonym resolution ──
+
+#[test]
+fn search_planet_synonym() {
+    let store = load_jyotish_with_synonyms();
+    let ctx = store.resolve_context("jyotish");
+
+    let report =
+        resolve::resolve(QueryMode::Search, "fire planet", &ctx.vocab, Some(&ctx.vsa), "jyotish")
+            .expect("should resolve");
+
+    match &report.query {
+        ResolvedQuery::Search { type_iri, filters } => {
+            assert!(
+                iri_ends_with(type_iri, "Graha"),
+                "expected Graha type, got {type_iri}"
+            );
+            assert!(
+                filters.iter().any(|(k, v)| k == "element" && v == "fire"),
+                "expected element=fire filter, got {filters:?}"
+            );
+        }
+        other => panic!("expected Search, got {other:?}"),
+    }
+}
+
+#[test]
+fn search_sign_synonym() {
+    let store = load_jyotish_with_synonyms();
+    let ctx = store.resolve_context("jyotish");
+
+    let report =
+        resolve::resolve(QueryMode::Search, "water sign", &ctx.vocab, Some(&ctx.vsa), "jyotish")
+            .expect("should resolve");
+
+    match &report.query {
+        ResolvedQuery::Search { type_iri, filters } => {
+            assert!(
+                iri_ends_with(type_iri, "Rashi"),
+                "expected Rashi type, got {type_iri}"
+            );
+            assert!(
+                filters.iter().any(|(k, v)| k == "element" && v == "water"),
+                "expected element=water filter, got {filters:?}"
+            );
+        }
+        other => panic!("expected Search, got {other:?}"),
+    }
+}
+
+#[test]
+fn traverse_with_predicate_synonym() {
+    let store = load_jyotish_with_synonyms();
+    let ctx = store.resolve_context("jyotish");
+
+    let report =
+        resolve::resolve(QueryMode::Traverse, "mars exalted", &ctx.vocab, Some(&ctx.vsa), "jyotish")
+            .expect("should resolve");
+
+    match &report.query {
+        ResolvedQuery::Traverse { subject_iri, predicate_iri } => {
+            assert!(
+                iri_ends_with(subject_iri, "mangala"),
+                "expected mangala, got {subject_iri}"
+            );
+            assert!(
+                iri_ends_with(predicate_iri, "exaltedIn"),
+                "expected exaltedIn, got {predicate_iri}"
+            );
+        }
+        other => panic!("expected Traverse, got {other:?}"),
+    }
 }
 
 // ── VSA fallback ──

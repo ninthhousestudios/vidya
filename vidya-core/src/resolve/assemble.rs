@@ -1,4 +1,5 @@
 use super::matcher::ResolvedToken;
+use super::vocab::SchemaVocab;
 
 #[derive(Debug)]
 pub enum ResolvedQuery {
@@ -36,6 +37,8 @@ pub enum AssembleError {
     AmbiguousEntity { entities: Vec<String> },
     #[error("no type found in input for search — need a type like 'graha' or 'rashi'")]
     NoType,
+    #[error("multiple types match the given properties: {}; specify a type", candidates.join(", "))]
+    AmbiguousType { candidates: Vec<String> },
     #[error("no predicate found in input for traverse — need a relation like 'rules' or 'exaltedIn'")]
     NoPredicate,
     #[error("provenance requires subject, predicate, and object — missing: {missing}")]
@@ -55,6 +58,7 @@ pub enum QueryMode {
 pub fn assemble(
     mode: QueryMode,
     tokens: &[ResolvedToken],
+    vocab: &SchemaVocab,
 ) -> std::result::Result<ResolutionReport, AssembleError> {
     let unknown_tokens: Vec<String> = tokens
         .iter()
@@ -71,7 +75,7 @@ pub fn assemble(
 
     match mode {
         QueryMode::Describe => assemble_describe(tokens, unknown_tokens),
-        QueryMode::Search => assemble_search(tokens, unknown_tokens),
+        QueryMode::Search => assemble_search(tokens, unknown_tokens, vocab),
         QueryMode::Traverse => assemble_traverse(tokens, unknown_tokens),
         QueryMode::Provenance => assemble_provenance(tokens, unknown_tokens),
     }
@@ -121,6 +125,7 @@ fn assemble_describe(
 fn assemble_search(
     tokens: &[ResolvedToken],
     unknown_tokens: Vec<String>,
+    vocab: &SchemaVocab,
 ) -> std::result::Result<ResolutionReport, AssembleError> {
     let types: Vec<&str> = tokens
         .iter()
@@ -142,16 +147,13 @@ fn assemble_search(
         })
         .collect();
 
-    // If we have an entity token in search mode, treat it as a type hint
-    // (e.g. "planets" might match as entity but user means the type)
-    let type_iri = if let Some(t) = types.first() {
-        t.to_string()
+    let (type_iri, inferred) = if let Some(t) = types.first() {
+        (t.to_string(), false)
     } else if !prop_values.is_empty() {
-        // Infer type: look at which predicates the property values belong to,
-        // and use the most common type that has those predicates.
-        // For now, if no type is given but we have filters, this is an error
-        // — the user must specify a type.
-        return Err(AssembleError::NoType);
+        match infer_type_from_values(&prop_values, vocab) {
+            Ok(iri) => (iri, true),
+            Err(e) => return Err(e),
+        }
     } else {
         return Err(AssembleError::NoType);
     };
@@ -161,7 +163,12 @@ fn assemble_search(
         .map(|(pred, val)| (short_name(pred), val.to_string()))
         .collect();
 
-    let mut details = vec![format!("type: {}", short_name(&type_iri))];
+    let type_short = short_name(&type_iri);
+    let mut details = if inferred {
+        vec![format!("type: {type_short} (inferred from property values)")]
+    } else {
+        vec![format!("type: {type_short}")]
+    };
     for (k, v) in &filters {
         details.push(format!("filter: {k}={v}"));
     }
@@ -174,6 +181,36 @@ fn assemble_search(
         unknown_tokens,
         resolution_details: details,
     })
+}
+
+fn infer_type_from_values(
+    prop_values: &[(&str, &str)],
+    vocab: &SchemaVocab,
+) -> std::result::Result<String, AssembleError> {
+    let mut candidate_sets: Vec<Vec<&str>> = Vec::new();
+    for (pred, val) in prop_values {
+        let types = vocab.types_for_value(pred, val);
+        if !types.is_empty() {
+            candidate_sets.push(types.iter().map(|s| s.as_str()).collect());
+        }
+    }
+
+    if candidate_sets.is_empty() {
+        return Err(AssembleError::NoType);
+    }
+
+    let mut candidates: Vec<&str> = candidate_sets[0].clone();
+    for set in &candidate_sets[1..] {
+        candidates.retain(|c| set.contains(c));
+    }
+
+    match candidates.len() {
+        0 => Err(AssembleError::NoType),
+        1 => Ok(candidates[0].to_string()),
+        _ => Err(AssembleError::AmbiguousType {
+            candidates: candidates.iter().map(|c| short_name(c)).collect(),
+        }),
+    }
 }
 
 fn assemble_traverse(

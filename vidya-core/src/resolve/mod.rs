@@ -4,7 +4,7 @@ pub mod vocab;
 
 pub use assemble::{AssembleError, QueryMode, ResolvedQuery, ResolutionReport};
 pub use matcher::{MatchConfidence, ResolvedToken};
-pub use vocab::SchemaVocab;
+pub use vocab::{SchemaVocab, SynonymTable};
 
 use crate::store::KnowledgeStore;
 use crate::vsa::{EntityIndex, Hrr};
@@ -18,7 +18,7 @@ pub fn resolve(
 ) -> std::result::Result<ResolutionReport, AssembleError> {
     let tokens = matcher::tokenize(input);
     let matched = matcher::match_tokens(&tokens, vocab, vsa, domain);
-    assemble::assemble(mode, &matched)
+    assemble::assemble(mode, &matched, vocab)
 }
 
 pub fn build_vocab(store: &KnowledgeStore, domain: &str) -> SchemaVocab {

@@ -2,8 +2,21 @@ use std::collections::HashMap;
 
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
+use serde::Deserialize;
 
 use crate::ontology;
+
+#[derive(Debug, Default, Deserialize)]
+pub struct SynonymTable {
+    #[serde(default)]
+    pub types: HashMap<String, String>,
+    #[serde(default)]
+    pub predicates: HashMap<String, String>,
+}
+
+pub fn parse_synonyms(toml_content: &str) -> Result<SynonymTable, toml::de::Error> {
+    toml::from_str(toml_content)
+}
 
 #[derive(Debug)]
 pub struct SchemaVocab {
@@ -11,6 +24,8 @@ pub struct SchemaVocab {
     pub type_names: HashMap<String, String>,
     pub predicate_names: HashMap<String, String>,
     pub value_index: HashMap<String, Vec<(String, String)>>,
+    /// Maps "{pred_local}\t{value_lowercase}" → Vec<type_iri>
+    pub value_types: HashMap<String, Vec<String>>,
 }
 
 impl SchemaVocab {
@@ -149,12 +164,62 @@ impl SchemaVocab {
         }
         dedup_value_vecs(&mut value_index);
 
+        // Build reverse index: (predicate, value) → types that have entities with that property
+        let mut value_types: HashMap<String, Vec<String>> = HashMap::new();
+        let vt_q = format!(
+            "SELECT DISTINCT ?type ?p ?val WHERE {{ \
+               GRAPH <{graph_iri}> {{ \
+                 ?s <{rdf}type> ?type . \
+                 ?s ?p ?val . \
+                 FILTER(isLiteral(?val)) \
+                 FILTER(?p != <{rdfs}label>) \
+                 FILTER(?p != <{rdfs}comment>) \
+                 FILTER(?p != <{domain_base}alias>) \
+                 FILTER(?p != <{domain_base}western>) \
+                 FILTER(?p != <{domain_base}sanskritName>) \
+               }} \
+             }}"
+        );
+        for (type_iri, pred_iri, val) in select_three_str(store, &vt_q) {
+            if is_infra_type(&type_iri, vidya_base) {
+                continue;
+            }
+            let pred_local = local_name(&pred_iri).unwrap_or_default();
+            let key = format!("{}\t{}", pred_local.to_lowercase(), val.to_lowercase());
+            value_types.entry(key).or_default().push(type_iri);
+        }
+        for v in value_types.values_mut() {
+            v.sort();
+            v.dedup();
+        }
+
         Self {
             entity_names,
             type_names,
             predicate_names,
             value_index,
+            value_types,
         }
+    }
+
+    pub fn apply_synonyms(&mut self, synonyms: &SynonymTable) {
+        for (synonym, target) in &synonyms.types {
+            let target_lower = target.to_lowercase();
+            if let Some(iri) = self.type_names.get(&target_lower).cloned() {
+                self.type_names.entry(synonym.clone()).or_insert(iri);
+            }
+        }
+        for (synonym, target) in &synonyms.predicates {
+            let target_lower = target.to_lowercase();
+            if let Some(iri) = self.predicate_names.get(&target_lower).cloned() {
+                self.predicate_names.entry(synonym.clone()).or_insert(iri);
+            }
+        }
+    }
+
+    pub fn types_for_value(&self, pred_local: &str, value: &str) -> &[String] {
+        let key = format!("{}\t{}", pred_local.to_lowercase(), value.to_lowercase());
+        self.value_types.get(&key).map(|v| v.as_slice()).unwrap_or(&[])
     }
 
     pub fn all_known_tokens(&self) -> Vec<String> {
@@ -220,6 +285,37 @@ fn select_two_str(store: &Store, sparql: &str) -> Vec<(String, String)> {
     out
 }
 
+fn select_three_str(store: &Store, sparql: &str) -> Vec<(String, String, String)> {
+    let results = match SparqlEvaluator::new()
+        .parse_query(sparql)
+        .ok()
+        .and_then(|q| q.on_store(store).execute().ok())
+    {
+        Some(r) => r,
+        None => return Vec::new(),
+    };
+    let mut out = Vec::new();
+    if let QueryResults::Solutions(solutions) = results {
+        for row in solutions.flatten() {
+            let vals = row.values();
+            if vals.len() >= 3 {
+                if let (Some(a_term), Some(b_term), Some(c_term)) =
+                    (&vals[0], &vals[1], &vals[2])
+                {
+                    if let (Some(a), Some(b), Some(c)) = (
+                        term_to_string(a_term),
+                        term_to_string(b_term),
+                        term_to_string(c_term),
+                    ) {
+                        out.push((a, b, c));
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
 fn term_to_string(term: &oxigraph::model::Term) -> Option<String> {
     match term {
         oxigraph::model::Term::NamedNode(n) => Some(n.as_str().to_string()),
@@ -254,4 +350,72 @@ fn is_infra_type(iri: &str, vidya_base: &str) -> bool {
         return !VIDYA_KEEP.contains(&local);
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_synonyms_basic() {
+        let toml = r#"
+[types]
+planet = "Graha"
+planets = "Graha"
+
+[predicates]
+exalted = "exaltedIn"
+"#;
+        let table = parse_synonyms(toml).unwrap();
+        assert_eq!(table.types.get("planet").unwrap(), "Graha");
+        assert_eq!(table.types.get("planets").unwrap(), "Graha");
+        assert_eq!(table.predicates.get("exalted").unwrap(), "exaltedIn");
+    }
+
+    #[test]
+    fn parse_synonyms_empty_sections() {
+        let table = parse_synonyms("").unwrap();
+        assert!(table.types.is_empty());
+        assert!(table.predicates.is_empty());
+    }
+
+    #[test]
+    fn apply_synonyms_extends_type_names() {
+        let mut vocab = SchemaVocab {
+            entity_names: HashMap::new(),
+            type_names: HashMap::from([("graha".to_string(), "urn:Graha".to_string())]),
+            predicate_names: HashMap::from([("exaltedin".to_string(), "urn:exaltedIn".to_string())]),
+            value_index: HashMap::new(),
+            value_types: HashMap::new(),
+        };
+
+        let syns = SynonymTable {
+            types: HashMap::from([("planet".to_string(), "Graha".to_string())]),
+            predicates: HashMap::from([("exalted".to_string(), "exaltedIn".to_string())]),
+        };
+
+        vocab.apply_synonyms(&syns);
+
+        assert_eq!(vocab.type_names.get("planet").unwrap(), "urn:Graha");
+        assert_eq!(vocab.predicate_names.get("exalted").unwrap(), "urn:exaltedIn");
+    }
+
+    #[test]
+    fn apply_synonyms_skips_unknown_targets() {
+        let mut vocab = SchemaVocab {
+            entity_names: HashMap::new(),
+            type_names: HashMap::new(),
+            predicate_names: HashMap::new(),
+            value_index: HashMap::new(),
+            value_types: HashMap::new(),
+        };
+
+        let syns = SynonymTable {
+            types: HashMap::from([("planet".to_string(), "NonExistent".to_string())]),
+            predicates: HashMap::new(),
+        };
+
+        vocab.apply_synonyms(&syns);
+        assert!(!vocab.type_names.contains_key("planet"));
+    }
 }
