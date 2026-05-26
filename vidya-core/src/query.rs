@@ -81,6 +81,7 @@ pub struct ProvenanceResult {
 #[derive(Debug, Default)]
 pub struct ProvenanceFilter {
     pub tradition: Option<String>,
+    pub source: Option<String>,
     pub pramana: Option<String>,
 }
 
@@ -401,7 +402,7 @@ fn apply_provenance_filter(
     obj_expr: &str,
     filter: &ProvenanceFilter,
 ) {
-    if filter.tradition.is_none() && filter.pramana.is_none() {
+    if filter.tradition.is_none() && filter.source.is_none() && filter.pramana.is_none() {
         return;
     }
     builder.add_body(&format!(
@@ -409,6 +410,9 @@ fn apply_provenance_filter(
     ));
     if let Some(ref trad) = filter.tradition {
         builder.add_body(&format!("?_pf_assertion vidya:tradition <{trad}> ."));
+    }
+    if let Some(ref src) = filter.source {
+        builder.add_body(&format!("?_pf_assertion vidya:source <{src}> ."));
     }
     if let Some(ref pram) = filter.pramana {
         builder.add_body(&format!("?_pf_assertion vidya:pramana <{pram}> ."));
@@ -463,6 +467,10 @@ pub fn provenance(
     if let Some(ref trad) = filter.tradition {
         validate_iri(trad)?;
         b.add_filter(&format!("FILTER(?trad = <{trad}>)"));
+    }
+    if let Some(ref src) = filter.source {
+        validate_iri(src)?;
+        b.add_filter(&format!("FILTER(?src = <{src}>)"));
     }
     if let Some(ref pram) = filter.pramana {
         validate_iri(pram)?;

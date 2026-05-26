@@ -4,7 +4,7 @@ pub mod matcher;
 pub mod rank;
 pub mod vocab;
 
-pub use assemble::{AlternativeParse, AssembleError, QueryMode, ResolvedQuery, ResolutionReport};
+pub use assemble::{AlternativeParse, AssembleError, ProvenanceScope, QueryMode, ResolvedQuery, ResolutionReport};
 pub use intent::IntentResult;
 pub use matcher::{MatchConfidence, ResolvedToken};
 pub use vocab::{SchemaVocab, SynonymTable};
@@ -102,10 +102,30 @@ pub fn resolve_nl(
             .push(format!("  {}: {:.3}", signal.name, signal.value));
     }
 
-    if let Some(tradition) = &winner.tradition {
-        report
-            .resolution_details
-            .push(format!("tradition: {tradition}"));
+    if let Some(ref hint) = winner.scope_hint {
+        let scope = vocab.resolve_provenance(hint);
+        if scope.is_empty() {
+            report
+                .resolution_details
+                .push(format!("scope: \"{hint}\" (unresolved)"));
+        } else {
+            if let Some(ref t) = scope.tradition {
+                report
+                    .resolution_details
+                    .push(format!("scope tradition: {}", assemble::short_name(t)));
+            }
+            if let Some(ref s) = scope.source {
+                report
+                    .resolution_details
+                    .push(format!("scope source: {}", assemble::short_name(s)));
+            }
+            if let Some(ref p) = scope.pramana {
+                report
+                    .resolution_details
+                    .push(format!("scope pramana: {}", assemble::short_name(p)));
+            }
+        }
+        report.scope = scope;
     }
 
     Ok(report)

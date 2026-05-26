@@ -4,7 +4,7 @@ use super::assemble::QueryMode;
 pub struct IntentResult {
     pub mode: QueryMode,
     pub slot_text: String,
-    pub tradition: Option<String>,
+    pub scope_hint: Option<String>,
     pub pattern_name: &'static str,
 }
 
@@ -16,6 +16,9 @@ pub fn detect_intent(raw_input: &str) -> Option<IntentResult> {
         return Some(r);
     }
     if let Some(r) = try_tradition_according(n) {
+        return Some(r);
+    }
+    if let Some(r) = try_pramana_from(n) {
         return Some(r);
     }
     if let Some(r) = try_similar(n) {
@@ -56,6 +59,7 @@ pub fn detect_all_intents(raw_input: &str) -> Vec<IntentResult> {
     let mut results = Vec::new();
     if let Some(r) = try_tradition_say(n) { results.push(r); }
     if let Some(r) = try_tradition_according(n) { results.push(r); }
+    if let Some(r) = try_pramana_from(n) { results.push(r); }
     if let Some(r) = try_similar(n) { results.push(r); }
     if let Some(r) = try_search_where(n) { results.push(r); }
     if let Some(r) = try_search_what_are(n) { results.push(r); }
@@ -94,12 +98,12 @@ fn try_tradition_say(input: &str) -> Option<IntentResult> {
     let inner = detect_intent(remainder).unwrap_or(IntentResult {
         mode: QueryMode::Describe,
         slot_text: remainder.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "describe_fallback",
     });
 
     Some(IntentResult {
-        tradition: Some(tradition.to_string()),
+        scope_hint: Some(tradition.to_string()),
         pattern_name: "tradition_say",
         ..inner
     })
@@ -120,15 +124,81 @@ fn try_tradition_according(input: &str) -> Option<IntentResult> {
     let inner = detect_intent(rest).unwrap_or(IntentResult {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "describe_fallback",
     });
 
     Some(IntentResult {
-        tradition: Some(tradition_text.to_string()),
+        scope_hint: Some(tradition_text.to_string()),
         pattern_name: "tradition_according",
         ..inner
     })
+}
+
+// "show claims from X pramana about Y", "claims from X about Y", "from X pramana, Y"
+fn try_pramana_from(input: &str) -> Option<IntentResult> {
+    let rest = if let Some(r) = input.strip_prefix("show claims from ") {
+        r
+    } else if let Some(r) = input.strip_prefix("claims from ") {
+        r
+    } else if let Some(r) = input.strip_prefix("from ") {
+        r
+    } else {
+        return None;
+    };
+
+    // Try "X pramana about Y" first
+    if let Some(idx) = rest.find(" pramana about ") {
+        let pramana = non_empty(&rest[..idx])?;
+        let remainder = non_empty(&rest[idx + " pramana about ".len()..])?;
+        let inner = detect_intent(remainder).unwrap_or(IntentResult {
+            mode: QueryMode::Describe,
+            slot_text: remainder.to_string(),
+            scope_hint: None,
+            pattern_name: "describe_fallback",
+        });
+        return Some(IntentResult {
+            scope_hint: Some(pramana.to_string()),
+            pattern_name: "pramana_from",
+            ..inner
+        });
+    }
+
+    // Try "X pramana, Y"
+    if let Some(idx) = rest.find(" pramana, ") {
+        let pramana = non_empty(&rest[..idx])?;
+        let remainder = non_empty(&rest[idx + " pramana, ".len()..])?;
+        let inner = detect_intent(remainder).unwrap_or(IntentResult {
+            mode: QueryMode::Describe,
+            slot_text: remainder.to_string(),
+            scope_hint: None,
+            pattern_name: "describe_fallback",
+        });
+        return Some(IntentResult {
+            scope_hint: Some(pramana.to_string()),
+            pattern_name: "pramana_from",
+            ..inner
+        });
+    }
+
+    // Try "X about Y" (no "pramana" keyword)
+    if let Some(idx) = rest.find(" about ") {
+        let scope_name = non_empty(&rest[..idx])?;
+        let remainder = non_empty(&rest[idx + " about ".len()..])?;
+        let inner = detect_intent(remainder).unwrap_or(IntentResult {
+            mode: QueryMode::Describe,
+            slot_text: remainder.to_string(),
+            scope_hint: None,
+            pattern_name: "describe_fallback",
+        });
+        return Some(IntentResult {
+            scope_hint: Some(scope_name.to_string()),
+            pattern_name: "pramana_from",
+            ..inner
+        });
+    }
+
+    None
 }
 
 // "similar to X", "what is related to X", "things like X", "entities like X"
@@ -148,7 +218,7 @@ fn try_similar(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Similar,
         slot_text: slot.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "similar",
     })
 }
@@ -166,7 +236,7 @@ fn try_search_where(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Search,
         slot_text: slot,
-        tradition: None,
+        scope_hint: None,
         pattern_name: "search_where",
     })
 }
@@ -182,7 +252,7 @@ fn try_search_what_are(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Search,
         slot_text: slot,
-        tradition: None,
+        scope_hint: None,
         pattern_name: "search_what_are",
     })
 }
@@ -199,7 +269,7 @@ fn try_traverse_possessive(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Traverse,
         slot_text: slot,
-        tradition: None,
+        scope_hint: None,
         pattern_name: "traverse_possessive",
     })
 }
@@ -215,7 +285,7 @@ fn try_traverse_does(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Traverse,
         slot_text: rest.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "traverse_does",
     })
 }
@@ -234,7 +304,7 @@ fn try_traverse_what_is(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Traverse,
         slot_text: rest.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "traverse_what_is",
     })
 }
@@ -248,7 +318,7 @@ fn try_describe_tell(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "describe_tell",
     })
 }
@@ -260,7 +330,7 @@ fn try_describe_explicit(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "describe_explicit",
     })
 }
@@ -272,7 +342,7 @@ fn try_describe_what_is(input: &str) -> Option<IntentResult> {
     Some(IntentResult {
         mode: QueryMode::Describe,
         slot_text: rest.to_string(),
-        tradition: None,
+        scope_hint: None,
         pattern_name: "describe_what_is",
     })
 }
@@ -376,7 +446,7 @@ mod tests {
     fn detect_tradition_say() {
         let r = detect_intent("what does parashara say about Mars?").unwrap();
         assert!(matches!(r.mode, QueryMode::Describe));
-        assert_eq!(r.tradition, Some("parashara".to_string()));
+        assert_eq!(r.scope_hint, Some("parashara".to_string()));
         assert_eq!(r.slot_text, "mars");
         assert_eq!(r.pattern_name, "tradition_say");
     }
@@ -385,7 +455,7 @@ mod tests {
     fn detect_tradition_according() {
         let r = detect_intent("according to BPHS, what does Mars rule?").unwrap();
         assert!(matches!(r.mode, QueryMode::Traverse));
-        assert_eq!(r.tradition, Some("bphs".to_string()));
+        assert_eq!(r.scope_hint, Some("bphs".to_string()));
         assert_eq!(r.slot_text, "mars rule");
     }
 
@@ -406,5 +476,38 @@ mod tests {
         assert!(detect_intent("describe").is_none());
         assert!(detect_intent("what is").is_none());
         assert!(detect_intent("similar to").is_none());
+    }
+
+    #[test]
+    fn detect_pramana_from_with_keyword() {
+        let r = detect_intent("show claims from shabda pramana about Mars").unwrap();
+        assert!(matches!(r.mode, QueryMode::Describe));
+        assert_eq!(r.scope_hint, Some("shabda".to_string()));
+        assert_eq!(r.slot_text, "mars");
+        assert_eq!(r.pattern_name, "pramana_from");
+    }
+
+    #[test]
+    fn detect_pramana_from_without_show() {
+        let r = detect_intent("claims from anumana about Mars").unwrap();
+        assert!(matches!(r.mode, QueryMode::Describe));
+        assert_eq!(r.scope_hint, Some("anumana".to_string()));
+        assert_eq!(r.slot_text, "mars");
+    }
+
+    #[test]
+    fn detect_pramana_from_with_inner_intent() {
+        let r = detect_intent("show claims from shabda pramana about what does mars rule").unwrap();
+        assert!(matches!(r.mode, QueryMode::Traverse));
+        assert_eq!(r.scope_hint, Some("shabda".to_string()));
+        assert_eq!(r.slot_text, "mars rule");
+    }
+
+    #[test]
+    fn detect_pramana_from_comma_form() {
+        let r = detect_intent("from shabda pramana, describe Mars").unwrap();
+        assert!(matches!(r.mode, QueryMode::Describe));
+        assert_eq!(r.scope_hint, Some("shabda".to_string()));
+        assert_eq!(r.slot_text, "mars");
     }
 }

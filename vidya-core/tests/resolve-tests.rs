@@ -83,8 +83,10 @@ fn vocab_excludes_rdf_infra_types() {
         assert!(!key.contains("rdf-schema"), "rdfs:Class should be filtered: {key}");
     }
     assert!(!vocab.type_names.contains_key("assertion"), "vidya:Assertion should be filtered");
-    assert!(vocab.type_names.contains_key("tradition"), "vidya:Tradition should be kept");
-    assert!(vocab.type_names.contains_key("source"), "vidya:Source should be kept");
+    assert!(!vocab.type_names.contains_key("tradition"), "vidya:Tradition moved to provenance vocab");
+    assert!(!vocab.type_names.contains_key("source"), "vidya:Source moved to provenance vocab");
+    assert!(!vocab.tradition_names.is_empty(), "tradition names should be populated");
+    assert!(!vocab.source_names.is_empty(), "source names should be populated");
 }
 
 #[test]
@@ -747,4 +749,140 @@ fn ranking_alternatives_have_scores() {
             "alternative should have score breakdown"
         );
     }
+}
+
+// ── Provenance vocabulary tests ──
+
+#[test]
+fn vocab_has_tradition_names() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    assert!(
+        vocab.tradition_names.contains_key("bphs"),
+        "should contain tradition-bphs by label"
+    );
+    assert!(
+        vocab.tradition_names.contains_key("tradition-parasara"),
+        "should contain tradition-parasara by local name"
+    );
+}
+
+#[test]
+fn vocab_has_source_names() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    assert!(
+        !vocab.source_names.is_empty(),
+        "source names should be populated from jyotish seed"
+    );
+    assert!(
+        vocab.source_names.contains_key("source-bphs"),
+        "should contain source-bphs by local name"
+    );
+}
+
+#[test]
+fn vocab_has_pramana_names() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    assert!(
+        vocab.pramana_names.contains_key("shabda"),
+        "should contain shabda pramana by local name"
+    );
+    assert!(
+        vocab.pramana_names.contains_key("pratyaksha"),
+        "should contain pratyaksha by local name"
+    );
+}
+
+#[test]
+fn resolve_provenance_tradition() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    let scope = vocab.resolve_provenance("bphs");
+    assert!(scope.tradition.is_some(), "bphs should resolve as tradition");
+}
+
+#[test]
+fn resolve_provenance_pramana() {
+    let store = load_jyotish();
+    let vocab = resolve::build_vocab(&store, "jyotish");
+    let scope = vocab.resolve_provenance("shabda");
+    assert!(scope.pramana.is_some(), "shabda should resolve as pramana");
+    assert!(scope.tradition.is_none(), "shabda should not be a tradition");
+}
+
+// ── Tradition-aware NL resolution tests ──
+
+#[test]
+fn nl_tradition_say_resolves_scope() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "what does parashara say about mars?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+    assert!(
+        report.scope.tradition.is_some(),
+        "tradition scope should be set from 'parashara'"
+    );
+    assert!(
+        report.scope.tradition.as_ref().unwrap().contains("tradition-parasara"),
+        "should resolve to tradition-parasara IRI"
+    );
+}
+
+#[test]
+fn nl_according_to_resolves_scope() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "according to bphs, what does mars rule?",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+    assert!(
+        report.scope.tradition.is_some(),
+        "tradition scope should be set from 'bphs'"
+    );
+}
+
+#[test]
+fn nl_pramana_from_resolves_scope() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "show claims from shabda pramana about mars",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+    assert!(
+        report.scope.pramana.is_some(),
+        "pramana scope should be set from 'shabda'"
+    );
+    assert!(
+        report.scope.pramana.as_ref().unwrap().contains("shabda"),
+        "should resolve to shabda pramana IRI"
+    );
+}
+
+#[test]
+fn nl_unscoped_query_has_empty_scope() {
+    let store = load_jyotish();
+    let ctx = store.resolve_context("jyotish");
+    let report = resolve::resolve_nl(
+        "tell me about mars",
+        &ctx.vocab,
+        Some(&ctx.vsa),
+        "jyotish",
+    )
+    .expect("should resolve");
+    assert!(report.scope.is_empty(), "unscoped query should have empty scope");
 }

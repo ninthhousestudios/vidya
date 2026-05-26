@@ -441,6 +441,7 @@ fn search_filtered_by_tradition_parasara() {
 
     let filter = ProvenanceFilter {
         tradition: Some(vidya_core::ontology::resolve_iri("tradition-parasara", "jyotish")),
+        source: None,
         pramana: None,
     };
     let result = store.search("jyotish", "Graha", &[], &filter).unwrap();
@@ -457,6 +458,7 @@ fn describe_filtered_by_pramana_shabda() {
 
     let filter = ProvenanceFilter {
         tradition: None,
+        source: None,
         pramana: Some(vidya_core::ontology::resolve_iri("vidya:shabda", "jyotish")),
     };
     let result = store.describe("jyotish", "surya", &filter).unwrap();
@@ -472,6 +474,7 @@ fn traverse_with_tradition_filter() {
 
     let filter = ProvenanceFilter {
         tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        source: None,
         pramana: None,
     };
     let result = store
@@ -490,6 +493,7 @@ fn provenance_with_tradition_filter() {
 
     let filter_bphs = ProvenanceFilter {
         tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        source: None,
         pramana: None,
     };
     let result = store
@@ -499,6 +503,7 @@ fn provenance_with_tradition_filter() {
 
     let filter_jaimini = ProvenanceFilter {
         tradition: Some(vidya_core::ontology::resolve_iri("tradition-jaimini", "jyotish")),
+        source: None,
         pramana: None,
     };
     let result = store
@@ -514,6 +519,7 @@ fn compose_tradition_and_pramana_filters() {
 
     let filter_match = ProvenanceFilter {
         tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        source: None,
         pramana: Some(vidya_core::ontology::resolve_iri("vidya:shabda", "jyotish")),
     };
     let result = store.search("jyotish", "Graha", &[], &filter_match).unwrap();
@@ -521,6 +527,7 @@ fn compose_tradition_and_pramana_filters() {
 
     let filter_mismatch = ProvenanceFilter {
         tradition: Some(vidya_core::ontology::resolve_iri("tradition-bphs", "jyotish")),
+        source: None,
         pramana: Some(vidya_core::ontology::resolve_iri("vidya:pratyaksha", "jyotish")),
     };
     let result = store.search("jyotish", "Graha", &[], &filter_mismatch).unwrap();
@@ -676,6 +683,7 @@ fn search_rejects_invalid_provenance_filter_iri() {
 
     let filter = ProvenanceFilter {
         tradition: Some("http://example.org/bad>iri".into()),
+        source: None,
         pramana: None,
     };
     let result = store.search("jyotish", "Graha", &[], &filter);
@@ -689,6 +697,7 @@ fn describe_with_mismatching_filter_excludes_unmatched_facts() {
 
     let filter = ProvenanceFilter {
         tradition: Some(vidya_core::ontology::resolve_iri("tradition-jaimini", "jyotish")),
+        source: None,
         pramana: None,
     };
     let result = store.describe("jyotish", "surya", &filter).unwrap();

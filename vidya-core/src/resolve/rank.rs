@@ -12,7 +12,7 @@ pub struct ScoreSignal {
 pub struct ScoredCandidate {
     pub report: ResolutionReport,
     pub pattern_name: &'static str,
-    pub tradition: Option<String>,
+    pub scope_hint: Option<String>,
     pub total_score: f64,
     pub signals: Vec<ScoreSignal>,
 }
@@ -43,7 +43,7 @@ pub(crate) fn rank(attempts: Vec<ParseAttempt>) -> Vec<ScoredCandidate> {
                 Some(ScoredCandidate {
                     report,
                     pattern_name: intent.pattern_name,
-                    tradition: intent.tradition,
+                    scope_hint: intent.scope_hint,
                     total_score,
                     signals,
                 })
@@ -115,8 +115,8 @@ fn score(
     });
 
     signals.push(ScoreSignal {
-        name: "tradition",
-        value: if intent.tradition.is_some() {
+        name: "scope",
+        value: if intent.scope_hint.is_some() {
             0.05
         } else {
             0.0
@@ -210,7 +210,7 @@ fn shape_validity(intent: &IntentResult, tokens: &[ResolvedToken]) -> f64 {
 
 fn pattern_specificity(pattern_name: &str) -> f64 {
     match pattern_name {
-        "tradition_say" | "tradition_according" => 0.10,
+        "tradition_say" | "tradition_according" | "pramana_from" => 0.10,
         "traverse_possessive" => 0.09,
         "search_where" => 0.08,
         "search_what_are" => 0.07,
@@ -244,13 +244,13 @@ mod tests {
         let traverse_intent = IntentResult {
             mode: QueryMode::Traverse,
             slot_text: "mars exalted".to_string(),
-            tradition: None,
+            scope_hint: None,
             pattern_name: "traverse_what_is",
         };
         let describe_intent = IntentResult {
             mode: QueryMode::Describe,
             slot_text: "mars exalted".to_string(),
-            tradition: None,
+            scope_hint: None,
             pattern_name: "describe_what_is",
         };
 
@@ -261,6 +261,7 @@ mod tests {
             },
             unknown_tokens: vec![],
             resolution_details: vec![],
+            scope: super::super::assemble::ProvenanceScope::default(),
             alternatives: vec![],
         };
         let describe_report = ResolutionReport {
@@ -269,6 +270,7 @@ mod tests {
             },
             unknown_tokens: vec![],
             resolution_details: vec![],
+            scope: super::super::assemble::ProvenanceScope::default(),
             alternatives: vec![],
         };
 
@@ -291,13 +293,13 @@ mod tests {
         let traverse_intent = IntentResult {
             mode: QueryMode::Traverse,
             slot_text: "mars".to_string(),
-            tradition: None,
+            scope_hint: None,
             pattern_name: "traverse_what_is",
         };
         let describe_intent = IntentResult {
             mode: QueryMode::Describe,
             slot_text: "mars".to_string(),
-            tradition: None,
+            scope_hint: None,
             pattern_name: "describe_what_is",
         };
 
@@ -307,6 +309,7 @@ mod tests {
             },
             unknown_tokens: vec![],
             resolution_details: vec![],
+            scope: super::super::assemble::ProvenanceScope::default(),
             alternatives: vec![],
         };
 
@@ -337,7 +340,7 @@ mod tests {
                 intent: IntentResult {
                     mode: QueryMode::Describe,
                     slot_text: "mars exalted".to_string(),
-                    tradition: None,
+                    scope_hint: None,
                     pattern_name: "describe_what_is",
                 },
                 tokens: tokens.clone(),
@@ -347,6 +350,7 @@ mod tests {
                     },
                     unknown_tokens: vec![],
                     resolution_details: vec![],
+                    scope: super::super::assemble::ProvenanceScope::default(),
                     alternatives: vec![],
                 },
             },
@@ -354,7 +358,7 @@ mod tests {
                 intent: IntentResult {
                     mode: QueryMode::Traverse,
                     slot_text: "mars exalted".to_string(),
-                    tradition: None,
+                    scope_hint: None,
                     pattern_name: "traverse_what_is",
                 },
                 tokens: tokens.clone(),
@@ -365,6 +369,7 @@ mod tests {
                     },
                     unknown_tokens: vec![],
                     resolution_details: vec![],
+                    scope: super::super::assemble::ProvenanceScope::default(),
                     alternatives: vec![],
                 },
             },

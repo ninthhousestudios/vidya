@@ -319,6 +319,9 @@ mod tests {
             predicate_names: HashMap::new(),
             value_index: HashMap::new(),
             value_types: HashMap::new(),
+            tradition_names: HashMap::new(),
+            source_names: HashMap::new(),
+            pramana_names: HashMap::new(),
         };
 
         let tokens = tokenize("1st House");
@@ -346,6 +349,9 @@ mod tests {
             predicate_names: HashMap::new(),
             value_index: HashMap::new(),
             value_types: HashMap::new(),
+            tradition_names: HashMap::new(),
+            source_names: HashMap::new(),
+            pramana_names: HashMap::new(),
         };
 
         let tokens = tokenize("mars rules");

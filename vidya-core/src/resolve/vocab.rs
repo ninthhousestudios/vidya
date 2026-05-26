@@ -26,6 +26,9 @@ pub struct SchemaVocab {
     pub value_index: HashMap<String, Vec<(String, String)>>,
     /// Maps "{pred_local}\t{value_lowercase}" → Vec<type_iri>
     pub value_types: HashMap<String, Vec<String>>,
+    pub tradition_names: HashMap<String, String>,
+    pub source_names: HashMap<String, String>,
+    pub pramana_names: HashMap<String, String>,
 }
 
 impl SchemaVocab {
@@ -193,12 +196,118 @@ impl SchemaVocab {
             v.dedup();
         }
 
+        // Collect tradition names (instances of vidya:Tradition in the domain graph)
+        let mut tradition_names: HashMap<String, String> = HashMap::new();
+        let trad_q = format!(
+            "SELECT ?t ?lbl WHERE {{ \
+               GRAPH <{graph_iri}> {{ \
+                 ?t a <{vidya_base}Tradition> . \
+                 OPTIONAL {{ ?t <{rdfs}label> ?lbl }} \
+               }} \
+             }}"
+        );
+        for (iri, label) in select_two_str(store, &trad_q) {
+            tradition_names.insert(label.to_lowercase(), iri.clone());
+            if let Some(local) = local_name(&iri) {
+                let local_lower = local.to_lowercase();
+                if let Some(stripped) = local_lower.strip_prefix("tradition-") {
+                    tradition_names.insert(stripped.to_string(), iri.clone());
+                }
+                tradition_names.insert(local_lower, iri);
+            }
+        }
+        // Also pick up traditions with no label via local name
+        let trad_nolbl_q = format!(
+            "SELECT ?t WHERE {{ \
+               GRAPH <{graph_iri}> {{ \
+                 ?t a <{vidya_base}Tradition> . \
+                 FILTER NOT EXISTS {{ ?t <{rdfs}label> ?lbl }} \
+               }} \
+             }}"
+        );
+        for iri in select_one_str(store, &trad_nolbl_q) {
+            if let Some(local) = local_name(&iri) {
+                let local_lower = local.to_lowercase();
+                if let Some(stripped) = local_lower.strip_prefix("tradition-") {
+                    tradition_names.insert(stripped.to_string(), iri.clone());
+                }
+                tradition_names.insert(local_lower, iri);
+            }
+        }
+
+        // Collect source names (instances of vidya:Source in the domain graph)
+        let mut source_names: HashMap<String, String> = HashMap::new();
+        let src_q = format!(
+            "SELECT ?s ?lbl WHERE {{ \
+               GRAPH <{graph_iri}> {{ \
+                 ?s a <{vidya_base}Source> . \
+                 OPTIONAL {{ ?s <{rdfs}label> ?lbl }} \
+               }} \
+             }}"
+        );
+        for (iri, label) in select_two_str(store, &src_q) {
+            source_names.insert(label.to_lowercase(), iri.clone());
+            if let Some(local) = local_name(&iri) {
+                let local_lower = local.to_lowercase();
+                if let Some(stripped) = local_lower.strip_prefix("source-") {
+                    source_names.insert(stripped.to_string(), iri.clone());
+                }
+                source_names.insert(local_lower, iri);
+            }
+        }
+        let src_nolbl_q = format!(
+            "SELECT ?s WHERE {{ \
+               GRAPH <{graph_iri}> {{ \
+                 ?s a <{vidya_base}Source> . \
+                 FILTER NOT EXISTS {{ ?s <{rdfs}label> ?lbl }} \
+               }} \
+             }}"
+        );
+        for iri in select_one_str(store, &src_nolbl_q) {
+            if let Some(local) = local_name(&iri) {
+                let local_lower = local.to_lowercase();
+                if let Some(stripped) = local_lower.strip_prefix("source-") {
+                    source_names.insert(stripped.to_string(), iri.clone());
+                }
+                source_names.insert(local_lower, iri);
+            }
+        }
+
+        // Collect pramana names (instances of vidya:Pramana — in the default graph / base ontology)
+        let mut pramana_names: HashMap<String, String> = HashMap::new();
+        let pram_q = format!(
+            "SELECT ?p ?val WHERE {{ \
+               ?p a <{vidya_base}Pramana> . \
+               ?p <{rdfs}label>|<{rdfs}comment> ?val . \
+             }}"
+        );
+        for (iri, val) in select_two_str(store, &pram_q) {
+            pramana_names.insert(val.to_lowercase(), iri.clone());
+            if let Some(local) = local_name(&iri) {
+                pramana_names.insert(local.to_lowercase(), iri);
+            }
+        }
+        let pram_nolbl_q = format!(
+            "SELECT ?p WHERE {{ \
+               ?p a <{vidya_base}Pramana> . \
+               FILTER NOT EXISTS {{ ?p <{rdfs}label> ?lbl }} \
+             }}"
+        );
+        for iri in select_one_str(store, &pram_nolbl_q) {
+            if let Some(local) = local_name(&iri) {
+                pramana_names.insert(local.to_lowercase(), iri);
+            }
+        }
+
         Self {
             entity_names,
             type_names,
             predicate_names,
             value_index,
             value_types,
+            tradition_names,
+            source_names,
+            pramana_names,
         }
     }
 
@@ -220,6 +329,17 @@ impl SchemaVocab {
     pub fn types_for_value(&self, pred_local: &str, value: &str) -> &[String] {
         let key = format!("{}\t{}", pred_local.to_lowercase(), value.to_lowercase());
         self.value_types.get(&key).map(|v| v.as_slice()).unwrap_or(&[])
+    }
+
+    pub fn resolve_provenance(&self, name: &str) -> super::assemble::ProvenanceScope {
+        let key = name.to_lowercase();
+        let tradition = self.tradition_names.get(&key).cloned()
+            .or_else(|| fuzzy_match_provenance(&key, &self.tradition_names));
+        let source = self.source_names.get(&key).cloned()
+            .or_else(|| fuzzy_match_provenance(&key, &self.source_names));
+        let pramana = self.pramana_names.get(&key).cloned()
+            .or_else(|| fuzzy_match_provenance(&key, &self.pramana_names));
+        super::assemble::ProvenanceScope { tradition, source, pramana }
     }
 
     pub fn all_known_tokens(&self) -> Vec<String> {
@@ -340,7 +460,47 @@ fn dedup_value_vecs(map: &mut HashMap<String, Vec<(String, String)>>) {
 
 const RDF_NS: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const RDFS_NS: &str = "http://www.w3.org/2000/01/rdf-schema#";
-const VIDYA_KEEP: &[&str] = &["Tradition", "Source"];
+const VIDYA_KEEP: &[&str] = &[];
+
+fn fuzzy_match_provenance(token: &str, names: &HashMap<String, String>) -> Option<String> {
+    if token.len() < 3 {
+        return None;
+    }
+    for (name, iri) in names {
+        if name.contains(token) || token.contains(name.as_str()) {
+            return Some(iri.clone());
+        }
+    }
+    let mut best: Option<(&str, usize)> = None;
+    for name in names.keys() {
+        let dist = simple_edit_distance(token, name);
+        if dist <= 2 {
+            if best.as_ref().is_none_or(|(_, d)| dist < *d) {
+                best = Some((name.as_str(), dist));
+            }
+        }
+    }
+    best.and_then(|(name, _)| names.get(name).cloned())
+}
+
+fn simple_edit_distance(a: &str, b: &str) -> usize {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    let (m, n) = (a.len(), b.len());
+    if m == 0 { return n; }
+    if n == 0 { return m; }
+    let mut prev: Vec<usize> = (0..=n).collect();
+    let mut curr = vec![0; n + 1];
+    for i in 1..=m {
+        curr[0] = i;
+        for j in 1..=n {
+            let cost = if a[i - 1] == b[j - 1] { 0 } else { 1 };
+            curr[j] = (prev[j] + 1).min(curr[j - 1] + 1).min(prev[j - 1] + cost);
+        }
+        std::mem::swap(&mut prev, &mut curr);
+    }
+    prev[n]
+}
 
 fn is_infra_type(iri: &str, vidya_base: &str) -> bool {
     if iri.starts_with(RDF_NS) || iri.starts_with(RDFS_NS) {
@@ -387,6 +547,9 @@ exalted = "exaltedIn"
             predicate_names: HashMap::from([("exaltedin".to_string(), "urn:exaltedIn".to_string())]),
             value_index: HashMap::new(),
             value_types: HashMap::new(),
+            tradition_names: HashMap::new(),
+            source_names: HashMap::new(),
+            pramana_names: HashMap::new(),
         };
 
         let syns = SynonymTable {
@@ -408,6 +571,9 @@ exalted = "exaltedIn"
             predicate_names: HashMap::new(),
             value_index: HashMap::new(),
             value_types: HashMap::new(),
+            tradition_names: HashMap::new(),
+            source_names: HashMap::new(),
+            pramana_names: HashMap::new(),
         };
 
         let syns = SynonymTable {

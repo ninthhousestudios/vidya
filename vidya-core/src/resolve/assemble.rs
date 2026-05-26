@@ -1,6 +1,19 @@
 use super::matcher::ResolvedToken;
 use super::vocab::SchemaVocab;
 
+#[derive(Debug, Clone, Default)]
+pub struct ProvenanceScope {
+    pub tradition: Option<String>,
+    pub source: Option<String>,
+    pub pramana: Option<String>,
+}
+
+impl ProvenanceScope {
+    pub fn is_empty(&self) -> bool {
+        self.tradition.is_none() && self.source.is_none() && self.pramana.is_none()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum ResolvedQuery {
     Describe {
@@ -32,6 +45,7 @@ pub enum ResolvedQuery {
 #[derive(Debug, Clone)]
 pub struct ResolutionReport {
     pub query: ResolvedQuery,
+    pub scope: ProvenanceScope,
     pub unknown_tokens: Vec<String>,
     pub resolution_details: Vec<String>,
     pub alternatives: Vec<AlternativeParse>,
@@ -123,6 +137,7 @@ fn assemble_describe(
             },
             unknown_tokens,
             resolution_details: vec![format!("subject: {}", short_name(entities[0]))],
+            scope: ProvenanceScope::default(),
             alternatives: Vec::new(),
         }),
         _ => {
@@ -134,7 +149,8 @@ fn assemble_describe(
                     },
                     unknown_tokens,
                     resolution_details: vec![format!("subject: {}", short_name(deduped[0]))],
-                    alternatives: Vec::new(),
+                    scope: ProvenanceScope::default(),
+            alternatives: Vec::new(),
                 });
             }
             Err(AssembleError::AmbiguousEntity {
@@ -202,6 +218,7 @@ fn assemble_search(
         },
         unknown_tokens,
         resolution_details: details,
+        scope: ProvenanceScope::default(),
         alternatives: Vec::new(),
     })
 }
@@ -283,6 +300,7 @@ fn assemble_traverse(
             format!("subject: {}", short_name(&subject_iri)),
             format!("predicate: {}", short_name(&predicate_iri)),
         ],
+        scope: ProvenanceScope::default(),
         alternatives: Vec::new(),
     })
 }
@@ -367,6 +385,7 @@ fn assemble_provenance(
                 }
             ),
         ],
+        scope: ProvenanceScope::default(),
         alternatives: Vec::new(),
     })
 }
@@ -393,6 +412,7 @@ fn assemble_similar(
             },
             unknown_tokens,
             resolution_details: vec![format!("subject: {}", short_name(iri))],
+            scope: ProvenanceScope::default(),
             alternatives: Vec::new(),
         }),
         iris => Err(AssembleError::AmbiguousEntity {
@@ -445,11 +465,12 @@ fn assemble_unbind(
             format!("subject: {}", short_name(&subject_iri)),
             format!("predicate: {}", short_name(&predicate_iri)),
         ],
+        scope: ProvenanceScope::default(),
         alternatives: Vec::new(),
     })
 }
 
-fn short_name(iri: &str) -> String {
+pub(crate) fn short_name(iri: &str) -> String {
     iri.rsplit_once('/')
         .map(|(_, local)| local.to_string())
         .unwrap_or_else(|| iri.to_string())

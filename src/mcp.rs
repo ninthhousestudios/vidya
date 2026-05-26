@@ -237,6 +237,7 @@ impl VidyaServer {
                 .tradition
                 .as_deref()
                 .map(|t| vidya_core::ontology::resolve_iri(t, &args.domain)),
+            source: None,
             pramana: args
                 .pramana
                 .as_deref()
@@ -411,18 +412,27 @@ impl VidyaServer {
         &self,
         Parameters(args): Parameters<AskArgs>,
     ) -> Result<String, ErrorData> {
-        let prov_filter = vidya_core::ProvenanceFilter {
-            tradition: args
-                .tradition
-                .as_deref()
-                .map(|t| vidya_core::ontology::resolve_iri(t, &args.domain)),
-            pramana: args
-                .pramana
-                .as_deref()
-                .map(|p| vidya_core::ontology::resolve_iri(p, &args.domain)),
-        };
-
         let ctx = self.store.resolve_context(&args.domain);
+
+        let mut prov_filter = vidya_core::ProvenanceFilter::default();
+        if let Some(ref t) = args.tradition {
+            let scope = ctx.vocab.resolve_provenance(t);
+            if scope.tradition.is_some() || scope.source.is_some() {
+                prov_filter.tradition = scope.tradition;
+                prov_filter.source = scope.source;
+            } else {
+                prov_filter.tradition = Some(vidya_core::ontology::resolve_iri(t, &args.domain));
+            }
+        }
+        if let Some(ref p) = args.pramana {
+            let scope = ctx.vocab.resolve_provenance(p);
+            if let Some(pram_iri) = scope.pramana {
+                prov_filter.pramana = Some(pram_iri);
+            } else {
+                prov_filter.pramana = Some(vidya_core::ontology::resolve_iri(p, &args.domain));
+            }
+        }
+
         let report = vidya_core::resolve::resolve_nl(
             &args.question,
             &ctx.vocab,
@@ -430,6 +440,16 @@ impl VidyaServer {
             &args.domain,
         )
         .map_err(|e| ErrorData::invalid_params(e.to_string(), None))?;
+
+        if prov_filter.tradition.is_none() {
+            prov_filter.tradition = report.scope.tradition.clone();
+        }
+        if prov_filter.source.is_none() {
+            prov_filter.source = report.scope.source.clone();
+        }
+        if prov_filter.pramana.is_none() {
+            prov_filter.pramana = report.scope.pramana.clone();
+        }
 
         match report.query {
             vidya_core::ResolvedQuery::Describe { ref subject_iri } => {

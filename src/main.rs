@@ -302,7 +302,47 @@ fn open_store_rw() -> Result<KnowledgeStore> {
 fn prov_filter(domain: &str, tradition: Option<String>, pramana: Option<String>) -> ProvenanceFilter {
     ProvenanceFilter {
         tradition: tradition.map(|t| vidya_core::ontology::resolve_iri(&t, domain)),
+        source: None,
         pramana: pramana.map(|p| vidya_core::ontology::resolve_iri(&p, domain)),
+    }
+}
+
+fn prov_filter_via_vocab(
+    domain: &str,
+    vocab: &vidya_core::resolve::SchemaVocab,
+    tradition: Option<String>,
+    pramana: Option<String>,
+) -> ProvenanceFilter {
+    let mut pf = ProvenanceFilter::default();
+    if let Some(ref t) = tradition {
+        let scope = vocab.resolve_provenance(t);
+        if scope.tradition.is_some() || scope.source.is_some() {
+            pf.tradition = scope.tradition;
+            pf.source = scope.source;
+        } else {
+            pf.tradition = Some(vidya_core::ontology::resolve_iri(t, domain));
+        }
+    }
+    if let Some(ref p) = pramana {
+        let scope = vocab.resolve_provenance(p);
+        if let Some(pram_iri) = scope.pramana {
+            pf.pramana = Some(pram_iri);
+        } else {
+            pf.pramana = Some(vidya_core::ontology::resolve_iri(p, domain));
+        }
+    }
+    pf
+}
+
+fn merge_scope_into_filter(pf: &mut ProvenanceFilter, scope: &vidya_core::ProvenanceScope) {
+    if pf.tradition.is_none() {
+        pf.tradition = scope.tradition.clone();
+    }
+    if pf.source.is_none() {
+        pf.source = scope.source.clone();
+    }
+    if pf.pramana.is_none() {
+        pf.pramana = scope.pramana.clone();
     }
 }
 
@@ -352,10 +392,12 @@ fn cmd_ask(
 ) -> Result<()> {
     let store = open_store_ro()?;
     let ctx = store.resolve_context(domain);
-    let pf = prov_filter(domain, tradition, pramana);
+    let mut pf = prov_filter_via_vocab(domain, &ctx.vocab, tradition, pramana);
 
     let report = resolve::resolve_nl(question, &ctx.vocab, Some(&ctx.vsa), domain)
         .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+    merge_scope_into_filter(&mut pf, &report.scope);
 
     eprintln!("  resolved: {}", report.resolution_details.join(", "));
     if !report.unknown_tokens.is_empty() {
