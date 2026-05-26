@@ -177,10 +177,10 @@ fn assemble_search(
         .iter()
         .filter_map(|t| match t {
             ResolvedToken::PropertyValue {
-                predicate_iri,
+                predicate_local,
                 value,
                 ..
-            } => Some((predicate_iri.as_str(), value.as_str())),
+            } => Some((predicate_local.as_str(), value.as_str())),
             _ => None,
         })
         .collect();

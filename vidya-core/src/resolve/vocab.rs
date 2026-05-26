@@ -486,21 +486,30 @@ fn fuzzy_match_provenance(token: &str, names: &HashMap<String, String>) -> Optio
     if token.len() < 3 {
         return None;
     }
+    // Collect all substring matches, pick the shortest name for determinism
+    let mut substr_matches: Vec<(&str, &str)> = Vec::new();
     for (name, iri) in names {
         if name.contains(token) || token.contains(name.as_str()) {
-            return Some(iri.clone());
+            substr_matches.push((name.as_str(), iri.as_str()));
         }
     }
-    let mut best: Option<(&str, usize)> = None;
+    if !substr_matches.is_empty() {
+        substr_matches.sort_by(|a, b| a.0.len().cmp(&b.0.len()).then_with(|| a.0.cmp(b.0)));
+        return Some(substr_matches[0].1.to_string());
+    }
+    // Fall back to edit distance, deterministic via shortest name then alphabetical
+    let mut best: Vec<(&str, usize)> = Vec::new();
     for name in names.keys() {
         let dist = simple_edit_distance(token, name);
         if dist <= 2 {
-            if best.as_ref().is_none_or(|(_, d)| dist < *d) {
-                best = Some((name.as_str(), dist));
-            }
+            best.push((name.as_str(), dist));
         }
     }
-    best.and_then(|(name, _)| names.get(name).cloned())
+    if best.is_empty() {
+        return None;
+    }
+    best.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.0.cmp(b.0)));
+    names.get(best[0].0).cloned()
 }
 
 fn simple_edit_distance(a: &str, b: &str) -> usize {

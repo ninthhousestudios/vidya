@@ -16,7 +16,7 @@ pub enum ResolvedToken {
         confidence: MatchConfidence,
     },
     PropertyValue {
-        predicate_iri: String,
+        predicate_local: String,
         value: String,
         confidence: MatchConfidence,
     },
@@ -127,7 +127,7 @@ fn try_exact(token: &str, vocab: &SchemaVocab) -> Option<ResolvedToken> {
     if let Some(entries) = vocab.value_index.get(token) {
         if let Some((pred_iri, val)) = entries.first() {
             return Some(ResolvedToken::PropertyValue {
-                predicate_iri: pred_iri.clone(),
+                predicate_local: pred_iri.clone(),
                 value: val.clone(),
                 confidence: MatchConfidence::Exact,
             });
@@ -208,7 +208,7 @@ fn try_edit_distance(token: &str, vocab: &SchemaVocab) -> Option<ResolvedToken> 
     if let Some(entries) = vocab.value_index.get(&best_key) {
         if let Some((pred_iri, val)) = entries.first() {
             return Some(ResolvedToken::PropertyValue {
-                predicate_iri: pred_iri.clone(),
+                predicate_local: pred_iri.clone(),
                 value: val.clone(),
                 confidence: MatchConfidence::EditDistance,
             });

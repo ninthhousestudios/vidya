@@ -694,7 +694,7 @@ impl ServerHandler for VidyaServer {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build()).with_instructions(
             "vidya — structured knowledge graph backed by Oxigraph. \
              RDF triplestore with named graphs per domain, RDF-star provenance, \
-             and SPARQL internally. Tools: vidya_health, vidya_load, vidya_query, vidya_assert, vidya_similar, vidya_unbind, vidya_vocab.",
+             and SPARQL internally. Tools: vidya_health, vidya_load, vidya_query, vidya_ask, vidya_assert, vidya_similar, vidya_unbind, vidya_vocab.",
         )
     }
 }

@@ -43,34 +43,31 @@ pub fn resolve_nl(
         return Err(IntentError::NoIntentDetected);
     }
 
-    let attempts: Vec<rank::ParseAttempt> = intents
-        .into_iter()
-        .map(|intent| {
-            let tokens = matcher::tokenize(&intent.slot_text);
-            let matched = matcher::match_tokens(&tokens, vocab, vsa, domain);
-            match assemble::assemble(intent.mode, &matched, vocab) {
-                Ok(report) => rank::ParseAttempt::Ok {
-                    intent,
-                    tokens: matched,
-                    report,
-                },
-                Err(error) => rank::ParseAttempt::Err {
-                    _intent: intent,
-                    _tokens: matched,
-                    _error: error,
-                },
+    let mut first_error: Option<assemble::AssembleError> = None;
+    let mut attempts: Vec<rank::ParseAttempt> = Vec::new();
+
+    for intent in intents {
+        let tokens = matcher::tokenize(&intent.slot_text);
+        let matched = matcher::match_tokens(&tokens, vocab, vsa, domain);
+        match assemble::assemble(intent.mode, &matched, vocab) {
+            Ok(report) => attempts.push(rank::ParseAttempt {
+                intent,
+                tokens: matched,
+                report,
+            }),
+            Err(error) => {
+                if first_error.is_none() {
+                    first_error = Some(error);
+                }
             }
-        })
-        .collect();
+        }
+    }
 
     let mut ranked = rank::rank(attempts);
 
     if ranked.is_empty() {
-        let intent = intent::detect_intent(raw_input).unwrap();
-        let tokens = matcher::tokenize(&intent.slot_text);
-        let matched = matcher::match_tokens(&tokens, vocab, vsa, domain);
         return Err(IntentError::Assemble(
-            assemble::assemble(intent.mode, &matched, vocab).unwrap_err(),
+            first_error.expect("at least one intent was tried"),
         ));
     }
 

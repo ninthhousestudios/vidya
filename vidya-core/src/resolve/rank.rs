@@ -1,4 +1,4 @@
-use super::assemble::{AssembleError, QueryMode, ResolutionReport};
+use super::assemble::{QueryMode, ResolutionReport};
 use super::intent::{IntentResult, ScopeCategory};
 use super::matcher::{MatchConfidence, ResolvedToken};
 
@@ -18,39 +18,25 @@ pub struct ScoredCandidate {
     pub signals: Vec<ScoreSignal>,
 }
 
-pub(crate) enum ParseAttempt {
-    Ok {
-        intent: IntentResult,
-        tokens: Vec<ResolvedToken>,
-        report: ResolutionReport,
-    },
-    Err {
-        _intent: IntentResult,
-        _tokens: Vec<ResolvedToken>,
-        _error: AssembleError,
-    },
+pub(crate) struct ParseAttempt {
+    pub intent: IntentResult,
+    pub tokens: Vec<ResolvedToken>,
+    pub report: ResolutionReport,
 }
 
 pub(crate) fn rank(attempts: Vec<ParseAttempt>) -> Vec<ScoredCandidate> {
     let mut candidates: Vec<ScoredCandidate> = attempts
         .into_iter()
-        .filter_map(|a| match a {
-            ParseAttempt::Ok {
-                intent,
-                tokens,
-                report,
-            } => {
-                let (total_score, signals) = score(&intent, &tokens, &report);
-                Some(ScoredCandidate {
-                    report,
-                    pattern_name: intent.pattern_name,
-                    scope_hint: intent.scope_hint,
-                    scope_category: intent.scope_category,
-                    total_score,
-                    signals,
-                })
+        .map(|a| {
+            let (total_score, signals) = score(&a.intent, &a.tokens, &a.report);
+            ScoredCandidate {
+                report: a.report,
+                pattern_name: a.intent.pattern_name,
+                scope_hint: a.intent.scope_hint,
+                scope_category: a.intent.scope_category,
+                total_score,
+                signals,
             }
-            ParseAttempt::Err { .. } => None,
         })
         .collect();
 
@@ -342,7 +328,7 @@ mod tests {
         ];
 
         let attempts = vec![
-            ParseAttempt::Ok {
+            ParseAttempt {
                 intent: IntentResult {
                     mode: QueryMode::Describe,
                     slot_text: "mars exalted".to_string(),
@@ -361,7 +347,7 @@ mod tests {
                     alternatives: vec![],
                 },
             },
-            ParseAttempt::Ok {
+            ParseAttempt {
                 intent: IntentResult {
                     mode: QueryMode::Traverse,
                     slot_text: "mars exalted".to_string(),

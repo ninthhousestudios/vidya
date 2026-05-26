@@ -73,9 +73,9 @@ pub fn detect_all_intents(raw_input: &str) -> Vec<IntentResult> {
     if let Some(r) = try_search_what_are(n) { results.push(r); }
     if let Some(r) = try_traverse_possessive(n) { results.push(r); }
     if let Some(r) = try_traverse_does(n) { results.push(r); }
-    if let Some(r) = try_traverse_what_is(n) { results.push(r); }
     if let Some(r) = try_describe_tell(n) { results.push(r); }
     if let Some(r) = try_describe_explicit(n) { results.push(r); }
+    if let Some(r) = try_traverse_what_is(n) { results.push(r); }
     if let Some(r) = try_describe_what_is(n) { results.push(r); }
     results
 }
